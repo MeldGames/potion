@@ -1,0 +1,74 @@
+[
+  (
+    entity: 0,
+    components: [
+      {
+        "type": "spite::ability::target::TargetDistance",
+        "struct": {
+          "dist": {
+            "type": "f32",
+            "value": 25.0,
+          },
+        },
+      },
+      {
+        "type": "spite::ability::target::TargetShape",
+        "value": TargetArc(
+          radius: 1.0,
+          angle: 170.0,
+        ),
+      },
+      {
+        "type": "bevy_transform::components::transform::Transform",
+        "struct": {
+          "translation": {
+            "type": "glam::vec3::Vec3",
+            "value": (0.0, 0.0, 0.0),
+          },
+          "rotation": {
+            "type": "glam::quat::Quat",
+            "value": (0.0, 0.0, 0.0, 1.0),
+          },
+          "scale": {
+            "type": "glam::vec3::Vec3",
+            "value": (1.0, 1.0, 1.0),
+          },
+        },
+      },
+      {
+        "type": "bevy_transform::components::global_transform::GlobalTransform",
+        "struct": {
+          "translation": {
+            "type": "glam::vec3::Vec3",
+            "value": (0.0, 0.0, 0.0),
+          },
+          "rotation": {
+            "type": "glam::quat::Quat",
+            "value": (0.0, 0.0, 0.0, 1.0),
+          },
+          "scale": {
+            "type": "glam::vec3::Vec3",
+            "value": (1.0, 1.0, 1.0),
+          },
+        },
+      },
+      {
+        "type": "spite::ability::projectile::LinearProjectile",
+        "struct": {
+          "direction": {
+            "type": "glam::vec3::Vec3",
+            "value": (0.0, 0.0, 1.0),
+          },
+          "speed": {
+            "type": "f32",
+            "value": 3.0,
+          },
+        },
+      },
+      {
+        "type": "spite::ability::target::AbilityTarget",
+        "struct": {},
+      },
+    ],
+  ),
+]
