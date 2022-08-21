@@ -20,6 +20,7 @@ pub fn setup_app(app: &mut App) {
     app.add_plugins(DefaultPlugins);
     app.add_plugin(EguiPlugin);
     app.add_plugin(crate::egui::SetupEguiPlugin);
+    app.add_plugin(bevy_editor_pls::EditorPlugin);
 
     app.add_plugin(bevy_mod_wanderlust::WanderlustPlugin);
     app.insert_resource(InspectableRegistry::default());
