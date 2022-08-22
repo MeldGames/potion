@@ -1,5 +1,6 @@
 //use bevy_editor_pls::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_fly_camera::FlyCamera;
 use bevy_inspector_egui::InspectableRegistry;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
@@ -23,19 +24,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.add_loopless_state(MouseState::Locked);
     app.insert_resource(LockToggle::default());
 
-    /*
-       app.add_system(
-           camera_movement_system
-               .run_if(window_focused)
-               .label("player_fly_movement"),
-       )
-       .add_system(
-           mouse_motion_system
-               .run_in_state(MouseState::Locked)
-               .run_if(window_focused)
-               .label("player_mouse_input"),
-       );
-    */
+    app.add_system(
+        bevy_fly_camera::camera_movement_system
+            .run_if(window_focused)
+            .label("player_fly_movement"),
+    )
+    .add_system(
+        bevy_fly_camera::mouse_motion_system
+            .run_in_state(MouseState::Locked)
+            .run_if(window_focused)
+            .label("player_mouse_input"),
+    );
     app.add_system(outline_meshes);
     app.add_system(
         toggle_mouse_lock
@@ -62,11 +61,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn setup_camera(mut commands: Commands, _asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-            .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands
+        .spawn_bundle(Camera3dBundle {
+            transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+                .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+            ..Default::default()
+        })
+        .insert(FlyCamera::default());
 
     commands.spawn_bundle(SceneBundle {
         scene: _asset_server.load("models/cauldron.glb#Scene0"),

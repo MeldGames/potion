@@ -509,7 +509,7 @@ dependencies = [
 [[package]]
 name = "bevy_fly_camera"
 version = "0.9.0"
-source = "git+https://github.com/PikminGuts92/bevy_fly_camera?branch=bevy-0.8#dd6ea635acfa6c6e4b248d7869575d366f18949a"
+source = "git+https://github.com/Aceeri/bevy_fly_camera?branch=bevy-0.8#d43316b289b713a13f4070dcf0fcf75bb9cb17af"
 dependencies = [
  "bevy",
 ]
