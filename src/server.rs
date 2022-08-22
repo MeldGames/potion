@@ -1,23 +1,16 @@
-//use bevy_editor_pls::prelude::*;
-use bevy_egui::EguiPlugin;
 use bevy_fly_camera::FlyCamera;
-use bevy_inspector_egui::InspectableRegistry;
 use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::*;
-use potion::network::NetworkPlugin;
-use potion::player::{LockToggle, MouseState, PlayerPlugin};
+use potion::player::{LockToggle, MouseState};
 
 use bevy::prelude::*;
-//use bevy_fly_camera::{camera_movement_system, mouse_motion_system, FlyCamera};
 
 use potion::player::{mouse_lock, toggle_mouse_lock, window_focused};
-use wgpu_types::PrimitiveTopology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
     app.insert_resource(sabi::Server);
     potion::setup_app(&mut app);
-    //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
 
     app.add_loopless_state(MouseState::Locked);
     app.insert_resource(LockToggle::default());
