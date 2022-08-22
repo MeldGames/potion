@@ -6,16 +6,19 @@ use iyes_loopless::prelude::*;
 use potion::diagnostics::DiagnosticsEguiPlugin;
 use potion::network::NetworkPlugin;
 use potion::physics::PhysicsPlugin;
-use potion::player::{PlayerInputPlugin, PlayerPlugin};
+use potion::player::{PlayerEvent, PlayerInputPlugin, PlayerPlugin};
 
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectableRegistry;
+use sabi::protocol::{NetworkTick, ServerEntity};
 
 fn main() {
     let mut app = App::new();
-    app.insert_resource(sabi::Client);
+    app.insert_resource(sabi::Local);
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
+    app.add_startup_system(spawn_local_player);
+
     /*
     app.add_plugin(NetworkPlugin)
         .insert_resource(Msaa { samples: 4 })
@@ -40,16 +43,13 @@ fn main() {
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(potion::diagnostics::DiagnosticsEguiPlugin);*/
-    app.add_startup_system(setup);
 
     app.run();
 }
 
-fn setup(
-    mut commands: Commands,
-    _meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<StandardMaterial>>,
-    _assets: Res<AssetServer>,
-) {
+fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>) {
     println!("yessir");
+    info!("spawning new player");
+    spawn_player.send(PlayerEvent::Spawn { id: 1 });
+    spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
 }

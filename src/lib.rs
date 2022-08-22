@@ -6,6 +6,7 @@ pub mod player;
 
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
+use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::*;
 
@@ -52,6 +53,26 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
+    app.add_plugin(OutlinePlugin);
+    app.add_system(outline_meshes);
 
     app.add_plugin(InspectableRapierPlugin);
+}
+
+fn outline_meshes(
+    mut commands: Commands,
+    mut outlines: ResMut<Assets<Outline>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<Handle<Outline>>)>,
+) {
+    for (entity, mesh) in &query {
+        if let Some(mesh) = meshes.get(mesh) {
+            if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
+                commands.entity(entity).insert(outlines.add(Outline {
+                    colour: Color::rgba(0.0, 0.0, 0.0, 0.8),
+                    width: 5.0,
+                }));
+            }
+        }
+    }
 }

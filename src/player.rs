@@ -5,6 +5,7 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
+use bevy_renet::renet::RenetServer;
 use sabi::{prelude::*, Replicate};
 
 use sabi::stage::NetworkSimulationAppExt;
@@ -13,7 +14,8 @@ use serde::{Deserialize, Serialize};
 
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
 
-#[derive(Debug, Component)]
+#[derive(Default, Debug, Component, Reflect)]
+#[reflect(Component)]
 pub struct Player {
     pub id: u64,
 }
@@ -244,6 +246,9 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Speed>();
         app.register_inspectable::<Speed>();
+        app.register_type::<Player>();
+
+        app.insert_resource(Events::<PlayerEvent>::default());
 
         app.add_plugin(ReplicatePlugin::<Speed>::default());
 
@@ -263,7 +268,9 @@ impl Plugin for PlayerPlugin {
                 .label("reticle_move")
                 .after("update_player_inputs")
                 .after("player_movement"),
-        );
+        )
+        .add_meta_network_system(setup_player)
+        .add_meta_network_system(Events::<PlayerEvent>::update_system);
     }
 }
 
@@ -429,4 +436,158 @@ pub fn player_input(keyboard_input: Res<Input<KeyCode>>, mut player_input: ResMu
         .set_forward(keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up));
     player_input
         .set_back(keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PlayerEvent {
+    Spawn { id: u64 },
+    SetupLocal { id: u64 },
+}
+
+pub fn setup_player(
+    mut commands: Commands,
+    mut server_entities: ResMut<ServerEntities>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut asset_server: ResMut<AssetServer>,
+    mut player_reader: EventReader<PlayerEvent>,
+
+    mut lobby: ResMut<Lobby>,
+    mut server: Option<ResMut<RenetServer>>,
+) {
+    for (event, id) in player_reader.iter_with_id() {
+        info!("player event {:?}: {:?}", id, event);
+        match event {
+            &PlayerEvent::SetupLocal { id } => {
+                let player_entity = *lobby.players.get(&id).unwrap();
+
+                let reticle_cube =
+                    meshes.add(Mesh::from(bevy::render::mesh::shape::Cube { size: 0.2 }));
+
+                let camera = commands
+                    .spawn_bundle(Camera3dBundle {
+                        transform: Transform::from_translation(Vec3::new(0., 0., 4.))
+                            .looking_at(Vec3::ZERO, Vec3::Y),
+                        ..Default::default()
+                    })
+                    .insert(PlayerCam)
+                    .insert(Name::new("Player Camera"))
+                    .id();
+
+                let reticle = commands
+                    .spawn_bundle((
+                        Transform {
+                            translation: Vec3::new(0., 0., 0.),
+                            ..Default::default()
+                        },
+                        GlobalTransform::identity(),
+                        Reticle {
+                            max_distance: 6.0,
+                            from_height: 4.0,
+                        },
+                        Name::new("Reticle"),
+                        FromCamera(camera),
+                    ))
+                    .id();
+
+                let neck = commands
+                    .spawn_bundle((
+                        Transform {
+                            translation: Vec3::new(0., 1., 0.),
+                            ..Default::default()
+                        },
+                        GlobalTransform::identity(),
+                        Neck,
+                        Name::new("Neck"),
+                    ))
+                    .id();
+
+                commands.entity(neck).push_children(&[camera]);
+
+                let mut material = StandardMaterial::default();
+                material.base_color = Color::hex("800000").unwrap().into();
+                material.perceptual_roughness = 0.97;
+                material.reflectance = 0.0;
+                let red = materials.add(material);
+
+                let ret_mesh = commands
+                    .spawn_bundle(PbrBundle {
+                        material: red.clone(),
+                        mesh: reticle_cube.clone(),
+                        ..Default::default()
+                    })
+                    .id();
+
+                commands.entity(reticle).push_children(&[ret_mesh]);
+
+                commands
+                    .entity(player_entity)
+                    .insert(PlayerInput::default())
+                    .push_children(&[neck, reticle]);
+                commands.spawn_bundle(SceneBundle {
+                    scene: asset_server.load("models/cauldron.glb#Scene0"),
+                    ..default()
+                });
+            }
+            &PlayerEvent::Spawn { id } => {
+                info!("spawning player {}", id);
+                // Spawn player cube
+                let player_entity = commands
+                    .spawn_bundle(TransformBundle::default())
+                    //.insert(Ccd::enabled())
+                    .insert(Speed::default())
+                    .insert(PlayerInput::default())
+                    .insert(Player { id: id })
+                    .insert(Name::new(format!("Player {}", id.to_string())))
+                    .insert(Owned)
+                    //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
+                    .insert_bundle(TransformBundle::default())
+                    .insert(RigidBody::KinematicVelocityBased)
+                    .insert(LockedAxes::ROTATION_LOCKED)
+                    .insert(crate::physics::PLAYER_GROUPING)
+                    .insert(Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5))
+                    .insert(Velocity::default())
+                    .insert(Friction {
+                        coefficient: 0.0,
+                        ..Default::default()
+                    })
+                    .id();
+
+                // We could send an InitState with all the players id and positions for the client
+                // but this is easier to do.
+
+                if let Some(ref mut server) = server {
+                    for (existing_id, existing_entity) in lobby.players.iter() {
+                        let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                            id: *existing_id,
+                            entity: (*existing_entity).into(),
+                        })
+                        .unwrap();
+
+                        server.send_message(id, ServerChannel::Message.id(), message);
+                    }
+                }
+
+                lobby.players.insert(id, player_entity);
+
+                if let Some(ref mut server) = server {
+                    let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                        id: id,
+                        entity: player_entity.into(),
+                    })
+                    .unwrap();
+                    server.broadcast_message(ServerChannel::Message.id(), message);
+
+                    let message = bincode::serialize(&ServerMessage::AssignOwnership {
+                        entity: player_entity.into(),
+                    })
+                    .unwrap();
+                    server.send_message(id, ServerChannel::Message.id(), message);
+
+                    let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
+                    server.send_message(id, ServerChannel::Message.id(), message);
+                }
+            }
+        }
+    }
 }

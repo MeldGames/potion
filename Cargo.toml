@@ -43,8 +43,8 @@ bevy_renet = "0.0.5"
 renet_visualizer = "0.0.2"
 
 [[bin]]
-name = "client"
-path = "src/client.rs"
+name = "local"
+path = "src/local.rs"
 
 [[bin]]
 name = "server"
