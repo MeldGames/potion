@@ -60,13 +60,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn setup_camera(mut commands: Commands,
     _asset_server: Res<AssetServer>,) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0., 2., 10.)),
+        transform: Transform::from_translation(Vec3::new(0., 12., 10.)).looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
         ..Default::default()
     });
 
-    let ret = commands.spawn_bundle(SceneBundle {
-        scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
+    commands.spawn_bundle(SceneBundle {
+        scene: _asset_server.load("models/cauldron.glb#Scene0"),
         ..default()
-    }).id();
-    dbg!(ret);
+    });
 }
