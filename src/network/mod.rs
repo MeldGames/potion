@@ -245,6 +245,7 @@ pub fn client_sync_players(
                     .entity(player_entity)
                     .insert(PlayerInput::default())
                     .push_children(&[neck, reticle]);
+
             }
             ServerMessage::AssignOwnership {
                 entity: server_entity,

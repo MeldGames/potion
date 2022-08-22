@@ -51,4 +51,5 @@ fn setup(
     _materials: ResMut<Assets<StandardMaterial>>,
     _assets: Res<AssetServer>,
 ) {
+    println!("yessir");
 }
