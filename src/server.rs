@@ -57,8 +57,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera(mut commands: Commands,
+    _asset_server: Res<AssetServer>,) {
     commands.spawn_bundle(Camera3dBundle {
+        transform: Transform::from_translation(Vec3::new(0., 12., 10.)).looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
         ..Default::default()
+    });
+
+    commands.spawn_bundle(SceneBundle {
+        scene: _asset_server.load("models/cauldron.glb#Scene0"),
+        ..default()
     });
 }

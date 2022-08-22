@@ -245,6 +245,11 @@ pub fn client_sync_players(
                     .entity(player_entity)
                     .insert(PlayerInput::default())
                     .push_children(&[neck, reticle]);
+                commands.spawn_bundle(SceneBundle {
+                    scene: _asset_server.load("models/cauldron.glb#Scene0"),
+                    ..default()
+                });
+
             }
             ServerMessage::AssignOwnership {
                 entity: server_entity,
