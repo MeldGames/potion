@@ -507,6 +507,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_fly_camera"
+version = "0.9.0"
+source = "git+https://github.com/PikminGuts92/bevy_fly_camera?branch=bevy-0.8#dd6ea635acfa6c6e4b248d7869575d366f18949a"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_framepace"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -676,6 +684,15 @@ dependencies = [
  "bevy_ecs",
  "bevy_render",
  "pretty-type-name",
+]
+
+[[package]]
+name = "bevy_mod_outline"
+version = "0.1.0"
+source = "git+https://github.com/komadori/bevy_mod_outline?rev=4627eaa093e0bc0f292ca19e5af631507840d313#4627eaa093e0bc0f292ca19e5af631507840d313"
+dependencies = [
+ "bevy",
+ "libm",
 ]
 
 [[package]]
@@ -3276,7 +3293,9 @@ dependencies = [
  "bevy-inspector-egui-rapier",
  "bevy_editor_pls",
  "bevy_egui",
+ "bevy_fly_camera",
  "bevy_framepace",
+ "bevy_mod_outline",
  "bevy_mod_wanderlust",
  "bevy_rapier3d",
  "bevy_renet",
