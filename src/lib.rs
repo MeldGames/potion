@@ -1,5 +1,6 @@
 pub mod diagnostics;
 pub mod egui;
+pub mod follow;
 pub mod network;
 pub mod physics;
 pub mod player;

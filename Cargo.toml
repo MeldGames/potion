@@ -12,6 +12,7 @@ serde = {version = "1.0", features = ["derive"]}
 bevy_fly_camera = {git = "https://github.com/Aceeri/bevy_fly_camera", branch = "bevy-0.8"}
 bevy_mod_outline = {git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313"}
 bevy_mod_wanderlust = "0.2"
+smooth-bevy-cameras = {git = "https://github.com/bonsairobo/smooth-bevy-cameras", rev = "a1095b9"}
 
 bevy-inspector-egui = "0.12"
 bevy-inspector-egui-rapier = {version = "0.5", features = ["rapier3d"]}

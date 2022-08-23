@@ -4,7 +4,9 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 
 use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_mod_wanderlust::{CharacterControllerBundle, ControllerInput, ControllerSettings};
+use bevy_mod_wanderlust::{
+    CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
+};
 use bevy_rapier3d::prelude::*;
 use bevy_renet::renet::RenetServer;
 use sabi::{prelude::*, Replicate};
@@ -14,6 +16,12 @@ use sabi::stage::NetworkSimulationAppExt;
 use serde::{Deserialize, Serialize};
 
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
+use smooth_bevy_cameras::{
+    controllers::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin},
+    LookTransformPlugin,
+};
+
+use crate::follow::{Follow, FollowPlugin};
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -164,9 +172,6 @@ pub struct Reticle {
 #[derive(Component, Debug)]
 pub struct FromCamera(pub Entity);
 
-#[derive(Component, Debug)]
-pub struct PlayerCamera(pub Entity);
-
 #[derive(
     Component,
     Debug,
@@ -225,13 +230,7 @@ impl Plugin for PlayerInputPlugin {
                     .run_if(window_focused)
                     .label("toggle_mouse_lock"),
             )
-            .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"))
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                camera_above_ground
-                    .label("camera_above_ground")
-                    .after(bevy::transform::TransformSystem::TransformPropagate),
-            );
+            .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
 
         app.add_network_system(
             update_local_player_inputs
@@ -245,6 +244,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugin(FollowPlugin);
         app.register_type::<Speed>();
         app.register_inspectable::<Speed>();
         app.register_type::<Player>();
@@ -254,21 +254,15 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(ReplicatePlugin::<Speed>::default());
 
         app.add_network_system(
-            player_swivel_and_tilt
-                .label("player_swivel_and_tilt")
-                .after("update_player_inputs"),
-        )
-        .add_network_system(
             player_movement
                 .label("player_movement")
                 .after("update_player_inputs")
                 .after("player_swivel_and_tilt"),
         )
         .add_network_system(
-            reticle_move
-                .label("reticle_move")
-                .after("update_player_inputs")
-                .after("player_movement"),
+            player_swivel_and_tilt
+                .label("player_swivel_and_tilt")
+                .after("update_player_inputs"),
         )
         .add_meta_network_system(setup_player)
         .add_meta_network_system(Events::<PlayerEvent>::update_system);
@@ -311,25 +305,6 @@ pub fn player_movement(
     }
 }
 
-pub fn reticle_move(
-    players: Query<(&PlayerInput, Option<&Children>), (With<Owned>, With<Player>)>,
-    mut reticles: Query<(&mut Transform, &Reticle), Without<Player>>,
-) {
-    for (player_input, children) in players.iter() {
-        if let Some(children) = children {
-            for child in children.iter() {
-                if let Ok((mut transform, reticle)) = reticles.get_mut(*child) {
-                    let current_angle = player_input.pitch.clamp(-1.57, 0.);
-                    // new poggers way
-                    transform.translation.z = (1.57 + current_angle).tan() * -reticle.from_height;
-                    transform.translation.z =
-                        transform.translation.z.clamp(-reticle.max_distance, 0.);
-                }
-            }
-        }
-    }
-}
-
 pub fn player_mouse_input(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
@@ -347,39 +322,6 @@ pub fn player_mouse_input(
     // We want approximately 5142.8571 dots per 360 I think? At least according to mouse-sensitivity.com's 1 sensitivity 600 DPI valorant measurements.
     player_input.yaw -= sensitivity.0 * cumulative_delta.x * 1.0 / 89.759789 / 2.0;
     player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
-}
-
-pub fn camera_follow_object(
-    transforms: Query<&Transform, Without<PlayerCamera>>,
-    mut cameras: Query<(&mut Transform, &PlayerCamera)>,
-) {
-    for (mut transform, camera) in &mut cameras {
-        if let Ok(target_transform) = transforms.get(camera.0) {
-            transform.translation = target_transform.translation;
-        }
-        transform.translation.y = transform.translation.y.max(-0.5);
-    }
-}
-
-pub fn player_swivel_and_tilt(
-    mut players: Query<
-        (&mut Transform, &PlayerInput, Option<&Children>),
-        (With<Owned>, With<Player>),
-    >,
-    mut necks: Query<&mut Transform, (With<Neck>, Without<Player>)>,
-) {
-    for (mut player_transform, player_inputs, children) in players.iter_mut() {
-        //player_transform.rotation = Quat::from_axis_angle(Vec3::Y, player_inputs.yaw as f32).into();
-
-        if let Some(children) = children {
-            for child in children.iter() {
-                if let Ok(mut neck_transform) = necks.get_mut(*child) {
-                    neck_transform.rotation =
-                        Quat::from_axis_angle(Vec3::X, player_inputs.pitch as f32).into();
-                }
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -473,7 +415,6 @@ pub fn setup_player(
                             .looking_at(Vec3::ZERO, Vec3::Y),
                         ..Default::default()
                     })
-                    .insert(PlayerCam(player_entity))
                     .insert(Name::new("Player Camera"))
                     .id();
 
@@ -502,6 +443,7 @@ pub fn setup_player(
                         GlobalTransform::identity(),
                         Neck,
                         Name::new("Neck"),
+                        Follow(player_entity),
                     ))
                     .id();
 
@@ -526,7 +468,7 @@ pub fn setup_player(
                 commands
                     .entity(player_entity)
                     .insert(PlayerInput::default())
-                    .push_children(&[neck, reticle]);
+                    .push_children(&[reticle]);
                 /*
                                commands.spawn_bundle(SceneBundle {
                                    scene: asset_server.load("models/cauldron.glb#Scene0"),
@@ -542,7 +484,7 @@ pub fn setup_player(
                         settings: ControllerSettings {
                             acceleration: 4.0,
                             max_speed: 5.0,
-                            max_acceleration_force: 4.0,
+                            max_acceleration_force: 1.0,
                             up_vector: Vec3::Y,
                             gravity: 9.8,
                             max_ground_angle: 45.0 * (std::f32::consts::PI / 180.0),
@@ -558,11 +500,16 @@ pub fn setup_player(
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 1.0,
                             float_cast_collider: Collider::ball(0.45),
-                            float_distance: 0.25,
+                            float_distance: 0.55,
                             float_strength: 5.0,
-                            float_dampen: 4.5,
+                            float_dampen: 0.5,
                             upright_spring_strength: 4.0,
-                            upright_spring_damping: 3.5,
+                            upright_spring_damping: 0.4,
+                            ..default()
+                        },
+                        physics: ControllerPhysicsBundle {
+                            //rigidbody: RigidBody::KinematicVelocityBased,
+                            collider: Collider::cuboid(0.5, 0.5, 0.5),
                             ..default()
                         },
                         ..default()
@@ -611,6 +558,19 @@ pub fn setup_player(
                     server.send_message(id, ServerChannel::Message.id(), message);
                 }
             }
+        }
+    }
+}
+
+pub fn player_swivel_and_tilt(
+    inputs: Query<&PlayerInput>,
+    mut necks: Query<(&mut Transform, &Follow), (With<Neck>, Without<Player>)>,
+) {
+    for (mut neck_transform, follow) in &mut necks {
+        if let Ok(input) = inputs.get(follow.entity()) {
+            neck_transform.rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
+                * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
+            .into();
         }
     }
 }
