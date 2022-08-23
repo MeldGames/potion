@@ -281,10 +281,13 @@ pub fn update_local_player_inputs(
     }
 }
 
+#[derive(Default, Debug, Clone, Component)]
+pub struct CameraDirection(pub Quat);
+
 pub fn player_movement(
-    mut query: Query<(&Speed, &mut ControllerInput, &PlayerInput), With<Owned>>,
+    mut query: Query<(&Speed, &mut ControllerInput, &CameraDirection, &PlayerInput), With<Owned>>,
 ) {
-    for (speed, mut controller, player_input) in query.iter_mut() {
+    for (speed, mut controller, direction, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
         if player_input.left() {
             dir.x += -1.;
@@ -300,7 +303,7 @@ pub fn player_movement(
             dir.z += -1.;
         }
 
-        let dir = dir.normalize_or_zero();
+        let dir = (direction.0 * dir).normalize_or_zero();
         controller.movement = dir;
     }
 }
@@ -468,6 +471,7 @@ pub fn setup_player(
                 commands
                     .entity(player_entity)
                     .insert(PlayerInput::default())
+                    .insert(CameraDirection::default())
                     .push_children(&[reticle]);
                 /*
                                commands.spawn_bundle(SceneBundle {
@@ -509,7 +513,8 @@ pub fn setup_player(
                         },
                         physics: ControllerPhysicsBundle {
                             //rigidbody: RigidBody::KinematicVelocityBased,
-                            collider: Collider::cuboid(0.5, 0.5, 0.5),
+                            //collider: Collider::cuboid(0.5, 0.5, 0.5),
+                            collider: Collider::ball(0.75),
                             ..default()
                         },
                         ..default()
@@ -563,14 +568,17 @@ pub fn setup_player(
 }
 
 pub fn player_swivel_and_tilt(
-    inputs: Query<&PlayerInput>,
+    mut inputs: Query<(&mut CameraDirection, &PlayerInput)>,
     mut necks: Query<(&mut Transform, &Follow), (With<Neck>, Without<Player>)>,
 ) {
     for (mut neck_transform, follow) in &mut necks {
-        if let Ok(input) = inputs.get(follow.entity()) {
-            neck_transform.rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
+        if let Ok((mut direction, input)) = inputs.get_mut(follow.entity()) {
+            let rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
                 * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
             .into();
+
+            neck_transform.rotation = rotation;
+            *direction = CameraDirection(rotation);
         }
     }
 }
