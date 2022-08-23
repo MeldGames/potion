@@ -514,7 +514,7 @@ pub fn setup_player(
                         physics: ControllerPhysicsBundle {
                             //rigidbody: RigidBody::KinematicVelocityBased,
                             //collider: Collider::cuboid(0.5, 0.5, 0.5),
-                            collider: Collider::ball(0.75),
+                            //collider: Collider::ball(0.75),
                             ..default()
                         },
                         ..default()
