@@ -55,6 +55,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
     app.add_system(outline_meshes);
+    app.add_startup_system(setup_map);
 
     app.add_plugin(InspectableRapierPlugin);
 }
@@ -75,4 +76,42 @@ fn outline_meshes(
             }
         }
     }
+}
+
+fn setup_map(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    assets: Res<AssetServer>,
+) {
+    commands
+        .spawn()
+        .insert_bundle((GlobalTransform::default(), Transform::default()))
+        .insert_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
+            material: materials.add(assets.load("icons/autoattack.png").into()),
+            transform: Transform {
+                translation: Vec3::new(0.0, -2.00, 0.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert_bundle((
+            RigidBody::Fixed,
+            Collider::cuboid(50.0, 0.1, 50.0),
+            Name::new("Plane"),
+            crate::physics::TERRAIN_GROUPING,
+        ));
+
+    commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            5.0, 0.0, 5.0,
+        )))
+        .insert_bundle((
+            RigidBody::KinematicPositionBased,
+            Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
+            //Collider::ball(1.0),
+            Name::new("Test capsule"),
+            crate::physics::TERRAIN_GROUPING,
+        ));
 }

@@ -4,6 +4,7 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 
 use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy_mod_wanderlust::{CharacterControllerBundle, ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 use bevy_renet::renet::RenetServer;
 use sabi::{prelude::*, Replicate};
@@ -164,7 +165,7 @@ pub struct Reticle {
 pub struct FromCamera(pub Entity);
 
 #[derive(Component, Debug)]
-pub struct PlayerCam;
+pub struct PlayerCamera(pub Entity);
 
 #[derive(
     Component,
@@ -286,8 +287,10 @@ pub fn update_local_player_inputs(
     }
 }
 
-pub fn player_movement(mut query: Query<(&Speed, &mut Velocity, &PlayerInput), With<Owned>>) {
-    for (speed, mut velocity, player_input) in query.iter_mut() {
+pub fn player_movement(
+    mut query: Query<(&Speed, &mut ControllerInput, &PlayerInput), With<Owned>>,
+) {
+    for (speed, mut controller, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
         if player_input.left() {
             dir.x += -1.;
@@ -304,13 +307,7 @@ pub fn player_movement(mut query: Query<(&Speed, &mut Velocity, &PlayerInput), W
         }
 
         let dir = dir.normalize_or_zero();
-
-        let movement_vector =
-            Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32) * dir * speed.0;
-
-        // don't effect the y direction since you can't move in that direction.
-        velocity.linvel.x = movement_vector.x;
-        velocity.linvel.z = movement_vector.z;
+        controller.movement = dir;
     }
 }
 
@@ -352,8 +349,14 @@ pub fn player_mouse_input(
     player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
 }
 
-pub fn camera_above_ground(mut cameras: Query<&mut Transform, With<PlayerCam>>) {
-    for mut transform in cameras.iter_mut() {
+pub fn camera_follow_object(
+    transforms: Query<&Transform, Without<PlayerCamera>>,
+    mut cameras: Query<(&mut Transform, &PlayerCamera)>,
+) {
+    for (mut transform, camera) in &mut cameras {
+        if let Ok(target_transform) = transforms.get(camera.0) {
+            transform.translation = target_transform.translation;
+        }
         transform.translation.y = transform.translation.y.max(-0.5);
     }
 }
@@ -366,7 +369,7 @@ pub fn player_swivel_and_tilt(
     mut necks: Query<&mut Transform, (With<Neck>, Without<Player>)>,
 ) {
     for (mut player_transform, player_inputs, children) in players.iter_mut() {
-        player_transform.rotation = Quat::from_axis_angle(Vec3::Y, player_inputs.yaw as f32).into();
+        //player_transform.rotation = Quat::from_axis_angle(Vec3::Y, player_inputs.yaw as f32).into();
 
         if let Some(children) = children {
             for child in children.iter() {
@@ -470,7 +473,7 @@ pub fn setup_player(
                             .looking_at(Vec3::ZERO, Vec3::Y),
                         ..Default::default()
                     })
-                    .insert(PlayerCam)
+                    .insert(PlayerCam(player_entity))
                     .insert(Name::new("Player Camera"))
                     .id();
 
@@ -524,33 +527,53 @@ pub fn setup_player(
                     .entity(player_entity)
                     .insert(PlayerInput::default())
                     .push_children(&[neck, reticle]);
-                commands.spawn_bundle(SceneBundle {
-                    scene: asset_server.load("models/cauldron.glb#Scene0"),
-                    ..default()
-                });
+                /*
+                               commands.spawn_bundle(SceneBundle {
+                                   scene: asset_server.load("models/cauldron.glb#Scene0"),
+                                   ..default()
+                               });
+                */
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
                 // Spawn player cube
                 let player_entity = commands
-                    .spawn_bundle(TransformBundle::default())
-                    //.insert(Ccd::enabled())
+                    .spawn_bundle(CharacterControllerBundle {
+                        settings: ControllerSettings {
+                            acceleration: 4.0,
+                            max_speed: 5.0,
+                            max_acceleration_force: 4.0,
+                            up_vector: Vec3::Y,
+                            gravity: 9.8,
+                            max_ground_angle: 45.0 * (std::f32::consts::PI / 180.0),
+                            min_float_offset: -0.3,
+                            max_float_offset: 0.05,
+                            jump_time: 0.5,
+                            jump_initial_force: 15.0,
+                            jump_stop_force: 0.3,
+                            jump_decay_function: |x| (1.0 - x).sqrt(),
+                            jump_skip_ground_check_duration: 0.5,
+                            coyote_time_duration: 0.16,
+                            jump_buffer_duration: 0.16,
+                            force_scale: Vec3::new(1.0, 0.0, 1.0),
+                            float_cast_length: 1.0,
+                            float_cast_collider: Collider::ball(0.45),
+                            float_distance: 0.25,
+                            float_strength: 5.0,
+                            float_dampen: 4.5,
+                            upright_spring_strength: 4.0,
+                            upright_spring_damping: 3.5,
+                            ..default()
+                        },
+                        ..default()
+                    })
                     .insert(Speed::default())
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(Owned)
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
-                    .insert_bundle(TransformBundle::default())
-                    .insert(RigidBody::KinematicVelocityBased)
-                    .insert(LockedAxes::ROTATION_LOCKED)
                     .insert(crate::physics::PLAYER_GROUPING)
-                    .insert(Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5))
-                    .insert(Velocity::default())
-                    .insert(Friction {
-                        coefficient: 0.0,
-                        ..Default::default()
-                    })
                     .id();
 
                 // We could send an InitState with all the players id and positions for the client

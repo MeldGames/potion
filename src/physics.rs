@@ -25,7 +25,7 @@ pub const ABILITY_GROUPING: CollisionGroups =
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     // Try to avoid launching players in weird situations
-    context.integration_parameters.max_penetration_correction = 100.0;
+    context.integration_parameters.max_penetration_correction = 10.0;
     //context.integration_parameters.dt = crate::network::TICK_RATE.as_secs_f32();
     //info!("integration: {:?}", context.integration_parameters);
 }

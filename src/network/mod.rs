@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
 use iyes_loopless::prelude::*;
 
@@ -85,6 +85,7 @@ fn server_update_system(
 
 pub fn client_sync_players(
     mut commands: Commands,
+    entities: &Entities,
     mut server_entities: ResMut<ServerEntities>,
     mut client: ResMut<RenetClient>,
     mut lobby: ResMut<Lobby>,
@@ -103,6 +104,11 @@ pub fn client_sync_players(
             }
             ServerMessage::PlayerDisconnected { id } => {
                 info!("player {} disconnected.", id);
+                if let Some(player) = lobby.players.get(&id) {
+                    if entities.contains(*player) {
+                        commands.entity(*player).despawn_recursive();
+                    }
+                }
             }
             ServerMessage::SetPlayer { id } => player_events.send(PlayerEvent::SetupLocal { id }),
             ServerMessage::AssignOwnership {
