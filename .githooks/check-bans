@@ -1,0 +1,11 @@
+#!/bin/sh
+
+bans=$(cargo deny check bans)
+result=$?
+
+if [[ ${result} -ne 0 ]] ; then
+    cat <<\EOF
+Cargo dependencies include duplicates or banned crates: $bans
+EOF
+    exit 1
+fi

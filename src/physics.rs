@@ -7,21 +7,21 @@ bitflags::bitflags! {
     pub struct Group: u32 {
         const PLAYER = 1 << 0;
         const TERRAIN = 1 << 1;
-        const ABILITY = 1 << 2;
         const FLUFF = 1 << 3;
 
         const PLAYER_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits();
+        //const ARM_FILTER = Group::TERRAIN.bits();
+        const ARM_FILTER = 0;
         const TERRAIN_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits() | Group::FLUFF.bits();
-        const ABILITY_FILTER = 0;
     }
 }
 
 pub const PLAYER_GROUPING: CollisionGroups =
     CollisionGroups::new(Group::PLAYER.bits(), Group::PLAYER_FILTER.bits());
+pub const ARM_GROUPING: CollisionGroups =
+    CollisionGroups::new(Group::PLAYER.bits(), Group::ARM_FILTER.bits());
 pub const TERRAIN_GROUPING: CollisionGroups =
     CollisionGroups::new(Group::TERRAIN.bits(), Group::TERRAIN_FILTER.bits());
-pub const ABILITY_GROUPING: CollisionGroups =
-    CollisionGroups::new(Group::ABILITY.bits(), Group::ABILITY_FILTER.bits());
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     // Try to avoid launching players in weird situations

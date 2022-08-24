@@ -8,6 +8,7 @@ use bevy_mod_wanderlust::{
     CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
 };
 use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 use sabi::{prelude::*, Replicate};
 
@@ -474,10 +475,10 @@ pub fn setup_player(
                     .insert(CameraDirection::default())
                     .push_children(&[reticle]);
                 /*
-                               commands.spawn_bundle(SceneBundle {
-                                   scene: asset_server.load("models/cauldron.glb#Scene0"),
-                                   ..default()
-                               });
+                    commands.spawn_bundle(SceneBundle {
+                        scene: asset_server.load("models/cauldron.glb#Scene0"),
+                        ..default()
+                    });
                 */
             }
             &PlayerEvent::Spawn { id } => {
@@ -507,8 +508,8 @@ pub fn setup_player(
                             float_distance: 0.55,
                             float_strength: 5.0,
                             float_dampen: 0.5,
-                            upright_spring_strength: 4.0,
-                            upright_spring_damping: 0.4,
+                            upright_spring_strength: 10.0,
+                            upright_spring_damping: 2.0,
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
@@ -527,6 +528,86 @@ pub fn setup_player(
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
+
+                let max_force = 10.0;
+                let stiffness = 20.0;
+                let damping = 6.0;
+                let distance_from_body = 0.65;
+                let arm_radius = 0.15;
+
+                {
+                    let arm_joint = SphericalJointBuilder::new()
+                        .local_anchor1(Vec3::new(distance_from_body, 0.5, 0.0)) // body local
+                        .local_anchor2(Vec3::new(0.0, 0.0, 0.0))
+                        .motor_model(JointAxis::AngX, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngY, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
+                        .motor_max_force(JointAxis::AngX, max_force)
+                        .motor_max_force(JointAxis::AngY, max_force)
+                        .motor_max_force(JointAxis::AngZ, max_force)
+                        .motor_position(
+                            JointAxis::AngX,
+                            std::f32::consts::TAU / 8.0,
+                            stiffness,
+                            damping,
+                        )
+                        .motor_position(
+                            JointAxis::AngY,
+                            std::f32::consts::TAU / 8.0,
+                            stiffness,
+                            damping,
+                        )
+                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping);
+                    let arm_entity = commands
+                        .spawn_bundle(TransformBundle::default())
+                        .insert(RigidBody::Dynamic)
+                        .insert(crate::physics::PLAYER_GROUPING)
+                        .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
+                        .id();
+
+                    commands.entity(arm_entity).with_children(|children| {
+                        children
+                            .spawn()
+                            .insert(ImpulseJoint::new(player_entity, arm_joint));
+                    });
+                }
+
+                {
+                    let arm_joint = SphericalJointBuilder::new()
+                        .local_anchor1(Vec3::new(-distance_from_body, 0.5, 0.0)) // body local
+                        .local_anchor2(Vec3::new(0.0, 0.0, 0.0))
+                        .motor_model(JointAxis::AngX, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngY, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
+                        .motor_max_force(JointAxis::AngX, max_force)
+                        .motor_max_force(JointAxis::AngY, max_force)
+                        .motor_max_force(JointAxis::AngZ, max_force)
+                        .motor_position(
+                            JointAxis::AngX,
+                            std::f32::consts::TAU / 8.0,
+                            stiffness,
+                            damping,
+                        )
+                        .motor_position(
+                            JointAxis::AngY,
+                            -std::f32::consts::TAU / 8.0,
+                            stiffness,
+                            damping,
+                        )
+                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping);
+                    let arm_entity = commands
+                        .spawn_bundle(TransformBundle::default())
+                        .insert(RigidBody::Dynamic)
+                        .insert(crate::physics::PLAYER_GROUPING)
+                        .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
+                        .id();
+
+                    commands.entity(arm_entity).with_children(|children| {
+                        children
+                            .spawn()
+                            .insert(ImpulseJoint::new(player_entity, arm_joint));
+                    });
+                }
 
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
