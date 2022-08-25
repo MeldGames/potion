@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use bevy::{input::mouse::MouseMotion, prelude::*};
+use std::f32::consts::{PI, TAU};
 
 use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
@@ -193,6 +194,9 @@ impl PlayerInput {
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Arm;
 
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Hand;
+
 #[derive(Component, Debug)]
 pub struct Neck;
 
@@ -303,6 +307,12 @@ impl Plugin for PlayerPlugin {
                 .after("player_movement"),
         )
         .add_network_system(
+            target_position
+                .label("target_position")
+                .after("update_player_inputs")
+                .after("player_grabby_hands"),
+        )
+        .add_network_system(
             player_swivel_and_tilt
                 .label("player_swivel_and_tilt")
                 .after("update_player_inputs"),
@@ -348,6 +358,7 @@ pub fn player_movement(
 
         let dir = (direction.0 * dir).normalize_or_zero();
         controller.movement = dir;
+        controller.jumping = player_input.jump();
     }
 }
 
@@ -431,7 +442,7 @@ pub fn player_mouse_inputs(
 
     player_input.pitch -= sensitivity.0 * cumulative_delta.y * 1.0 / 89.759789 / 2.0;
 
-    player_input.pitch = player_input.pitch.clamp(-1.57, 1.57);
+    player_input.pitch = player_input.pitch.clamp(-PI / 2.0, PI / 2.0);
 
     // We want approximately 5142.8571 dots per 360 I think? At least according to mouse-sensitivity.com's 1 sensitivity 600 DPI valorant measurements.
     player_input.yaw -= sensitivity.0 * cumulative_delta.x * 1.0 / 89.759789 / 2.0;
@@ -543,7 +554,7 @@ pub fn setup_player(
                             max_acceleration_force: 1.0,
                             up_vector: Vec3::Y,
                             gravity: 9.8,
-                            max_ground_angle: 45.0 * (std::f32::consts::PI / 180.0),
+                            max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
@@ -581,18 +592,20 @@ pub fn setup_player(
                     .id();
 
                 let max_force = 10.0;
-                let twist_stiffness = 400.0;
-                let twist_damping = 20.0;
+                let twist_stiffness = 2.0;
+                let twist_damping = 0.2;
                 let resting_stiffness = 3.0;
                 let resting_damping = 0.2;
                 let distance_from_body = 0.65;
                 let arm_radius = 0.15;
                 let motor_model = MotorModel::ForceBased;
 
+                let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (arm_radius * 2.0), 0.0);
+
                 {
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
+                        .local_anchor2(arm_height)
                         .motor_model(JointAxis::AngX, motor_model)
                         .motor_model(JointAxis::AngY, motor_model)
                         .motor_model(JointAxis::AngZ, motor_model)
@@ -608,16 +621,40 @@ pub fn setup_player(
                         .insert(Arm)
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
-                        .insert(Grabby(false))
+                        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
                         .insert(ImpulseJoint::new(player_entity, arm_joint))
+                        .id();
+
+                    let hand_joint = SphericalJointBuilder::new()
+                        .local_anchor2(Vec3::new(0.0, arm_radius * 2.0, 0.0))
+                        .motor_model(JointAxis::AngX, motor_model)
+                        .motor_model(JointAxis::AngY, motor_model)
+                        .motor_model(JointAxis::AngZ, motor_model)
+                        .motor_max_force(JointAxis::AngX, max_force)
+                        .motor_max_force(JointAxis::AngY, max_force)
+                        .motor_max_force(JointAxis::AngZ, max_force)
+                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+
+                    let hand_entity = commands
+                        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                            0.0, 4.0, 0.0,
+                        )))
+                        .insert(Hand)
+                        .insert(TargetPosition(None))
+                        .insert(Velocity::default())
+                        .insert(RigidBody::Dynamic)
+                        .insert(crate::physics::PLAYER_GROUPING)
+                        .insert(Collider::ball(arm_radius))
+                        .insert(ImpulseJoint::new(arm_entity, hand_joint))
                         .id();
                 }
 
                 {
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(-distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
+                        .local_anchor2(arm_height)
                         .motor_model(JointAxis::AngX, motor_model)
                         .motor_model(JointAxis::AngY, motor_model)
                         .motor_model(JointAxis::AngZ, motor_model)
@@ -633,9 +670,33 @@ pub fn setup_player(
                         .insert(Arm)
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
-                        .insert(Grabby(false))
+                        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
                         .insert(ImpulseJoint::new(player_entity, arm_joint))
+                        .id();
+
+                    let hand_joint = SphericalJointBuilder::new()
+                        .local_anchor2(Vec3::new(0.0, arm_radius * 2.0, 0.0))
+                        .motor_model(JointAxis::AngX, motor_model)
+                        .motor_model(JointAxis::AngY, motor_model)
+                        .motor_model(JointAxis::AngZ, motor_model)
+                        .motor_max_force(JointAxis::AngX, max_force)
+                        .motor_max_force(JointAxis::AngY, max_force)
+                        .motor_max_force(JointAxis::AngZ, max_force)
+                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+
+                    let hand_entity = commands
+                        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                            0.0, 4.0, 0.0,
+                        )))
+                        .insert(Hand)
+                        .insert(TargetPosition(None))
+                        .insert(Velocity::default())
+                        .insert(RigidBody::Dynamic)
+                        .insert(crate::physics::PLAYER_GROUPING)
+                        .insert(Collider::ball(arm_radius))
+                        .insert(ImpulseJoint::new(arm_entity, hand_joint))
                         .id();
                 }
                 // We could send an InitState with all the players id and positions for the client
@@ -694,49 +755,56 @@ pub fn player_swivel_and_tilt(
 }
 
 #[derive(Debug, Component, Clone, Copy)]
-pub struct Grabby(bool);
+pub struct TargetPosition(Option<Vec3>);
 
 pub fn player_grabby_hands(
-    inputs: Query<(&CameraDirection, &PlayerInput)>,
-    mut arms: Query<(&mut ImpulseJoint, &mut Grabby), With<Arm>>,
+    mut egui_context: ResMut<EguiContext>,
+    time: Res<Time>,
+    inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
+    mut joints: Query<&mut ImpulseJoint>,
+    arms: Query<Entity, With<Arm>>,
+    mut hands: Query<(Entity, &mut TargetPosition), With<Hand>>,
 ) {
-    let grabby_stiffness = 500.0;
-    let grabby_damping = 20.0;
-    let resting_stiffness = 5.0;
-    let resting_damping = 0.2;
-    for (mut joint, mut grabby) in &mut arms {
-        if let Ok((direction, input)) = inputs.get(joint.parent) {
-            if !grabby.0 && input.grabby_hands() {
-                joint.data.set_motor_position(
-                    JointAxis::AngX,
-                    std::f32::consts::TAU / 8.0,
-                    grabby_stiffness,
-                    grabby_damping,
-                );
-                /*
-                               joint.data.set_motor_position(
-                                   JointAxis::AngZ,
-                                   std::f32::consts::TAU / 8.0,
-                                   grabby_stiffness,
-                                   grabby_damping,
-                               );
-                */
-                grabby.0 = true;
-            } else if grabby.0 && !input.grabby_hands() {
-                joint.data.set_motor_position(
-                    JointAxis::AngX,
-                    0.0,
-                    resting_stiffness,
-                    resting_damping,
-                );
-                joint.data.set_motor_position(
-                    JointAxis::AngZ,
-                    0.0,
-                    resting_stiffness,
-                    resting_damping,
-                );
-                grabby.0 = false;
-            }
+    for mut joint in &mut joints {
+        joint.data.set_contacts_enabled(false);
+    }
+
+    for (hand, mut target_position) in &mut hands {
+        target_position.0 = None;
+
+        let arm_entity = if let Ok(joint) = joints.get(hand) {
+            joint.parent
+        } else {
+            continue;
+        };
+
+        let player_entity = if let Ok(joint) = joints.get(arm_entity) {
+            joint.parent
+        } else {
+            continue;
+        };
+
+        let (global, direction, input) =
+            if let Ok((global, direction, input)) = inputs.get(player_entity) {
+                (global, direction, input)
+            } else {
+                continue;
+            };
+
+        if input.grabby_hands() {
+            target_position.0 =
+                Some(global.translation() + (direction.0 * -Vec3::Z * 3.0) + Vec3::Y * 2.0);
+        }
+    }
+}
+
+pub fn target_position(
+    mut hands: Query<(&TargetPosition, &GlobalTransform, &mut Velocity), With<Hand>>,
+) {
+    for (target, global, mut velocity) in &mut hands {
+        let current = global.translation();
+        if let Some(target) = target.0 {
+            velocity.linvel = target - current;
         }
     }
 }

@@ -88,6 +88,7 @@ fn setup_map(
     commands
         .spawn()
         .insert_bundle((GlobalTransform::default(), Transform::default()))
+        /*
         .insert_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
             material: materials.add(assets.load("icons/autoattack.png").into()),
@@ -96,7 +97,7 @@ fn setup_map(
                 ..Default::default()
             },
             ..Default::default()
-        })
+        })*/
         .insert_bundle((
             RigidBody::Fixed,
             Collider::cuboid(50.0, 0.1, 50.0),
@@ -106,7 +107,7 @@ fn setup_map(
 
     commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            5.0, 0.0, 5.0,
+            5.0, 2.0, 5.0,
         )))
         .insert_bundle((
             RigidBody::KinematicPositionBased,
