@@ -863,29 +863,47 @@ pub fn grab_collider(
                     continue;
                 }
 
-                if let Some(manifold) = contact_pair.manifold(0) {
-                    if let Some(solver_contact) = manifold.solver_contact(0) {
-                        if let Ok(other_global) = globals.get(other_collider) {
-                            if let Ok(name) = name.get(other_collider) {
-                                info!("grabbing {:?}", name.as_str());
-                            } else {
-                                info!("grabbing entity {:?}", other_collider);
-                            }
+                let contact_points = contact_pair
+                    .manifolds()
+                    .map(|manifold| {
+                        manifold
+                            .solver_contacts()
+                            .map(|contact| contact.point())
+                            .collect::<Vec<_>>()
+                    })
+                    .flatten()
+                    .collect::<Vec<_>>();
+                if contact_points.len() == 0 {
+                    continue;
+                }
 
-                            let anchor1 = global.translation() - solver_contact.point();
-                            let anchor2 = other_global.translation() - solver_contact.point();
+                let mut averaged_point = Vec3::ZERO;
+                for point in &contact_points {
+                    averaged_point += *point;
+                }
 
-                            let grab_joint = FixedJointBuilder::new()
-                                .local_anchor1(anchor1)
-                                .local_anchor2(anchor2);
-                            commands.entity(hand).add_children(|children| {
-                                children
-                                    .spawn()
-                                    .insert(ImpulseJoint::new(other_collider, grab_joint))
-                                    .insert(GrabJoint);
-                            });
-                        }
-                    }
+                averaged_point /= contact_points.len() as f32;
+
+                if let Ok(name) = name.get(other_collider) {
+                    info!("grabbing {:?}", name.as_str());
+                } else {
+                    info!("grabbing entity {:?}", other_collider);
+                }
+
+                if let Ok(other_global) = globals.get(other_collider) {
+                    let anchor1 = other_global.translation() - averaged_point;
+                    let anchor2 = global.translation() - averaged_point;
+
+                    let grab_joint = FixedJointBuilder::new()
+                        .local_basis2(global.compute_transform().rotation)
+                        .local_anchor1(anchor1)
+                        .local_anchor2(anchor2);
+                    commands.entity(hand).add_children(|children| {
+                        children
+                            .spawn()
+                            .insert(ImpulseJoint::new(other_collider, grab_joint))
+                            .insert(GrabJoint);
+                    });
                 }
             }
         } else {
