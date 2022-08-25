@@ -581,20 +581,21 @@ pub fn setup_player(
                     .id();
 
                 let max_force = 10.0;
-                let twist_stiffness = 200.0;
-                let twist_damping = 6.0;
-                let resting_stiffness = 1.0;
+                let twist_stiffness = 400.0;
+                let twist_damping = 20.0;
+                let resting_stiffness = 3.0;
                 let resting_damping = 0.2;
-                let distance_from_body = 0.75;
+                let distance_from_body = 0.65;
                 let arm_radius = 0.15;
+                let motor_model = MotorModel::ForceBased;
 
                 {
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(distance_from_body, 0.5, 0.0)) // body local
                         .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
-                        .motor_model(JointAxis::AngX, MotorModel::ForceBased)
-                        .motor_model(JointAxis::AngY, MotorModel::ForceBased)
-                        .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngX, motor_model)
+                        .motor_model(JointAxis::AngY, motor_model)
+                        .motor_model(JointAxis::AngZ, motor_model)
                         .motor_max_force(JointAxis::AngX, max_force)
                         .motor_max_force(JointAxis::AngY, max_force)
                         .motor_max_force(JointAxis::AngZ, max_force)
@@ -617,9 +618,9 @@ pub fn setup_player(
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(-distance_from_body, 0.5, 0.0)) // body local
                         .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
-                        .motor_model(JointAxis::AngX, MotorModel::ForceBased)
-                        .motor_model(JointAxis::AngY, MotorModel::ForceBased)
-                        .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
+                        .motor_model(JointAxis::AngX, motor_model)
+                        .motor_model(JointAxis::AngY, motor_model)
+                        .motor_model(JointAxis::AngZ, motor_model)
                         .motor_max_force(JointAxis::AngX, max_force)
                         .motor_max_force(JointAxis::AngY, max_force)
                         .motor_max_force(JointAxis::AngZ, max_force)
@@ -699,9 +700,9 @@ pub fn player_grabby_hands(
     inputs: Query<(&CameraDirection, &PlayerInput)>,
     mut arms: Query<(&mut ImpulseJoint, &mut Grabby), With<Arm>>,
 ) {
-    let grabby_stiffness = 200.0;
-    let grabby_damping = 50.0;
-    let resting_stiffness = 1.0;
+    let grabby_stiffness = 500.0;
+    let grabby_damping = 20.0;
+    let resting_stiffness = 5.0;
     let resting_damping = 0.2;
     for (mut joint, mut grabby) in &mut arms {
         if let Ok((direction, input)) = inputs.get(joint.parent) {
@@ -712,16 +713,24 @@ pub fn player_grabby_hands(
                     grabby_stiffness,
                     grabby_damping,
                 );
-                joint.data.set_motor_position(
-                    JointAxis::AngY,
-                    std::f32::consts::TAU / 8.0,
-                    grabby_stiffness,
-                    grabby_damping,
-                );
+                /*
+                               joint.data.set_motor_position(
+                                   JointAxis::AngZ,
+                                   std::f32::consts::TAU / 8.0,
+                                   grabby_stiffness,
+                                   grabby_damping,
+                               );
+                */
                 grabby.0 = true;
             } else if grabby.0 && !input.grabby_hands() {
                 joint.data.set_motor_position(
                     JointAxis::AngX,
+                    0.0,
+                    resting_stiffness,
+                    resting_damping,
+                );
+                joint.data.set_motor_position(
+                    JointAxis::AngZ,
                     0.0,
                     resting_stiffness,
                     resting_damping,
