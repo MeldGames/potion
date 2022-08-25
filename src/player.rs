@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::{PI, TAU};
 
@@ -824,12 +825,15 @@ pub fn target_position(
 
 pub fn grab_collider(
     mut commands: Commands,
+    name: Query<&Name>,
     rapier_context: Res<RapierContext>,
-    hands: Query<(Entity, &Grabbing, Option<&Children>), With<Hand>>,
+    children: Query<&Children>,
+    globals: Query<&GlobalTransform>,
+    hands: Query<(Entity, &Grabbing, &GlobalTransform, Option<&Children>), With<Hand>>,
     impulse_joints: Query<&ImpulseJoint>,
     grab_joints: Query<&GrabJoint>,
 ) {
-    for (hand, grabbing, children) in &hands {
+    for (hand, grabbing, global, children) in &hands {
         if grabbing.0 {
             for contact_pair in rapier_context.contacts_with(hand) {
                 let (other_collider, flipped) = if contact_pair.collider1() == hand {
@@ -838,60 +842,50 @@ pub fn grab_collider(
                     (contact_pair.collider1(), true)
                 };
 
-                let mut should_grab = true;
+                let mut related_entities = HashSet::new();
                 if let Some(children) = children {
                     for child in children.iter() {
+                        related_entities.insert(*child);
                         if let Ok(impulse) = impulse_joints.get(*child) {
-                            if other_collider == impulse.parent {
-                                should_grab = false;
-                                break;
-                            }
+                            related_entities.insert(impulse.parent);
                         }
                     }
                 }
 
-                let arm_entity = if let Ok(joint) = impulse_joints.get(hand) {
-                    joint.parent
-                } else {
-                    continue;
-                };
-
-                if arm_entity == other_collider {
-                    should_grab = false;
+                // Walk up chain of impulse joints to make sure we aren't grabbing ourselves.
+                let mut child_entity = hand;
+                while let Ok(impulse) = impulse_joints.get(child_entity) {
+                    related_entities.insert(impulse.parent);
+                    child_entity = impulse.parent;
                 }
 
-                let player_entity = if let Ok(joint) = impulse_joints.get(arm_entity) {
-                    joint.parent
-                } else {
-                    continue;
-                };
-
-                if player_entity == other_collider {
-                    should_grab = false;
-                }
-
-                if !should_grab {
+                if related_entities.contains(&other_collider) {
                     continue;
                 }
 
-                info!("grabbing: {:?}", other_collider);
                 if let Some(manifold) = contact_pair.manifold(0) {
-                    let mut anchor1 = manifold.local_n1();
-                    let mut anchor2 = manifold.local_n2();
+                    if let Some(solver_contact) = manifold.solver_contact(0) {
+                        if let Ok(other_global) = globals.get(other_collider) {
+                            if let Ok(name) = name.get(other_collider) {
+                                info!("grabbing {:?}", name.as_str());
+                            } else {
+                                info!("grabbing entity {:?}", other_collider);
+                            }
 
-                    if flipped {
-                        std::mem::swap(&mut anchor1, &mut anchor2);
+                            let anchor1 = global.translation() - solver_contact.point();
+                            let anchor2 = other_global.translation() - solver_contact.point();
+
+                            let grab_joint = FixedJointBuilder::new()
+                                .local_anchor1(anchor1)
+                                .local_anchor2(anchor2);
+                            commands.entity(hand).add_children(|children| {
+                                children
+                                    .spawn()
+                                    .insert(ImpulseJoint::new(other_collider, grab_joint))
+                                    .insert(GrabJoint);
+                            });
+                        }
                     }
-
-                    let grab_joint = FixedJointBuilder::new()
-                        .local_anchor1(anchor1)
-                        .local_anchor2(anchor2);
-                    commands.entity(hand).add_children(|children| {
-                        children
-                            .spawn()
-                            .insert(ImpulseJoint::new(other_collider, grab_joint))
-                            .insert(GrabJoint);
-                    });
                 }
             }
         } else {
