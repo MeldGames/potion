@@ -49,6 +49,8 @@ bitflags::bitflags! {
         const BACK = 1 << 2;
         const LEFT = 1 << 3;
         const RIGHT = 1 << 4;
+        const JUMP = 1 << 5;
+        const GRABBY_HANDS = 1 << 6;
     }
 }
 
@@ -73,6 +75,16 @@ impl PlayerInputSet {
 
         keys += match self.contains(Self::RIGHT) {
             true => ">",
+            false => "-",
+        };
+
+        keys += match self.contains(Self::JUMP) {
+            true => "+",
+            false => "-",
+        };
+
+        keys += match self.contains(Self::GRABBY_HANDS) {
+            true => "@",
             false => "-",
         };
 
@@ -144,6 +156,15 @@ impl PlayerInput {
         self.binary_inputs.set(PlayerInputSet::RIGHT, right);
     }
 
+    pub fn set_jump(&mut self, jump: bool) {
+        self.binary_inputs.set(PlayerInputSet::JUMP, jump);
+    }
+
+    pub fn set_grabby_hands(&mut self, grabby_hands: bool) {
+        self.binary_inputs
+            .set(PlayerInputSet::GRABBY_HANDS, grabby_hands);
+    }
+
     pub fn forward(&self) -> bool {
         self.binary_inputs.contains(PlayerInputSet::FORWARD)
     }
@@ -159,7 +180,18 @@ impl PlayerInput {
     pub fn right(&self) -> bool {
         self.binary_inputs.contains(PlayerInputSet::RIGHT)
     }
+
+    pub fn jump(&self) -> bool {
+        self.binary_inputs.contains(PlayerInputSet::JUMP)
+    }
+
+    pub fn grabby_hands(&self) -> bool {
+        self.binary_inputs.contains(PlayerInputSet::GRABBY_HANDS)
+    }
 }
+
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Arm;
 
 #[derive(Component, Debug)]
 pub struct Neck;
@@ -219,19 +251,23 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
-        app.add_system(player_input.label("player_inputs"))
-            .add_system(
-                player_mouse_input
-                    .run_in_state(MouseState::Locked)
-                    .run_if(window_focused)
-                    .label("player_mouse_input"),
-            )
-            .add_system(
-                toggle_mouse_lock
-                    .run_if(window_focused)
-                    .label("toggle_mouse_lock"),
-            )
-            .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
+        app.add_system(
+            player_binary_inputs
+                .run_if(window_focused)
+                .label("binary_inputs"),
+        )
+        .add_system(
+            player_mouse_inputs
+                .run_in_state(MouseState::Locked)
+                .run_if(window_focused)
+                .label("player_mouse_input"),
+        )
+        .add_system(
+            toggle_mouse_lock
+                .run_if(window_focused)
+                .label("toggle_mouse_lock"),
+        )
+        .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
 
         app.add_network_system(
             update_local_player_inputs
@@ -259,6 +295,12 @@ impl Plugin for PlayerPlugin {
                 .label("player_movement")
                 .after("update_player_inputs")
                 .after("player_swivel_and_tilt"),
+        )
+        .add_network_system(
+            player_grabby_hands
+                .label("player_grabby_hands")
+                .after("update_player_inputs")
+                .after("player_movement"),
         )
         .add_network_system(
             player_swivel_and_tilt
@@ -309,25 +351,6 @@ pub fn player_movement(
     }
 }
 
-pub fn player_mouse_input(
-    sensitivity: Res<MouseSensitivity>,
-    mut ev_mouse: EventReader<MouseMotion>,
-    mut player_input: ResMut<PlayerInput>,
-) {
-    let mut cumulative_delta = Vec2::ZERO;
-    for ev in ev_mouse.iter() {
-        cumulative_delta += ev.delta;
-    }
-
-    player_input.pitch -= sensitivity.0 * cumulative_delta.y * 1.0 / 89.759789 / 2.0;
-
-    player_input.pitch = player_input.pitch.clamp(-1.57, 1.57);
-
-    // We want approximately 5142.8571 dots per 360 I think? At least according to mouse-sensitivity.com's 1 sensitivity 600 DPI valorant measurements.
-    player_input.yaw -= sensitivity.0 * cumulative_delta.x * 1.0 / 89.759789 / 2.0;
-    player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MouseState {
     Free,
@@ -376,7 +399,11 @@ pub fn mouse_lock(mut windows: ResMut<Windows>, state: Res<CurrentState<MouseSta
     }
 }
 
-pub fn player_input(keyboard_input: Res<Input<KeyCode>>, mut player_input: ResMut<PlayerInput>) {
+pub fn player_binary_inputs(
+    keyboard_input: Res<Input<KeyCode>>,
+    mouse_input: Res<Input<MouseButton>>,
+    mut player_input: ResMut<PlayerInput>,
+) {
     player_input
         .set_left(keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left));
     player_input
@@ -385,6 +412,30 @@ pub fn player_input(keyboard_input: Res<Input<KeyCode>>, mut player_input: ResMu
         .set_forward(keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up));
     player_input
         .set_back(keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
+    player_input
+        .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
+    player_input.set_grabby_hands(
+        mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::Q),
+    );
+}
+
+pub fn player_mouse_inputs(
+    sensitivity: Res<MouseSensitivity>,
+    mut ev_mouse: EventReader<MouseMotion>,
+    mut player_input: ResMut<PlayerInput>,
+) {
+    let mut cumulative_delta = Vec2::ZERO;
+    for ev in ev_mouse.iter() {
+        cumulative_delta += ev.delta;
+    }
+
+    player_input.pitch -= sensitivity.0 * cumulative_delta.y * 1.0 / 89.759789 / 2.0;
+
+    player_input.pitch = player_input.pitch.clamp(-1.57, 1.57);
+
+    // We want approximately 5142.8571 dots per 360 I think? At least according to mouse-sensitivity.com's 1 sensitivity 600 DPI valorant measurements.
+    player_input.yaw -= sensitivity.0 * cumulative_delta.x * 1.0 / 89.759789 / 2.0;
+    player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -530,85 +581,62 @@ pub fn setup_player(
                     .id();
 
                 let max_force = 10.0;
-                let stiffness = 20.0;
-                let damping = 6.0;
-                let distance_from_body = 0.65;
+                let twist_stiffness = 200.0;
+                let twist_damping = 6.0;
+                let resting_stiffness = 1.0;
+                let resting_damping = 0.2;
+                let distance_from_body = 0.75;
                 let arm_radius = 0.15;
 
                 {
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(Vec3::new(0.0, 0.0, 0.0))
+                        .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
                         .motor_model(JointAxis::AngX, MotorModel::ForceBased)
                         .motor_model(JointAxis::AngY, MotorModel::ForceBased)
                         .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
                         .motor_max_force(JointAxis::AngX, max_force)
                         .motor_max_force(JointAxis::AngY, max_force)
                         .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(
-                            JointAxis::AngX,
-                            std::f32::consts::TAU / 8.0,
-                            stiffness,
-                            damping,
-                        )
-                        .motor_position(
-                            JointAxis::AngY,
-                            std::f32::consts::TAU / 8.0,
-                            stiffness,
-                            damping,
-                        )
-                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping);
+                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+
                     let arm_entity = commands
                         .spawn_bundle(TransformBundle::default())
+                        .insert(Arm)
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
                         .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
+                        .insert(Grabby(false))
+                        .insert(ImpulseJoint::new(player_entity, arm_joint))
                         .id();
-
-                    commands.entity(arm_entity).with_children(|children| {
-                        children
-                            .spawn()
-                            .insert(ImpulseJoint::new(player_entity, arm_joint));
-                    });
                 }
 
                 {
                     let arm_joint = SphericalJointBuilder::new()
                         .local_anchor1(Vec3::new(-distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(Vec3::new(0.0, 0.0, 0.0))
+                        .local_anchor2(Vec3::new(0.0, 1.0 / 1.25, 0.0))
                         .motor_model(JointAxis::AngX, MotorModel::ForceBased)
                         .motor_model(JointAxis::AngY, MotorModel::ForceBased)
                         .motor_model(JointAxis::AngZ, MotorModel::ForceBased)
                         .motor_max_force(JointAxis::AngX, max_force)
                         .motor_max_force(JointAxis::AngY, max_force)
                         .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(
-                            JointAxis::AngX,
-                            std::f32::consts::TAU / 8.0,
-                            stiffness,
-                            damping,
-                        )
-                        .motor_position(
-                            JointAxis::AngY,
-                            -std::f32::consts::TAU / 8.0,
-                            stiffness,
-                            damping,
-                        )
-                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping);
+                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+
                     let arm_entity = commands
                         .spawn_bundle(TransformBundle::default())
+                        .insert(Arm)
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
                         .insert(Collider::capsule(Vec3::ZERO, Vec3::Y / 1.25, arm_radius))
+                        .insert(Grabby(false))
+                        .insert(ImpulseJoint::new(player_entity, arm_joint))
                         .id();
-
-                    commands.entity(arm_entity).with_children(|children| {
-                        children
-                            .spawn()
-                            .insert(ImpulseJoint::new(player_entity, arm_joint));
-                    });
                 }
-
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
@@ -660,6 +688,46 @@ pub fn player_swivel_and_tilt(
 
             neck_transform.rotation = rotation;
             *direction = CameraDirection(rotation);
+        }
+    }
+}
+
+#[derive(Debug, Component, Clone, Copy)]
+pub struct Grabby(bool);
+
+pub fn player_grabby_hands(
+    inputs: Query<(&CameraDirection, &PlayerInput)>,
+    mut arms: Query<(&mut ImpulseJoint, &mut Grabby), With<Arm>>,
+) {
+    let grabby_stiffness = 200.0;
+    let grabby_damping = 50.0;
+    let resting_stiffness = 1.0;
+    let resting_damping = 0.2;
+    for (mut joint, mut grabby) in &mut arms {
+        if let Ok((direction, input)) = inputs.get(joint.parent) {
+            if !grabby.0 && input.grabby_hands() {
+                joint.data.set_motor_position(
+                    JointAxis::AngX,
+                    std::f32::consts::TAU / 8.0,
+                    grabby_stiffness,
+                    grabby_damping,
+                );
+                joint.data.set_motor_position(
+                    JointAxis::AngY,
+                    std::f32::consts::TAU / 8.0,
+                    grabby_stiffness,
+                    grabby_damping,
+                );
+                grabby.0 = true;
+            } else if grabby.0 && !input.grabby_hands() {
+                joint.data.set_motor_position(
+                    JointAxis::AngX,
+                    0.0,
+                    resting_stiffness,
+                    resting_damping,
+                );
+                grabby.0 = false;
+            }
         }
     }
 }
