@@ -197,6 +197,9 @@ pub struct Arm;
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Hand;
 
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GrabJoint;
+
 #[derive(Component, Debug)]
 pub struct Neck;
 
@@ -311,6 +314,11 @@ impl Plugin for PlayerPlugin {
                 .label("target_position")
                 .after("update_player_inputs")
                 .after("player_grabby_hands"),
+        )
+        .add_network_system(
+            grab_collider
+                .label("grab_collider")
+                .after("target_position"),
         )
         .add_network_system(
             player_swivel_and_tilt
@@ -643,6 +651,7 @@ pub fn setup_player(
                         )))
                         .insert(Hand)
                         .insert(TargetPosition(None))
+                        .insert(Grabbing(false))
                         .insert(Velocity::default())
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
@@ -692,6 +701,7 @@ pub fn setup_player(
                         )))
                         .insert(Hand)
                         .insert(TargetPosition(None))
+                        .insert(Grabbing(false))
                         .insert(Velocity::default())
                         .insert(RigidBody::Dynamic)
                         .insert(crate::physics::PLAYER_GROUPING)
@@ -757,12 +767,19 @@ pub fn player_swivel_and_tilt(
 #[derive(Debug, Component, Clone, Copy)]
 pub struct TargetPosition(Option<Vec3>);
 
+#[derive(Debug, Component, Clone, Copy)]
+pub struct Grabbing(bool);
+
 pub fn player_grabby_hands(
     inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
-    joints: Query<&ImpulseJoint>,
-    mut hands: Query<(Entity, &mut TargetPosition), With<Hand>>,
+    mut joints: Query<&mut ImpulseJoint>,
+    mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing), With<Hand>>,
 ) {
-    for (hand, mut target_position) in &mut hands {
+    for mut joint in &mut joints {
+        joint.data.set_contacts_enabled(false);
+    }
+
+    for (hand, mut target_position, mut grabbing) in &mut hands {
         target_position.0 = None;
 
         let arm_entity = if let Ok(joint) = joints.get(hand) {
@@ -787,6 +804,9 @@ pub fn player_grabby_hands(
         if input.grabby_hands() {
             target_position.0 =
                 Some(global.translation() + (direction.0 * -Vec3::Z * 2.) + Vec3::Y * 2.0);
+            grabbing.0 = true;
+        } else {
+            grabbing.0 = false;
         }
     }
 }
@@ -798,6 +818,91 @@ pub fn target_position(
         let current = global.translation();
         if let Some(target) = target.0 {
             velocity.linvel = (target - current).powf(3.0);
+        }
+    }
+}
+
+pub fn grab_collider(
+    mut commands: Commands,
+    rapier_context: Res<RapierContext>,
+    hands: Query<(Entity, &Grabbing, Option<&Children>), With<Hand>>,
+    impulse_joints: Query<&ImpulseJoint>,
+    grab_joints: Query<&GrabJoint>,
+) {
+    for (hand, grabbing, children) in &hands {
+        if grabbing.0 {
+            for contact_pair in rapier_context.contacts_with(hand) {
+                let (other_collider, flipped) = if contact_pair.collider1() == hand {
+                    (contact_pair.collider2(), false)
+                } else {
+                    (contact_pair.collider1(), true)
+                };
+
+                let mut should_grab = true;
+                if let Some(children) = children {
+                    for child in children.iter() {
+                        if let Ok(impulse) = impulse_joints.get(*child) {
+                            if other_collider == impulse.parent {
+                                should_grab = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                let arm_entity = if let Ok(joint) = impulse_joints.get(hand) {
+                    joint.parent
+                } else {
+                    continue;
+                };
+
+                if arm_entity == other_collider {
+                    should_grab = false;
+                }
+
+                let player_entity = if let Ok(joint) = impulse_joints.get(arm_entity) {
+                    joint.parent
+                } else {
+                    continue;
+                };
+
+                if player_entity == other_collider {
+                    should_grab = false;
+                }
+
+                if !should_grab {
+                    continue;
+                }
+
+                info!("grabbing: {:?}", other_collider);
+                if let Some(manifold) = contact_pair.manifold(0) {
+                    let mut anchor1 = manifold.local_n1();
+                    let mut anchor2 = manifold.local_n2();
+
+                    if flipped {
+                        std::mem::swap(&mut anchor1, &mut anchor2);
+                    }
+
+                    let grab_joint = FixedJointBuilder::new()
+                        .local_anchor1(anchor1)
+                        .local_anchor2(anchor2);
+                    commands.entity(hand).add_children(|children| {
+                        children
+                            .spawn()
+                            .insert(ImpulseJoint::new(other_collider, grab_joint))
+                            .insert(GrabJoint);
+                    });
+                }
+            }
+        } else {
+            // clean up joints if we aren't grabbing anymore
+            if let Some(children) = children {
+                for child in children.iter() {
+                    if grab_joints.get(*child).is_ok() {
+                        commands.entity(*child).despawn_recursive();
+                    }
+                }
+            }
         }
     }
 }
