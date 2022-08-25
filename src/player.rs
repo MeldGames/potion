@@ -596,7 +596,7 @@ pub fn setup_player(
                 let twist_damping = 0.2;
                 let resting_stiffness = 3.0;
                 let resting_damping = 0.2;
-                let distance_from_body = 0.65;
+                let distance_from_body = 0.7;
                 let arm_radius = 0.15;
                 let motor_model = MotorModel::ForceBased;
 
@@ -758,17 +758,10 @@ pub fn player_swivel_and_tilt(
 pub struct TargetPosition(Option<Vec3>);
 
 pub fn player_grabby_hands(
-    mut egui_context: ResMut<EguiContext>,
-    time: Res<Time>,
     inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
-    mut joints: Query<&mut ImpulseJoint>,
-    arms: Query<Entity, With<Arm>>,
+    joints: Query<&ImpulseJoint>,
     mut hands: Query<(Entity, &mut TargetPosition), With<Hand>>,
 ) {
-    for mut joint in &mut joints {
-        joint.data.set_contacts_enabled(false);
-    }
-
     for (hand, mut target_position) in &mut hands {
         target_position.0 = None;
 
@@ -793,7 +786,7 @@ pub fn player_grabby_hands(
 
         if input.grabby_hands() {
             target_position.0 =
-                Some(global.translation() + (direction.0 * -Vec3::Z * 3.0) + Vec3::Y * 2.0);
+                Some(global.translation() + (direction.0 * -Vec3::Z * 2.) + Vec3::Y * 2.0);
         }
     }
 }
@@ -804,7 +797,7 @@ pub fn target_position(
     for (target, global, mut velocity) in &mut hands {
         let current = global.translation();
         if let Some(target) = target.0 {
-            velocity.linvel = target - current;
+            velocity.linvel = (target - current).powf(3.0);
         }
     }
 }
