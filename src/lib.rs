@@ -88,7 +88,9 @@ fn setup_map(
 ) {
     commands
         .spawn()
-        .insert_bundle((GlobalTransform::default(), Transform::default()))
+        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            0.0, -10.0, 0.0,
+        )))
         /*
         .insert_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
@@ -101,7 +103,7 @@ fn setup_map(
         })*/
         .insert_bundle((
             RigidBody::Fixed,
-            Collider::cuboid(50.0, 0.1, 50.0),
+            Collider::cuboid(50.0, 10.0, 50.0),
             Name::new("Plane"),
             crate::physics::TERRAIN_GROUPING,
         ));
@@ -132,11 +134,17 @@ fn setup_map(
 
     commands
         .spawn_bundle(TransformBundle::default())
-        .insert(Collider::cylinder(0.6, 0.65))
-        .insert(Sensor)
         .insert_bundle(Follow::all(cauldron))
         .insert_bundle((
             Name::new("Cauldron Water"),
             crate::physics::TERRAIN_GROUPING,
-        ));
+        ))
+        .with_children(|children| {
+            children
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    0.0, 0.1, 0.0,
+                )))
+                .insert(Collider::cylinder(0.4, 0.65))
+                .insert(Sensor);
+        });
 }
