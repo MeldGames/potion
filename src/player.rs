@@ -940,16 +940,19 @@ pub fn grab_collider(
                     continue;
                 }
 
-                let mut averaged_point = Vec3::ZERO;
+                let mut closest_point = Vec3::ZERO;
+                let mut closest_distance = f32::MAX;
                 for point in &contact_points {
-                    averaged_point += *point;
+                    let dist = point.distance(global.translation());
+                    if dist < closest_distance {
+                        closest_point = *point;
+                        closest_distance = dist;
+                    }
                 }
 
-                averaged_point /= contact_points.len() as f32;
-
                 if let Ok(other_global) = globals.get(other_collider) {
-                    let anchor1 = averaged_point - other_global.translation();
-                    let anchor2 = averaged_point - global.translation();
+                    let anchor1 = closest_point - other_global.translation();
+                    let anchor2 = closest_point - global.translation();
 
                     if let Ok(name) = name.get(other_collider) {
                         info!("grabbing {:?}", name.as_str());
@@ -957,10 +960,10 @@ pub fn grab_collider(
                         info!("grabbing entity {:?}", other_collider);
                     }
 
-                    let motor_model = MotorModel::AccelerationBased;
+                    let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
-                    let stiffness = 100000.0;
-                    let damping = 1000.0;
+                    let stiffness = 10.0;
+                    let damping = 1.0;
                     let grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
                         .local_anchor2(anchor2)
