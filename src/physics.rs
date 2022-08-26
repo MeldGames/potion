@@ -10,24 +10,34 @@ bitflags::bitflags! {
         const FLUFF = 1 << 3;
 
         const PLAYER_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits();
-        //const ARM_FILTER = Group::TERRAIN.bits();
-        const ARM_FILTER = 0;
         const TERRAIN_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits() | Group::FLUFF.bits();
     }
 }
 
 pub const PLAYER_GROUPING: CollisionGroups =
     CollisionGroups::new(Group::PLAYER.bits(), Group::PLAYER_FILTER.bits());
-pub const ARM_GROUPING: CollisionGroups =
-    CollisionGroups::new(Group::PLAYER.bits(), Group::ARM_FILTER.bits());
 pub const TERRAIN_GROUPING: CollisionGroups =
     CollisionGroups::new(Group::TERRAIN.bits(), Group::TERRAIN_FILTER.bits());
+
+pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(Group::PLAYER.bits(), 0);
+pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     // Try to avoid launching players in weird situations
     context.integration_parameters.max_penetration_correction = 10.0;
     //context.integration_parameters.dt = crate::network::TICK_RATE.as_secs_f32();
     //info!("integration: {:?}", context.integration_parameters);
+}
+
+pub const VELOCITY_CAP: f32 = 150.0;
+pub const MAX_VELOCITY: Vec3 = Vec3::splat(VELOCITY_CAP);
+pub const MIN_VELOCITY: Vec3 = Vec3::splat(-VELOCITY_CAP);
+
+pub fn cap_velocity(mut velocities: Query<&mut Velocity, Changed<Velocity>>) {
+    for mut velocity in &mut velocities {
+        velocity.linvel = velocity.linvel.clamp(MIN_VELOCITY, MAX_VELOCITY);
+        velocity.angvel = velocity.angvel.clamp(MIN_VELOCITY, MAX_VELOCITY);
+    }
 }
 
 pub struct PhysicsPlugin;
@@ -77,6 +87,7 @@ impl Plugin for PhysicsPlugin {
             ),
         );
 
+        app.add_network_system(cap_velocity);
         app.add_startup_system(modify_rapier_context);
     }
 }

@@ -26,6 +26,7 @@ use smooth_bevy_cameras::{
 };
 
 use crate::follow::{Follow, FollowPlugin};
+use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -536,8 +537,8 @@ pub fn setup_player(
                         GlobalTransform::identity(),
                         Neck,
                         Name::new("Neck"),
-                        Follow(player_entity),
                     ))
+                    .insert_bundle(Follow::translation(player_entity))
                     .id();
 
                 commands.entity(neck).push_children(&[camera]);
@@ -672,9 +673,10 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
     let resting_stiffness = 2.0;
     let resting_damping = 0.2;
     let arm_radius = 0.15;
+    let hand_radius = 0.25;
     let motor_model = MotorModel::ForceBased;
 
-    let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (arm_radius * 2.0), 0.0);
+    let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (hand_radius * 2.0), 0.0);
 
     let arm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -689,13 +691,13 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut arm_joint = arm_joint.build();
-    arm_joint.set_contacts_enabled(true);
+    arm_joint.set_contacts_enabled(false);
 
     let arm_entity = commands
         .spawn_bundle(TransformBundle::default())
         .insert(Arm)
         .insert(RigidBody::Dynamic)
-        .insert(crate::physics::PLAYER_GROUPING)
+        .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
         .insert(ImpulseJoint::new(to, arm_joint))
         .id();
@@ -712,7 +714,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut hand_joint = hand_joint.build();
-    hand_joint.set_contacts_enabled(true);
+    hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
@@ -723,8 +725,8 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .insert(Grabbing(false))
         .insert(Velocity::default())
         .insert(RigidBody::Dynamic)
-        .insert(crate::physics::PLAYER_GROUPING)
-        .insert(Collider::ball(arm_radius))
+        .insert(crate::physics::REST_GROUPING)
+        .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(arm_entity, hand_joint))
         .id();
 }
@@ -734,7 +736,7 @@ pub fn player_swivel_and_tilt(
     mut necks: Query<(&mut Transform, &Follow), (With<Neck>, Without<Player>)>,
 ) {
     for (mut neck_transform, follow) in &mut necks {
-        if let Ok((mut direction, input)) = inputs.get_mut(follow.entity()) {
+        if let Ok((mut direction, input)) = inputs.get_mut(follow.get()) {
             let rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
                 * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
             .into();
@@ -753,13 +755,10 @@ pub struct Grabbing(bool);
 
 pub fn player_grabby_hands(
     inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
-    mut joints: Query<&mut ImpulseJoint>,
+    joints: Query<&ImpulseJoint>,
     mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing), With<Hand>>,
+    mut collision_groups: Query<&mut CollisionGroups>,
 ) {
-    for mut joint in &mut joints {
-        joint.data.set_contacts_enabled(false);
-    }
-
     for (hand, mut target_position, mut grabbing) in &mut hands {
         target_position.0 = None;
 
@@ -783,11 +782,21 @@ pub fn player_grabby_hands(
             };
 
         if input.grabby_hands() {
+            grabbing.0 = true;
             target_position.0 =
                 Some(global.translation() + (direction.0 * -Vec3::Z * 2.) + Vec3::Y * 2.0);
-            grabbing.0 = true;
         } else {
             grabbing.0 = false;
+        }
+
+        if let Ok(collision_groups) = collision_groups.get_many_mut([hand, arm_entity]) {
+            for mut collision_group in collision_groups {
+                if input.grabby_hands() {
+                    *collision_group = GRAB_GROUPING;
+                } else {
+                    *collision_group = REST_GROUPING;
+                }
+            }
         }
     }
 }
@@ -949,8 +958,6 @@ pub fn grab_collider(
                     } else {
                         info!("grabbing entity {:?}", other_collider);
                     }
-                    info!("anchor 1 {:?}", anchor1);
-                    info!("anchor 2 {:?}", anchor2);
 
                     let motor_model = MotorModel::AccelerationBased;
                     let max_force = 1000.0;
@@ -969,7 +976,7 @@ pub fn grab_collider(
                         .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
                         .motor_position(JointAxis::AngY, 0.0, stiffness, damping);
                     let mut grab_joint = grab_joint.build();
-                    grab_joint.set_contacts_enabled(true);
+                    grab_joint.set_contacts_enabled(false);
 
                     commands.entity(hand).add_children(|children| {
                         children

@@ -9,6 +9,7 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
+use follow::Follow;
 use iyes_loopless::prelude::*;
 
 use crate::network::NetworkPlugin;
@@ -116,7 +117,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    commands
+    let cauldron = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
             -4.0, 3.0, -4.0,
         )))
@@ -125,6 +126,17 @@ fn setup_map(
             RigidBody::Dynamic,
             Collider::cylinder(0.4, 0.75),
             Name::new("Cauldron"),
+            crate::physics::TERRAIN_GROUPING,
+        ))
+        .id();
+
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(Collider::cylinder(0.6, 0.65))
+        .insert(Sensor)
+        .insert_bundle(Follow::all(cauldron))
+        .insert_bundle((
+            Name::new("Cauldron Water"),
             crate::physics::TERRAIN_GROUPING,
         ));
 }
