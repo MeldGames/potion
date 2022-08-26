@@ -150,24 +150,22 @@ fn setup_map(
         .add_child(cauldron_model)
         .id();
 
-    /*
-       commands
-           .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-               -2.0, 3.0, -2.0,
-           )))
-           .insert_bundle(Follow::all(cauldron))
-           .insert_bundle((
-               Name::new("Cauldron Ingredient Hitbox"),
-               crate::physics::TERRAIN_GROUPING,
-           ))
-           .with_children(|children| {
-               children
-                   .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                       0.0, 0.25, 0.0,
-                   )))
-                   .insert(Collider::cylinder(0.4, 0.6))
-                   .insert(Cauldron)
-                   .insert(Sensor);
-           });
-    */
+    commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            -2.0, 3.0, -2.0,
+        )))
+        .insert_bundle(Follow::all(cauldron))
+        .insert_bundle((
+            Name::new("Cauldron Ingredient Hitbox"),
+            crate::physics::TERRAIN_GROUPING,
+        ))
+        .with_children(|children| {
+            children
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    0.0, 0.25, 0.0,
+                )))
+                .insert(Collider::cylinder(0.4, 0.6))
+                .insert(Cauldron)
+                .insert(Sensor);
+        });
 }
