@@ -600,7 +600,7 @@ pub fn setup_player(
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
 
-                let max_force = 10.0;
+                let max_force = 1000.0;
                 let twist_stiffness = 2.0;
                 let twist_damping = 0.2;
                 let resting_stiffness = 3.0;
@@ -884,15 +884,17 @@ pub fn grab_collider(
 
                 averaged_point /= contact_points.len() as f32;
 
-                if let Ok(name) = name.get(other_collider) {
-                    info!("grabbing {:?}", name.as_str());
-                } else {
-                    info!("grabbing entity {:?}", other_collider);
-                }
-
                 if let Ok(other_global) = globals.get(other_collider) {
-                    let anchor1 = other_global.translation() - averaged_point;
-                    let anchor2 = global.translation() - averaged_point;
+                    let anchor1 = averaged_point - other_global.translation();
+                    let anchor2 = averaged_point - global.translation();
+
+                    if let Ok(name) = name.get(other_collider) {
+                        info!("grabbing {:?}", name.as_str());
+                    } else {
+                        info!("grabbing entity {:?}", other_collider);
+                    }
+                    info!("anchor 1 {:?}", anchor1);
+                    info!("anchor 2 {:?}", anchor2);
 
                     let grab_joint = FixedJointBuilder::new()
                         .local_basis2(global.compute_transform().rotation)
