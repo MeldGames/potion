@@ -65,6 +65,10 @@ fn setup_camera(mut commands: Commands, _asset_server: Res<AssetServer>) {
         scene: _asset_server.load("models/cauldron.glb#Scene0"),
         ..default()
     });
+    commands.spawn_bundle(SceneBundle {
+        scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
+        ..default()
+    });
 }
 
 fn setup_map(
