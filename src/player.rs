@@ -842,11 +842,12 @@ pub fn avoid_intersecting(
 pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
     let crouch_height = 0.05;
     let full_height = 0.45;
+    let threshold = -0.3;
     for (input, mut controller) in &mut controllers {
-        // Are we looking down?
-        if input.pitch < 0.0 {
-            // interpolate between crouch and full based on how far we are pitched
-            let crouch_coefficient = input.pitch.abs() / (PI / 2.0);
+        // Are we looking sufficiently down?
+        if input.pitch < threshold {
+            // interpolate between crouch and full based on how far we are pitched downwards
+            let crouch_coefficient = input.pitch.abs() / ((PI / 2.0) - threshold.abs());
             let interpolated =
                 full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
             controller.float_distance = interpolated;
