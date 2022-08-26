@@ -861,17 +861,19 @@ pub fn avoid_intersecting(
             Transform::default()
         };
 
-        if let Some((_entity, toi)) = rapier_context.cast_ray(
+        let toi = if let Some((_entity, toi)) = rapier_context.cast_ray(
             global_transform.translation,
             global_transform.rotation * avoid.dir,
             avoid.max_toi,
             true,
             filter,
         ) {
-            transform.translation = avoid.dir * toi;
+            toi
         } else {
-            transform.translation = avoid.dir * avoid.max_toi;
+            avoid.max_toi
         };
+
+        transform.translation = avoid.dir * toi;
     }
 }
 
