@@ -695,6 +695,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
 
     let arm_entity = commands
         .spawn_bundle(TransformBundle::default())
+        .insert(Name::new("Arm"))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
         .insert(crate::physics::PLAYER_GROUPING)
@@ -720,6 +721,8 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
             1.0, 10.0, 1.0,
         )))
+        .insert(Name::new("Hand"))
+        .insert(crate::cauldron::Ingredient)
         .insert(Hand)
         .insert(TargetPosition(None))
         .insert(Grabbing(false))
