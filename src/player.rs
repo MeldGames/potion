@@ -317,6 +317,13 @@ impl Plugin for PlayerPlugin {
                 .after("player_grabby_hands"),
         )
         .add_network_system(
+            avoid_intersecting
+                .label("avoid_intersecting")
+                .after("update_player_inputs")
+                .after("player_movement")
+                .after("character_crouch"),
+        )
+        .add_network_system(
             character_crouch
                 .label("character_crouch")
                 .after("update_player_inputs"),
@@ -494,6 +501,10 @@ pub fn setup_player(
                         transform: Transform::from_translation(Vec3::new(0., 0., 4.))
                             .looking_at(Vec3::ZERO, Vec3::Y),
                         ..Default::default()
+                    })
+                    .insert(AvoidIntersecting {
+                        dir: Vec3::Z,
+                        max_toi: 4.0,
                     })
                     .insert(Name::new("Player Camera"))
                     .id();
@@ -827,6 +838,40 @@ pub fn target_position(
         if let Some(target) = target.0 {
             velocity.linvel = (target - current).powf(3.0);
         }
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct AvoidIntersecting {
+    pub dir: Vec3,
+    pub max_toi: f32,
+}
+
+pub fn avoid_intersecting(
+    rapier_context: Res<RapierContext>,
+    global: Query<&GlobalTransform>,
+    mut avoid: Query<(&mut Transform, &Parent, &AvoidIntersecting)>,
+) {
+    let filter = QueryFilter::default().exclude_dynamic();
+
+    for (mut transform, parent, avoid) in &mut avoid {
+        let global_transform = if let Ok(global) = global.get(parent.get()) {
+            global.compute_transform()
+        } else {
+            Transform::default()
+        };
+
+        if let Some((_entity, toi)) = rapier_context.cast_ray(
+            global_transform.translation,
+            global_transform.rotation * avoid.dir,
+            avoid.max_toi,
+            true,
+            filter,
+        ) {
+            transform.translation = avoid.dir * toi;
+        } else {
+            transform.translation = avoid.dir * avoid.max_toi;
+        };
     }
 }
 
