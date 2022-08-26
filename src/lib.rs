@@ -85,6 +85,7 @@ fn outline_meshes(
 
 fn setup_map(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     assets: Res<AssetServer>,
@@ -122,6 +123,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
+    let cauldron_scene: Handle<Scene> = asset_server.load("models/cauldron.glb#Scene0");
     let cauldron = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
             -4.0, 3.0, -4.0,
@@ -133,6 +135,7 @@ fn setup_map(
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
+        .insert(cauldron_scene)
         .id();
 
     commands

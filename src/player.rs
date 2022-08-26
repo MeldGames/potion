@@ -380,7 +380,11 @@ pub fn player_movement(
             dir.z += -1.;
         }
 
-        let dir = (direction.0 * dir).normalize_or_zero();
+        // we only take into account horizontal rotation so looking down doesn't
+        // slow the character down.
+        let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
+        let dir = (rotation * dir).normalize_or_zero();
+
         controller.movement = dir;
         controller.jumping = player_input.jump();
     }
@@ -564,14 +568,6 @@ pub fn setup_player(
                     .insert(PlayerInput::default())
                     .insert(CameraDirection::default())
                     .push_children(&[reticle]);
-                commands.spawn_bundle(SceneBundle {
-                    scene: asset_server.load("models/cauldron.glb#Scene0"),
-                    transform: Transform {
-                        scale: Vec3::ONE * 2.,
-                        ..default()
-                    },
-                    ..default()
-                });
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -588,7 +584,7 @@ pub fn setup_player(
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 15.0,
+                            jump_initial_force: 2.0,
                             jump_stop_force: 0.3,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
@@ -722,7 +718,6 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
             1.0, 10.0, 1.0,
         )))
         .insert(Name::new("Hand"))
-        .insert(crate::cauldron::Ingredient)
         .insert(Hand)
         .insert(TargetPosition(None))
         .insert(Grabbing(false))
