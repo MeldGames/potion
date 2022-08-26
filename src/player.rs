@@ -317,6 +317,11 @@ impl Plugin for PlayerPlugin {
                 .after("player_grabby_hands"),
         )
         .add_network_system(
+            character_crouch
+                .label("character_crouch")
+                .after("update_player_inputs"),
+        )
+        .add_network_system(
             grab_collider
                 .label("grab_collider")
                 .after("target_position"),
@@ -545,12 +550,14 @@ pub fn setup_player(
                     .insert(PlayerInput::default())
                     .insert(CameraDirection::default())
                     .push_children(&[reticle]);
-                /*
-                    commands.spawn_bundle(SceneBundle {
-                        scene: asset_server.load("models/cauldron.glb#Scene0"),
+                commands.spawn_bundle(SceneBundle {
+                    scene: asset_server.load("models/cauldron.glb#Scene0"),
+                    transform: Transform {
+                        scale: Vec3::ONE * 2.,
                         ..default()
-                    });
-                */
+                    },
+                    ..default()
+                });
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -576,9 +583,9 @@ pub fn setup_player(
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 1.0,
                             float_cast_collider: Collider::ball(0.45),
-                            float_distance: 0.55,
-                            float_strength: 5.0,
-                            float_dampen: 0.5,
+                            float_distance: 0.25,
+                            float_strength: 10.0,
+                            float_dampen: 1.0,
                             upright_spring_strength: 10.0,
                             upright_spring_damping: 2.0,
                             ..default()
@@ -819,6 +826,23 @@ pub fn target_position(
         let current = global.translation();
         if let Some(target) = target.0 {
             velocity.linvel = (target - current).powf(3.0);
+        }
+    }
+}
+
+pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
+    let crouch_height = 0.05;
+    let full_height = 0.45;
+    for (input, mut controller) in &mut controllers {
+        // Are we looking down?
+        if input.pitch < 0.0 {
+            // interpolate between crouch and full based on how far we are pitched
+            let crouch_coefficient = input.pitch.abs() / (PI / 2.0);
+            let interpolated =
+                full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
+            controller.float_distance = interpolated;
+        } else {
+            controller.float_distance = full_height;
         }
     }
 }
