@@ -112,8 +112,19 @@ fn setup_map(
         .insert_bundle((
             RigidBody::KinematicPositionBased,
             Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
-            //Collider::ball(1.0),
             Name::new("Test capsule"),
+            crate::physics::TERRAIN_GROUPING,
+        ));
+
+    commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            -4.0, 3.0, -4.0,
+        )))
+        .insert_bundle((
+            ColliderMassProperties::Density(15.0),
+            RigidBody::Dynamic,
+            Collider::cylinder(0.4, 0.75),
+            Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ));
 }
