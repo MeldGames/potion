@@ -687,7 +687,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut arm_joint = arm_joint.build();
-    //arm_joint.set_contacts_enabled(false);
+    arm_joint.set_contacts_enabled(false);
 
     let arm_entity = commands
         .spawn_bundle(TransformBundle::default())
@@ -711,7 +711,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut hand_joint = hand_joint.build();
-    //hand_joint.set_contacts_enabled(false);
+    hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
@@ -951,8 +951,15 @@ pub fn grab_collider(
                 }
 
                 if let Ok(other_global) = globals.get(other_collider) {
-                    let anchor1 = closest_point - other_global.translation();
-                    let anchor2 = closest_point - global.translation();
+                    // convert back to local space.
+                    let anchor1 = other_global
+                        .compute_matrix()
+                        .inverse()
+                        .project_point3(closest_point);
+                    let anchor2 = global
+                        .compute_matrix()
+                        .inverse()
+                        .project_point3(closest_point);
 
                     if let Ok(name) = name.get(other_collider) {
                         info!("grabbing {:?}", name.as_str());
@@ -977,7 +984,7 @@ pub fn grab_collider(
                         .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
                         .motor_position(JointAxis::AngY, 0.0, stiffness, damping);
                     let mut grab_joint = grab_joint.build();
-                    //grab_joint.set_contacts_enabled(false);
+                    grab_joint.set_contacts_enabled(false);
 
                     commands.entity(hand).add_children(|children| {
                         children
