@@ -584,7 +584,7 @@ pub fn setup_player(
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 2.0,
+                            jump_initial_force: 4.0,
                             jump_stop_force: 0.3,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,

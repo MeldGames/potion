@@ -123,10 +123,21 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    let cauldron_scene: Handle<Scene> = asset_server.load("models/cauldron.glb#Scene0");
+    let cauldron_model = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/cauldron.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-5.5, -0.3, -0.075),
+                scale: Vec3::splat(1.2),
+                ..default()
+            },
+            ..default()
+        })
+        .id();
+
     let cauldron = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            -4.0, 3.0, -4.0,
+            -2.0, 3.0, -2.0,
         )))
         .insert_bundle((
             ColliderMassProperties::Density(15.0),
@@ -135,24 +146,25 @@ fn setup_map(
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(cauldron_scene)
+        .insert_bundle(VisibilityBundle::default())
+        .add_child(cauldron_model)
         .id();
 
     commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            -4.0, 3.0, -4.0,
+            -2.0, 3.0, -2.0,
         )))
         .insert_bundle(Follow::all(cauldron))
         .insert_bundle((
-            Name::new("Cauldron Water"),
+            Name::new("Cauldron Ingredient Hitbox"),
             crate::physics::TERRAIN_GROUPING,
         ))
         .with_children(|children| {
             children
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, 0.1, 0.0,
+                    0.0, 0.25, 0.0,
                 )))
-                .insert(Collider::cylinder(0.4, 0.65))
+                .insert(Collider::cylinder(0.4, 0.6))
                 .insert(Cauldron)
                 .insert(Sensor);
         });
