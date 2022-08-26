@@ -1,3 +1,4 @@
+pub mod cauldron;
 pub mod diagnostics;
 pub mod egui;
 pub mod follow;
@@ -9,6 +10,7 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
+use cauldron::Cauldron;
 use follow::Follow;
 use iyes_loopless::prelude::*;
 
@@ -145,6 +147,7 @@ fn setup_map(
                     0.0, 0.1, 0.0,
                 )))
                 .insert(Collider::cylinder(0.4, 0.65))
+                .insert(Cauldron)
                 .insert(Sensor);
         });
 }
