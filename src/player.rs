@@ -8,6 +8,7 @@ use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
     CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
+    ControllerState,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -328,6 +329,7 @@ impl Plugin for PlayerPlugin {
                 .label("character_crouch")
                 .after("update_player_inputs"),
         )
+        //.add_network_system(pull_up.label("pull_up").after("update_player_inputs"))
         .add_network_system(
             grab_collider
                 .label("grab_collider")
@@ -601,12 +603,6 @@ pub fn setup_player(
                             upright_spring_damping: 2.0,
                             ..default()
                         },
-                        physics: ControllerPhysicsBundle {
-                            //rigidbody: RigidBody::KinematicVelocityBased,
-                            //collider: Collider::cuboid(0.5, 0.5, 0.5),
-                            //collider: Collider::ball(0.75),
-                            ..default()
-                        },
                         ..default()
                     })
                     .insert(Speed::default())
@@ -618,116 +614,18 @@ pub fn setup_player(
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
 
-                let max_force = 1000.0;
-                let twist_stiffness = 2.0;
-                let twist_damping = 0.2;
-                let resting_stiffness = 3.0;
-                let resting_damping = 0.2;
                 let distance_from_body = 0.7;
-                let arm_radius = 0.15;
-                let motor_model = MotorModel::ForceBased;
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    Vec3::new(distance_from_body, 0.5, 0.0),
+                );
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    Vec3::new(-distance_from_body, 0.5, 0.0),
+                );
 
-                let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (arm_radius * 2.0), 0.0);
-
-                {
-                    let arm_joint = SphericalJointBuilder::new()
-                        .local_anchor1(Vec3::new(distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(arm_height)
-                        .motor_model(JointAxis::AngX, motor_model)
-                        .motor_model(JointAxis::AngY, motor_model)
-                        .motor_model(JointAxis::AngZ, motor_model)
-                        .motor_max_force(JointAxis::AngX, max_force)
-                        .motor_max_force(JointAxis::AngY, max_force)
-                        .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-
-                    let arm_entity = commands
-                        .spawn_bundle(TransformBundle::default())
-                        .insert(Arm)
-                        .insert(RigidBody::Dynamic)
-                        .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
-                        .insert(ImpulseJoint::new(player_entity, arm_joint))
-                        .id();
-
-                    let hand_joint = SphericalJointBuilder::new()
-                        .local_anchor2(Vec3::new(0.0, arm_radius * 2.0, 0.0))
-                        .motor_model(JointAxis::AngX, motor_model)
-                        .motor_model(JointAxis::AngY, motor_model)
-                        .motor_model(JointAxis::AngZ, motor_model)
-                        .motor_max_force(JointAxis::AngX, max_force)
-                        .motor_max_force(JointAxis::AngY, max_force)
-                        .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-
-                    let hand_entity = commands
-                        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                            0.0, 4.0, 0.0,
-                        )))
-                        .insert(Hand)
-                        .insert(TargetPosition(None))
-                        .insert(Grabbing(false))
-                        .insert(Velocity::default())
-                        .insert(RigidBody::Dynamic)
-                        .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::ball(arm_radius))
-                        .insert(ImpulseJoint::new(arm_entity, hand_joint))
-                        .id();
-                }
-
-                {
-                    let arm_joint = SphericalJointBuilder::new()
-                        .local_anchor1(Vec3::new(-distance_from_body, 0.5, 0.0)) // body local
-                        .local_anchor2(arm_height)
-                        .motor_model(JointAxis::AngX, motor_model)
-                        .motor_model(JointAxis::AngY, motor_model)
-                        .motor_model(JointAxis::AngZ, motor_model)
-                        .motor_max_force(JointAxis::AngX, max_force)
-                        .motor_max_force(JointAxis::AngY, max_force)
-                        .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-
-                    let arm_entity = commands
-                        .spawn_bundle(TransformBundle::default())
-                        .insert(Arm)
-                        .insert(RigidBody::Dynamic)
-                        .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
-                        .insert(ImpulseJoint::new(player_entity, arm_joint))
-                        .id();
-
-                    let hand_joint = SphericalJointBuilder::new()
-                        .local_anchor2(Vec3::new(0.0, arm_radius * 2.0, 0.0))
-                        .motor_model(JointAxis::AngX, motor_model)
-                        .motor_model(JointAxis::AngY, motor_model)
-                        .motor_model(JointAxis::AngZ, motor_model)
-                        .motor_max_force(JointAxis::AngX, max_force)
-                        .motor_max_force(JointAxis::AngY, max_force)
-                        .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
-                        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-
-                    let hand_entity = commands
-                        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                            0.0, 4.0, 0.0,
-                        )))
-                        .insert(Hand)
-                        .insert(TargetPosition(None))
-                        .insert(Grabbing(false))
-                        .insert(Velocity::default())
-                        .insert(RigidBody::Dynamic)
-                        .insert(crate::physics::PLAYER_GROUPING)
-                        .insert(Collider::ball(arm_radius))
-                        .insert(ImpulseJoint::new(arm_entity, hand_joint))
-                        .id();
-                }
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
@@ -765,6 +663,70 @@ pub fn setup_player(
             }
         }
     }
+}
+
+pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
+    let max_force = 1000.0;
+    let twist_stiffness = 20.0;
+    let twist_damping = 0.2;
+    let resting_stiffness = 2.0;
+    let resting_damping = 0.2;
+    let arm_radius = 0.15;
+    let motor_model = MotorModel::ForceBased;
+
+    let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (arm_radius * 2.0), 0.0);
+
+    let arm_joint = SphericalJointBuilder::new()
+        .local_anchor1(at) // body local
+        .local_anchor2(arm_height)
+        .motor_model(JointAxis::AngX, motor_model)
+        .motor_model(JointAxis::AngY, motor_model)
+        .motor_model(JointAxis::AngZ, motor_model)
+        .motor_max_force(JointAxis::AngX, max_force)
+        .motor_max_force(JointAxis::AngY, max_force)
+        .motor_max_force(JointAxis::AngZ, max_force)
+        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+    let mut arm_joint = arm_joint.build();
+    arm_joint.set_contacts_enabled(true);
+
+    let arm_entity = commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(Arm)
+        .insert(RigidBody::Dynamic)
+        .insert(crate::physics::PLAYER_GROUPING)
+        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
+        .insert(ImpulseJoint::new(to, arm_joint))
+        .id();
+
+    let hand_joint = SphericalJointBuilder::new()
+        .local_anchor2(Vec3::new(0.0, arm_radius * 2.0 + 0.15, 0.0))
+        .motor_model(JointAxis::AngX, motor_model)
+        .motor_model(JointAxis::AngY, motor_model)
+        .motor_model(JointAxis::AngZ, motor_model)
+        .motor_max_force(JointAxis::AngX, max_force)
+        .motor_max_force(JointAxis::AngY, max_force)
+        .motor_max_force(JointAxis::AngZ, max_force)
+        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
+    let mut hand_joint = hand_joint.build();
+    hand_joint.set_contacts_enabled(true);
+
+    let _hand_entity = commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            1.0, 10.0, 1.0,
+        )))
+        .insert(Hand)
+        .insert(TargetPosition(None))
+        .insert(Grabbing(false))
+        .insert(Velocity::default())
+        .insert(RigidBody::Dynamic)
+        .insert(crate::physics::PLAYER_GROUPING)
+        .insert(Collider::ball(arm_radius))
+        .insert(ImpulseJoint::new(arm_entity, hand_joint))
+        .id();
 }
 
 pub fn player_swivel_and_tilt(
@@ -894,11 +856,33 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSet
     }
 }
 
+pub fn pull_up(
+    grab_joints: Query<&GrabJoint>,
+    hands: Query<(Entity, &Children), With<Hand>>,
+    impulse_joints: Query<&ImpulseJoint>,
+    mut controllers: Query<(&mut ControllerInput, &PlayerInput)>,
+) {
+    for (hand, children) in &hands {
+        let should_pull_up = children.iter().any(|child| grab_joints.contains(*child));
+        if should_pull_up {
+            let mut child_entity = hand;
+            while let Ok(joint) = impulse_joints.get(child_entity) {
+                child_entity = joint.parent;
+                if let Ok((mut controller, input)) = controllers.get_mut(child_entity) {
+                    let power = 1.0 - ((input.pitch + PI / 2.) / PI);
+                    controller.custom_impulse += Vec3::Y * 1.5 * power;
+                    info!("impulse: {:?}", controller.custom_impulse);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 pub fn grab_collider(
     mut commands: Commands,
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
-    children: Query<&Children>,
     globals: Query<&GlobalTransform>,
     hands: Query<(Entity, &Grabbing, &GlobalTransform, Option<&Children>), With<Hand>>,
     impulse_joints: Query<&ImpulseJoint>,
@@ -907,10 +891,10 @@ pub fn grab_collider(
     for (hand, grabbing, global, children) in &hands {
         if grabbing.0 {
             for contact_pair in rapier_context.contacts_with(hand) {
-                let (other_collider, flipped) = if contact_pair.collider1() == hand {
-                    (contact_pair.collider2(), false)
+                let other_collider = if contact_pair.collider1() == hand {
+                    contact_pair.collider2()
                 } else {
-                    (contact_pair.collider1(), true)
+                    contact_pair.collider1()
                 };
 
                 let mut related_entities = HashSet::new();
@@ -967,10 +951,25 @@ pub fn grab_collider(
                     info!("anchor 1 {:?}", anchor1);
                     info!("anchor 2 {:?}", anchor2);
 
-                    let grab_joint = FixedJointBuilder::new()
-                        .local_basis2(global.compute_transform().rotation)
+                    let motor_model = MotorModel::AccelerationBased;
+                    let max_force = 1000.0;
+                    let stiffness = 100000.0;
+                    let damping = 1000.0;
+                    let grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
-                        .local_anchor2(anchor2);
+                        .local_anchor2(anchor2)
+                        .motor_model(JointAxis::AngX, motor_model)
+                        .motor_model(JointAxis::AngY, motor_model)
+                        .motor_model(JointAxis::AngZ, motor_model)
+                        .motor_max_force(JointAxis::AngX, max_force)
+                        .motor_max_force(JointAxis::AngY, max_force)
+                        .motor_max_force(JointAxis::AngZ, max_force)
+                        .motor_position(JointAxis::AngX, 0.0, stiffness, damping)
+                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
+                        .motor_position(JointAxis::AngY, 0.0, stiffness, damping);
+                    let mut grab_joint = grab_joint.build();
+                    grab_joint.set_contacts_enabled(true);
+
                     commands.entity(hand).add_children(|children| {
                         children
                             .spawn()
