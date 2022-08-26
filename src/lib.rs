@@ -10,7 +10,7 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
-use cauldron::{Cauldron, CauldronPlugin};
+use cauldron::{Cauldron, CauldronPlugin, Ingredient};
 use follow::Follow;
 use iyes_loopless::prelude::*;
 
@@ -168,4 +168,41 @@ fn setup_map(
                 .insert(Cauldron)
                 .insert(Sensor);
         });
+
+    let stone = commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.3,
+                ..default()
+            })),
+            transform: Transform::from_xyz(1.0, 2.0, -1.0),
+            ..default()
+        })
+        .insert(Ingredient)
+        .insert_bundle((
+            Collider::ball(0.3),
+            RigidBody::Dynamic,
+            Name::new("Stone"),
+            Velocity::default(),
+        ))
+        .id();
+
+    let donut = commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Torus {
+                radius: 0.4,
+                ring_radius: 0.2,
+                ..default()
+            })),
+            transform: Transform::from_xyz(1.0, 2.0, -2.0),
+            ..default()
+        })
+        .insert(Ingredient)
+        .insert_bundle((
+            Collider::round_cylinder(0.025, 0.4, 0.2),
+            RigidBody::Dynamic,
+            Name::new("Donut"),
+            Velocity::default(),
+        ))
+        .id();
 }

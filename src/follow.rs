@@ -78,6 +78,6 @@ pub struct FollowPlugin;
 
 impl Plugin for FollowPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_follow);
+        app.add_system_to_stage(CoreStage::PreUpdate, update_follow);
     }
 }
