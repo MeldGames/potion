@@ -903,6 +903,32 @@ pub fn grab_collider(
 ) {
     for (hand, grabbing, global, children) in &hands {
         if grabbing.0 {
+            let mut already_grabbing = false;
+            let mut related_entities = HashSet::new();
+
+            if let Some(children) = children {
+                for child in children.iter() {
+                    related_entities.insert(*child);
+                    if let Ok(impulse) = impulse_joints.get(*child) {
+                        // We are already grabbing something so just skip this hand.
+                        already_grabbing = true;
+                        related_entities.insert(impulse.parent);
+                    }
+                }
+            }
+
+            // Walk up chain of impulse joints to make sure we aren't grabbing ourselves*
+            // *TODO: should also walk down the hierarchy to check that.
+            let mut child_entity = hand;
+            while let Ok(impulse) = impulse_joints.get(child_entity) {
+                related_entities.insert(impulse.parent);
+                child_entity = impulse.parent;
+            }
+
+            if already_grabbing {
+                continue;
+            }
+
             for contact_pair in rapier_context.contacts_with(hand) {
                 let other_collider = if contact_pair.collider1() == hand {
                     contact_pair.collider2()
@@ -910,26 +936,7 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                let mut already_grabbing = false;
-                let mut related_entities = HashSet::new();
-                if let Some(children) = children {
-                    for child in children.iter() {
-                        related_entities.insert(*child);
-                        if let Ok(impulse) = impulse_joints.get(*child) {
-                            already_grabbing = true;
-                            related_entities.insert(impulse.parent);
-                        }
-                    }
-                }
-
-                // Walk up chain of impulse joints to make sure we aren't grabbing ourselves.
-                let mut child_entity = hand;
-                while let Ok(impulse) = impulse_joints.get(child_entity) {
-                    related_entities.insert(impulse.parent);
-                    child_entity = impulse.parent;
-                }
-
-                if already_grabbing || related_entities.contains(&other_collider) {
+                if related_entities.contains(&other_collider) {
                     continue;
                 }
 
