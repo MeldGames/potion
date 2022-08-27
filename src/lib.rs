@@ -21,11 +21,13 @@ use crate::player::{PlayerInputPlugin, PlayerPlugin};
 
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectableRegistry;
+use bevy_prototype_debug_lines::*;
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
     app.add_plugins(DefaultPlugins);
     app.add_plugin(EguiPlugin);
+    app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
 

@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy_prototype_debug_lines::DebugLines;
 use std::f32::consts::{PI, TAU};
 
 use bevy_egui::EguiContext;
@@ -355,37 +356,17 @@ pub fn update_local_player_inputs(
 }
 
 #[derive(Default, Debug, Clone, Component)]
-pub struct CameraDirection(pub Quat);
+pub struct LookTransform(pub Transform);
 
-pub fn player_movement(
-    mut query: Query<(&Speed, &mut ControllerInput, &CameraDirection, &PlayerInput), With<Owned>>,
-) {
-    for (speed, mut controller, direction, player_input) in query.iter_mut() {
-        let mut dir = Vec3::new(0.0, 0.0, 0.0);
-        if player_input.left() {
-            dir.x += -1.;
-        }
-        if player_input.right() {
-            dir.x += 1.;
-        }
+impl LookTransform {
+    pub fn rotation(&self) -> Quat {
+        self.0.rotation
+    }
 
-        if player_input.back() {
-            dir.z += 1.;
-        }
-        if player_input.forward() {
-            dir.z += -1.;
-        }
-
-        // we only take into account horizontal rotation so looking down doesn't
-        // slow the character down.
-        let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
-        let dir = (rotation * dir).normalize_or_zero();
-
-        controller.movement = dir;
-        controller.jumping = player_input.jump();
+    pub fn translation(&self) -> Vec3 {
+        self.0.translation
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MouseState {
     Free,
@@ -451,11 +432,11 @@ pub fn player_binary_inputs(
         .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
     player_input.set_grabby_hands(
         0,
-        mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::E),
+        mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::LShift),
     );
     player_input.set_grabby_hands(
         1,
-        mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::Q),
+        mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::LShift),
     );
 }
 
@@ -566,7 +547,7 @@ pub fn setup_player(
                 commands
                     .entity(player_entity)
                     .insert(PlayerInput::default())
-                    .insert(CameraDirection::default())
+                    .insert(LookTransform::default())
                     .push_children(&[reticle]);
             }
             &PlayerEvent::Spawn { id } => {
@@ -754,17 +735,17 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
 }
 
 pub fn player_swivel_and_tilt(
-    mut inputs: Query<(&mut CameraDirection, &PlayerInput)>,
+    mut inputs: Query<(&mut LookTransform, &PlayerInput)>,
     mut necks: Query<(&mut Transform, &Follow), (With<Neck>, Without<Player>)>,
 ) {
     for (mut neck_transform, follow) in &mut necks {
-        if let Ok((mut direction, input)) = inputs.get_mut(follow.get()) {
+        if let Ok((mut look_transform, input)) = inputs.get_mut(follow.get()) {
             let rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
                 * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
             .into();
 
             neck_transform.rotation = rotation;
-            *direction = CameraDirection(rotation);
+            look_transform.0 = *neck_transform;
         }
     }
 }
@@ -776,7 +757,7 @@ pub struct TargetPosition(Option<Vec3>);
 pub struct Grabbing(bool);
 
 pub fn player_grabby_hands(
-    inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
+    inputs: Query<(&GlobalTransform, &LookTransform, &PlayerInput)>,
     joints: Query<&ImpulseJoint>,
     mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing, &ArmId), With<Hand>>,
 ) {
@@ -805,7 +786,7 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
             target_position.0 =
-                Some(global.translation() + (direction.0 * -Vec3::Z * 2.) + Vec3::Y);
+                Some(global.translation() + (direction.rotation() * -Vec3::Z * 2.) + Vec3::Y);
         } else {
             grabbing.0 = false;
         }
@@ -818,7 +799,7 @@ pub fn target_position(
     for (target, global, mut velocity) in &mut hands {
         let current = global.translation();
         if let Some(target) = target.0 {
-            velocity.linvel = (target - current).powf(3.0);
+            velocity.linvel = target - current;
         }
     }
 }
@@ -892,7 +873,6 @@ pub fn pull_up(
                 if let Ok((mut controller, input)) = controllers.get_mut(child_entity) {
                     let power = 1.0 - ((input.pitch + PI / 2.) / PI);
                     controller.custom_impulse += Vec3::Y * 1.5 * power;
-                    info!("impulse: {:?}", controller.custom_impulse);
                     break;
                 }
             }
@@ -1016,6 +996,55 @@ pub fn grab_collider(
                     }
                 }
             }
+        }
+    }
+}
+
+pub fn player_movement(
+    mut query: Query<
+        (
+            &GlobalTransform,
+            &mut ControllerInput,
+            &LookTransform,
+            &PlayerInput,
+        ),
+        With<Owned>,
+    >,
+    mut lines: ResMut<DebugLines>,
+) {
+    for (global, mut controller, look_transform, player_input) in query.iter_mut() {
+        let mut dir = Vec3::new(0.0, 0.0, 0.0);
+        if player_input.left() {
+            dir.x += -1.;
+        }
+        if player_input.right() {
+            dir.x += 1.;
+        }
+
+        if player_input.back() {
+            dir.z += 1.;
+        }
+        if player_input.forward() {
+            dir.z += -1.;
+        }
+
+        // we only take into account horizontal rotation so looking down doesn't
+        // slow the character down.
+        let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
+        let dir = (rotation * dir).normalize_or_zero();
+
+        controller.movement = dir;
+        controller.jumping = player_input.jump();
+
+        let current_dir = Vec2::new(global.forward().x, global.forward().z);
+        let desired_dir = Vec2::new(dir.x, dir.z);
+
+        if desired_dir.length() > 0.0 {
+            let y = current_dir.angle_between(desired_dir);
+            info!("current: {}", current_dir);
+            info!("desired: {}", desired_dir);
+            info!("angle: {}", y * 180. / PI);
+            controller.custom_torque.y = y * 0.01;
         }
     }
 }
