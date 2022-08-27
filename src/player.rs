@@ -811,7 +811,7 @@ pub fn target_position(
     for (target, global, mut velocity) in &mut hands {
         let current = global.translation();
         if let Some(target) = target.0 {
-            velocity.linvel = target - current;
+            velocity.linvel = (target - current).powf(3.0);
         }
     }
 }
@@ -1064,7 +1064,7 @@ pub fn player_movement(
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            controller.custom_torque.y = y;
+            controller.custom_torque.y = y * 0.1; // avoid overshooting
         }
     }
 }
