@@ -623,6 +623,21 @@ pub fn setup_player(
                     Vec3::new(-distance_from_body, 0.5, 0.0),
                 );
 
+                // for some body horror
+                /*
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    Vec3::new(0.0, 0.5, distance_from_body),
+                );
+
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    Vec3::new(0.0, 0.5, -distance_from_body),
+                );
+                */
+
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
