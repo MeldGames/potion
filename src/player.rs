@@ -54,7 +54,6 @@ bitflags::bitflags! {
         const LEFT = 1 << 3;
         const RIGHT = 1 << 4;
         const JUMP = 1 << 5;
-        const GRABBY_HANDS = 1 << 6;
     }
 }
 
@@ -87,11 +86,6 @@ impl PlayerInputSet {
             false => "-",
         };
 
-        keys += match self.contains(Self::GRABBY_HANDS) {
-            true => "@",
-            false => "-",
-        };
-
         keys
     }
 }
@@ -114,6 +108,8 @@ impl Debug for Radians {
 pub struct PlayerInput {
     /// Movement inputs
     pub binary_inputs: PlayerInputSet,
+    /// Grabby hands by index.
+    pub grabby_hands: [bool; 8],
     /// Vertical rotation of camera
     pub pitch: f32,
     /// Horizontal rotation of camera
@@ -138,6 +134,7 @@ impl PlayerInput {
     pub fn new() -> Self {
         Self {
             binary_inputs: PlayerInputSet::empty(),
+            grabby_hands: [false; 8],
             pitch: 0.0,
             yaw: 0.0,
             //casted: [None; 4],
@@ -164,9 +161,8 @@ impl PlayerInput {
         self.binary_inputs.set(PlayerInputSet::JUMP, jump);
     }
 
-    pub fn set_grabby_hands(&mut self, grabby_hands: bool) {
-        self.binary_inputs
-            .set(PlayerInputSet::GRABBY_HANDS, grabby_hands);
+    pub fn set_grabby_hands(&mut self, index: usize, grabby_hands: bool) {
+        self.grabby_hands[index] = grabby_hands;
     }
 
     pub fn forward(&self) -> bool {
@@ -189,8 +185,8 @@ impl PlayerInput {
         self.binary_inputs.contains(PlayerInputSet::JUMP)
     }
 
-    pub fn grabby_hands(&self) -> bool {
-        self.binary_inputs.contains(PlayerInputSet::GRABBY_HANDS)
+    pub fn grabby_hands(&self, index: usize) -> bool {
+        self.grabby_hands[index]
     }
 }
 
@@ -454,6 +450,11 @@ pub fn player_binary_inputs(
     player_input
         .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
     player_input.set_grabby_hands(
+        0,
+        mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::E),
+    );
+    player_input.set_grabby_hands(
+        1,
         mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::Q),
     );
 }
@@ -485,7 +486,6 @@ pub enum PlayerEvent {
 
 pub fn setup_player(
     mut commands: Commands,
-    mut server_entities: ResMut<ServerEntities>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut asset_server: ResMut<AssetServer>,
@@ -612,15 +612,17 @@ pub fn setup_player(
                     .id();
 
                 let distance_from_body = 0.7;
-                attach_arm(
+                let (right_arm, right_hand) = attach_arm(
                     &mut commands,
                     player_entity,
                     Vec3::new(distance_from_body, 0.5, 0.0),
+                    0,
                 );
-                attach_arm(
+                let (left_arm, left_hand) = attach_arm(
                     &mut commands,
                     player_entity,
                     Vec3::new(-distance_from_body, 0.5, 0.0),
+                    1,
                 );
 
                 // for some body horror
@@ -677,9 +679,12 @@ pub fn setup_player(
     }
 }
 
-pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
+#[derive(Debug, Clone, Component)]
+pub struct ArmId(usize);
+
+pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -> (Entity, Entity) {
     let max_force = 1000.0;
-    let twist_stiffness = 20.0;
+    let twist_stiffness = 2.0;
     let twist_damping = 0.2;
     let resting_stiffness = 2.0;
     let resting_damping = 0.2;
@@ -712,6 +717,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .insert(crate::physics::PLAYER_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
         .insert(ImpulseJoint::new(to, arm_joint))
+        .insert(ArmId(index))
         .id();
 
     let hand_joint = SphericalJointBuilder::new()
@@ -728,7 +734,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
     let mut hand_joint = hand_joint.build();
     hand_joint.set_contacts_enabled(false);
 
-    let _hand_entity = commands
+    let hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
             1.0, 10.0, 1.0,
         )))
@@ -741,7 +747,10 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3) {
         .insert(crate::physics::PLAYER_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(arm_entity, hand_joint))
+        .insert(ArmId(index))
         .id();
+
+    (arm_entity, hand_entity)
 }
 
 pub fn player_swivel_and_tilt(
@@ -769,10 +778,9 @@ pub struct Grabbing(bool);
 pub fn player_grabby_hands(
     inputs: Query<(&GlobalTransform, &CameraDirection, &PlayerInput)>,
     joints: Query<&ImpulseJoint>,
-    mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing), With<Hand>>,
-    mut collision_groups: Query<&mut CollisionGroups>,
+    mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing, &ArmId), With<Hand>>,
 ) {
-    for (hand, mut target_position, mut grabbing) in &mut hands {
+    for (hand, mut target_position, mut grabbing, arm_id) in &mut hands {
         target_position.0 = None;
 
         let arm_entity = if let Ok(joint) = joints.get(hand) {
@@ -794,22 +802,12 @@ pub fn player_grabby_hands(
                 continue;
             };
 
-        if input.grabby_hands() {
+        if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
             target_position.0 =
                 Some(global.translation() + (direction.0 * -Vec3::Z * 2.) + Vec3::Y);
         } else {
             grabbing.0 = false;
-        }
-
-        if let Ok(collision_groups) = collision_groups.get_many_mut([hand, arm_entity]) {
-            for mut collision_group in collision_groups {
-                if input.grabby_hands() {
-                    //*collision_group = GRAB_GROUPING;
-                } else {
-                    //*collision_group = REST_GROUPING;
-                }
-            }
         }
     }
 }
