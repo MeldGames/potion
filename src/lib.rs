@@ -143,12 +143,12 @@ fn setup_map(
     );
 
     let stone = commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.3,
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/rock1.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 1.075),
                 ..default()
-            })),
-            transform: Transform::from_xyz(1.0, 2.0, -1.0),
+            },
             ..default()
         })
         .insert(Ingredient)
@@ -186,7 +186,7 @@ fn setup_map(
             scene: asset_server.load("models/prallet.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-2.5, 1.3, -0.075),
-                scale: Vec3::splat(1.2),
+                scale: Vec3::splat(1.),
                 ..default()
             },
             ..default()
@@ -196,7 +196,7 @@ fn setup_map(
         .insert_bundle((
             Collider::ball(0.3),
             RigidBody::Dynamic,
-            Name::new("Stone"),
+            Name::new("Prallet"),
             Velocity::default(),
         ))
         .id();
