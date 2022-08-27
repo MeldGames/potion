@@ -19,7 +19,7 @@ fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>,mut commands: C
     spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
     
     commands.spawn_bundle(SceneBundle {
-        scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
+        scene: _asset_server.load("models/ground.glb#Scene0"),
         ..default()
     });
    
