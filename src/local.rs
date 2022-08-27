@@ -22,6 +22,7 @@ fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>,mut commands: C
         scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
         ..default()
     });
+   
 
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,

@@ -128,6 +128,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
+
     crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
@@ -176,6 +177,26 @@ fn setup_map(
             Collider::round_cylinder(0.025, 0.4, 0.2),
             RigidBody::Dynamic,
             Name::new("Donut"),
+            Velocity::default(),
+        ))
+        .id();
+
+    let prallet = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/prallet.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-2.5, 1.3, -0.075),
+                scale: Vec3::splat(1.2),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Ingredient)
+        .insert(crate::deposit::Value::new(1))
+        .insert_bundle((
+            Collider::ball(0.3),
+            RigidBody::Dynamic,
+            Name::new("Stone"),
             Velocity::default(),
         ))
         .id();

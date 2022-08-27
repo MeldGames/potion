@@ -117,8 +117,8 @@ pub fn spawn_deposit_box(
     position: Transform,
 ) -> Entity {
     let model = commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube::new(0.5))),
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/crate.glb#Scene0"),
             ..default()
         })
         .insert(Name::new("Deposit Box Model"))
