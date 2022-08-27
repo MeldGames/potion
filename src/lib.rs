@@ -31,7 +31,6 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
 
-    app.add_plugin(bevy_mod_wanderlust::WanderlustPlugin);
     app.insert_resource(InspectableRegistry::default());
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
@@ -68,6 +67,7 @@ pub fn setup_app(app: &mut App) {
     app.add_startup_system(setup_map);
 
     app.add_plugin(InspectableRapierPlugin);
+    app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
 fn outline_meshes(
@@ -127,7 +127,6 @@ fn setup_map(
             Name::new("Test capsule"),
             crate::physics::TERRAIN_GROUPING,
         ));
-
 
     crate::cauldron::spawn_cauldron(
         &mut commands,

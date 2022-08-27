@@ -29,6 +29,18 @@ use smooth_bevy_cameras::{
 use crate::follow::{Follow, FollowPlugin};
 use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
+pub struct CustomWanderlustPlugin;
+
+impl Plugin for CustomWanderlustPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<ControllerState>()
+            .register_type::<ControllerSettings>()
+            .register_type::<ControllerInput>()
+            .add_startup_system(bevy_mod_wanderlust::setup_physics_context)
+            .add_network_system(bevy_mod_wanderlust::movement);
+    }
+}
+
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
 pub struct Player {
@@ -1050,9 +1062,9 @@ pub fn player_movement(
             0.0,
         );
 
-        if desired_dir.length() > 0.0 {
+        if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            controller.custom_torque.y = y * 0.1;
+            controller.custom_torque.y = y;
         }
     }
 }
