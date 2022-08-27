@@ -910,11 +910,13 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
+                let mut already_grabbing = false;
                 let mut related_entities = HashSet::new();
                 if let Some(children) = children {
                     for child in children.iter() {
                         related_entities.insert(*child);
                         if let Ok(impulse) = impulse_joints.get(*child) {
+                            already_grabbing = true;
                             related_entities.insert(impulse.parent);
                         }
                     }
@@ -927,7 +929,7 @@ pub fn grab_collider(
                     child_entity = impulse.parent;
                 }
 
-                if related_entities.contains(&other_collider) {
+                if already_grabbing || related_entities.contains(&other_collider) {
                     continue;
                 }
 
