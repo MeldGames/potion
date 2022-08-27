@@ -12,6 +12,7 @@ use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{Cauldron, CauldronPlugin, Ingredient};
+use deposit::DepositPlugin;
 use follow::Follow;
 use iyes_loopless::prelude::*;
 
@@ -50,6 +51,7 @@ pub fn setup_app(app: &mut App) {
         })
         .add_plugin(PlayerPlugin)
         .add_plugin(CauldronPlugin)
+        .add_plugin(DepositPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
             depth_test: true,
@@ -147,6 +149,7 @@ fn setup_map(
             ..default()
         })
         .insert(Ingredient)
+        .insert(crate::deposit::Value::new(1))
         .insert_bundle((
             Collider::ball(0.3),
             RigidBody::Dynamic,
@@ -165,6 +168,7 @@ fn setup_map(
             transform: Transform::from_xyz(1.0, 2.0, -2.0),
             ..default()
         })
+        .insert(crate::deposit::Value::new(5))
         .insert(Ingredient)
         .insert_bundle((
             Collider::round_cylinder(0.025, 0.4, 0.2),

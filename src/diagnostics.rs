@@ -39,6 +39,6 @@ pub struct DiagnosticsEguiPlugin;
 
 impl Plugin for DiagnosticsEguiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(display_diagnostics);
+        //app.add_system(display_diagnostics);
     }
 }

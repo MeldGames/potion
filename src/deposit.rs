@@ -17,8 +17,8 @@ pub struct DepositBox;
 pub struct Value(u64);
 
 impl Value {
-    pub fn new() -> Self {
-        Self(0)
+    pub fn new(value: u64) -> Self {
+        Self(value)
     }
 
     pub fn get(&self) -> u64 {
@@ -64,6 +64,9 @@ pub struct DepositPlugin;
 impl Plugin for DepositPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Value>();
+
+        app.add_system(display_money);
+
         app.add_network_system(deposit);
     }
 }
@@ -98,13 +101,21 @@ pub fn deposit(
     }
 }
 
+pub fn display_money(mut egui_context: ResMut<bevy_egui::EguiContext>, value: Res<Value>) {
+    egui::Window::new("Value")
+        .min_width(0.0)
+        .default_width(1.0)
+        .show(egui_context.ctx_mut(), |ui| {
+            ui.label(format!("Tendies: {:?}", value.get()));
+        });
+}
+
 pub fn spawn_deposit_box(
     commands: &mut Commands,
     asset_server: &AssetServer,
     meshes: &mut Assets<Mesh>,
     position: Transform,
 ) -> Entity {
-    let size = Vec3::new(0.7, 0.55, 0.5);
     let model = commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(0.5))),
