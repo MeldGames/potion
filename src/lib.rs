@@ -200,4 +200,24 @@ fn setup_map(
             Velocity::default(),
         ))
         .id();
+
+    let thorns = commands
+    .spawn_bundle(SceneBundle {
+        scene: asset_server.load("models/thorns.glb#Scene0"),
+        transform: Transform {
+            translation: Vec3::new(-2.5, 1.3, -0.075),
+            scale: Vec3::splat(1.),
+            ..default()
+        },
+        ..default()
+    })
+    .insert(Ingredient)
+    .insert(crate::deposit::Value::new(1))
+    .insert_bundle((
+        Collider::ball(0.3),
+        RigidBody::Dynamic,
+        Name::new("Thorns"),
+        Velocity::default(),
+    ))
+    .id();
 }
