@@ -1039,12 +1039,20 @@ pub fn player_movement(
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
         let desired_dir = Vec2::new(dir.x, dir.z);
 
+        lines.line(
+            global.translation(),
+            global.translation() + Vec3::new(current_dir.x, 0.0, current_dir.y),
+            0.0,
+        );
+        lines.line(
+            global.translation(),
+            global.translation() + Vec3::new(desired_dir.x, 0.0, desired_dir.y),
+            0.0,
+        );
+
         if desired_dir.length() > 0.0 {
-            let y = current_dir.angle_between(desired_dir);
-            info!("current: {}", current_dir);
-            info!("desired: {}", desired_dir);
-            info!("angle: {}", y * 180. / PI);
-            controller.custom_torque.y = y * 0.01;
+            let y = desired_dir.angle_between(current_dir);
+            controller.custom_torque.y = y * 0.1;
         }
     }
 }
