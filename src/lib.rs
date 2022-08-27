@@ -1,4 +1,5 @@
 pub mod cauldron;
+pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
 pub mod follow;
@@ -123,51 +124,18 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    let cauldron_model = commands
-        .spawn_bundle(SceneBundle {
-            scene: asset_server.load("models/cauldron.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-5.5, -0.3, -0.075),
-                scale: Vec3::splat(1.2),
-                ..default()
-            },
-            ..default()
-        })
-        .id();
+    crate::cauldron::spawn_cauldron(
+        &mut commands,
+        &*asset_server,
+        Transform::from_xyz(-2.0, 3.0, -2.0),
+    );
 
-    let cauldron = commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            -2.0, 3.0, -2.0,
-        )))
-        .insert_bundle((
-            ColliderMassProperties::Density(15.0),
-            RigidBody::Dynamic,
-            Collider::cylinder(0.4, 0.75),
-            Name::new("Cauldron"),
-            crate::physics::TERRAIN_GROUPING,
-        ))
-        .insert_bundle(VisibilityBundle::default())
-        .add_child(cauldron_model)
-        .id();
-
-    commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            -2.0, 3.0, -2.0,
-        )))
-        .insert_bundle(Follow::all(cauldron))
-        .insert_bundle((
-            Name::new("Cauldron Ingredient Hitbox"),
-            crate::physics::TERRAIN_GROUPING,
-        ))
-        .with_children(|children| {
-            children
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, 0.25, 0.0,
-                )))
-                .insert(Collider::cylinder(0.4, 0.6))
-                .insert(Cauldron)
-                .insert(Sensor);
-        });
+    crate::deposit::spawn_deposit_box(
+        &mut commands,
+        &*asset_server,
+        &mut meshes,
+        Transform::from_xyz(2.0, 3.0, -2.0),
+    );
 
     let stone = commands
         .spawn_bundle(PbrBundle {
