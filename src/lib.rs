@@ -245,7 +245,7 @@ fn setup_map(
     .id();
 
     
-    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/door.glb#Scene0");
+    let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
     
     let door = commands
     .spawn_bundle(SceneBundle {
@@ -263,11 +263,12 @@ fn setup_map(
         Name::new("Door"),
         Velocity::default(),
     ))
+    .insert(ColliderLoad)
+    .insert(level_collision_mesh2)
     .id();
 
 
-    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/walls_shop1.glb#Mesh0");
-    dbg!(level_collision_mesh.clone());
+    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
     let walls = commands
     .spawn_bundle(SceneBundle {
