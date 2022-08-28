@@ -735,7 +735,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
         .insert(Hand)
         .insert(TargetPosition(None))
         .insert(Grabbing(false))
-        .insert(Velocity::default())
+        .insert(ExternalImpulse::default())
         .insert(RigidBody::Dynamic)
         .insert(crate::physics::PLAYER_GROUPING)
         .insert(Collider::ball(hand_radius))
@@ -806,12 +806,13 @@ pub fn player_grabby_hands(
 }
 
 pub fn target_position(
-    mut hands: Query<(&TargetPosition, &GlobalTransform, &mut Velocity), With<Hand>>,
+    mut hands: Query<(&TargetPosition, &GlobalTransform, &mut ExternalImpulse), With<Hand>>,
 ) {
-    for (target, global, mut velocity) in &mut hands {
+    for (target, global, mut impulse) in &mut hands {
         let current = global.translation();
         if let Some(target) = target.0 {
-            velocity.linvel = (target - current).powf(3.0);
+            impulse.impulse = (target - current) * 0.02;
+            //info!("impulse: {:?}", impulse);
         }
     }
 }
