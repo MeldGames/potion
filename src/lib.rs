@@ -66,6 +66,8 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(OutlinePlugin);
     app.add_system(outline_meshes);
     app.add_startup_system(setup_map);
+    app.add_event::<AssetEvent<Mesh>>();
+    app.add_system(update_level_collision);
 
     app.add_plugin(InspectableRapierPlugin);
     app.add_plugin(crate::player::CustomWanderlustPlugin);
@@ -205,8 +207,8 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/thorns.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-2.5, 10.3, -0.075),
-                scale: Vec3::splat(10.),
+                translation: Vec3::new(-2.5, 1.3, -0.075),
+                scale: Vec3::splat(1.),
                 ..default()
             },
             ..default()
@@ -220,9 +222,30 @@ fn setup_map(
             Velocity::default(),
         ))
         .id();
+    
+        
+    let welt = commands
+    .spawn_bundle(SceneBundle {
+        scene: asset_server.load("models/weltberry.glb#Scene0"),
+        transform: Transform {
+            translation: Vec3::new(-2.5, 2.3, -0.075),
+            scale: Vec3::splat(1.),
+            ..default()
+        },
+        ..default()
+    })
+    .insert(Ingredient)
+    .insert(crate::deposit::Value::new(1))
+    .insert_bundle((
+        Collider::ball(0.3),
+        RigidBody::Dynamic,
+        Name::new("Weltberry"),
+        Velocity::default(),
+    ))
+    .id();
 
     
-    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0");
+    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/door.glb#Scene0");
     
     let door = commands
     .spawn_bundle(SceneBundle {
@@ -243,7 +266,8 @@ fn setup_map(
     .id();
 
 
-
+    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/walls_shop1.glb#Mesh0");
+    dbg!(level_collision_mesh.clone());
 
     let walls = commands
     .spawn_bundle(SceneBundle {
@@ -261,5 +285,89 @@ fn setup_map(
         Name::new("Walls Shop"),
         Velocity::default(),
     ))
+    .insert(ColliderLoad)
+    .insert(level_collision_mesh)
     .id();
+
+
+    // Bounds
+    commands
+    .spawn()
+    .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        0.0, 10.0, 50.0,
+    )))
+    .insert_bundle((
+        RigidBody::Fixed,
+        Collider::cuboid(50.0, 20.0, 1.0),
+        Name::new("Bound Wall"),
+        crate::physics::TERRAIN_GROUPING,
+    ));
+    commands
+    .spawn()
+    .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        0.0, 10.0, -50.0,
+    )))
+    .insert_bundle((
+        RigidBody::Fixed,
+        Collider::cuboid(50.0, 20.0, 1.0),
+        Name::new("Bound Wall"),
+        crate::physics::TERRAIN_GROUPING,
+    ));
+
+    commands
+    .spawn()
+    .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        50.0, 10.0, 0.0,
+    )))
+    .insert_bundle((
+        RigidBody::Fixed,
+        Collider::cuboid(1.0, 20.0, 50.0),
+        Name::new("Bound Wall"),
+        crate::physics::TERRAIN_GROUPING,
+    ));
+    commands
+    .spawn()
+    .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        -50.0, 10.0, 0.0,
+    )))
+    .insert_bundle((
+        RigidBody::Fixed,
+        Collider::cuboid(1.0, 20.0, 50.0),
+        Name::new("Bound Wall"),
+        crate::physics::TERRAIN_GROUPING,
+    ));
+    
+}
+
+
+#[derive(Debug, Component, Clone, Copy)]
+pub struct ColliderLoad;
+
+fn update_level_collision(
+    mut commands: Commands,
+    mut ev_asset: EventReader<AssetEvent<Mesh>>,
+    mut assets: ResMut<Assets<Mesh>>,
+    mut replace: Query<(&mut Collider, &Handle<Mesh>, Entity), With<ColliderLoad>>,
+
+) {
+    for ev in ev_asset.iter() {
+        match ev {
+            AssetEvent::Created { handle } => {
+                let loaded_mesh = assets.get_mut(handle).unwrap();
+                for (mut col, inner_handle, e) in replace.iter_mut(){
+                    if *inner_handle == *handle{
+                        *col = Collider::from_bevy_mesh(loaded_mesh, &ComputedColliderShape::TriMesh).unwrap();
+                        commands.entity(e).remove::<ColliderLoad>();
+                    }
+                }
+
+            }
+            AssetEvent::Modified { handle } => {
+
+            }
+            AssetEvent::Removed { handle } => {
+                
+            }
+        }
+    }
 }
