@@ -16,7 +16,7 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 use sabi::{prelude::*, Replicate};
 
-use sabi::stage::NetworkSimulationAppExt;
+use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 use serde::{Deserialize, Serialize};
 
@@ -331,12 +331,9 @@ impl Plugin for PlayerPlugin {
                 .after("update_player_inputs")
                 .after("player_grabby_hands"),
         )
-        .add_network_system(
-            avoid_intersecting
-                .label("avoid_intersecting")
-                .after("update_player_inputs")
-                .after("player_movement")
-                .after("character_crouch"),
+        .add_system_to_network_stage(
+            NetworkCoreStage::PostUpdate,
+            avoid_intersecting.label("avoid_intersecting"),
         )
         .add_network_system(
             character_crouch
@@ -509,6 +506,7 @@ pub fn setup_player(
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,
+                        buffer: 0.075,
                     })
                     .insert(Name::new("Player Camera"))
                     .id();
@@ -826,6 +824,7 @@ pub fn target_position(
 pub struct AvoidIntersecting {
     pub dir: Vec3,
     pub max_toi: f32,
+    pub buffer: f32,
 }
 
 pub fn avoid_intersecting(
@@ -845,16 +844,16 @@ pub fn avoid_intersecting(
         let toi = if let Some((_entity, toi)) = rapier_context.cast_ray(
             global_transform.translation,
             global_transform.rotation * avoid.dir,
-            avoid.max_toi,
+            avoid.max_toi + avoid.buffer,
             true,
             filter,
         ) {
             toi
         } else {
-            avoid.max_toi
+            avoid.max_toi + avoid.buffer
         };
 
-        transform.translation = avoid.dir * toi;
+        transform.translation = avoid.dir * (toi - avoid.buffer);
     }
 }
 
@@ -1079,7 +1078,7 @@ pub fn player_movement(
 
         // If we are grabby then make the character face the way we are grabbing.
         if player_input.any_grabby_hands() {
-            let camera_dir = rotation * Vec3::Z;
+            let camera_dir = rotation * -Vec3::Z;
             desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
         }
 
