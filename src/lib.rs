@@ -220,4 +220,46 @@ fn setup_map(
             Velocity::default(),
         ))
         .id();
+
+    
+    let level_collision_mesh: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0");
+    
+    let door = commands
+    .spawn_bundle(SceneBundle {
+        scene: asset_server.load("models/door.glb#Scene0"),
+        transform: Transform {
+            translation: Vec3::new(-10.5, 1.3, -0.075),
+            scale: Vec3::splat(1.),
+            ..default()
+        },
+        ..default()
+    })
+    .insert_bundle((
+        Collider::cuboid(1.0, 1.0, 1.0),
+        RigidBody::Dynamic,
+        Name::new("Door"),
+        Velocity::default(),
+    ))
+    .id();
+
+
+
+
+    let walls = commands
+    .spawn_bundle(SceneBundle {
+        scene: asset_server.load("models/walls_shop1.glb#Scene0"),
+        transform: Transform {
+            translation: Vec3::new(-10.5, 1.3, -0.075),
+            scale: Vec3::splat(1.),
+            ..default()
+        },
+        ..default()
+    })
+    .insert_bundle((
+        Collider::cuboid(1.0, 1.0, 1.0),
+        RigidBody::Dynamic,
+        Name::new("Walls Shop"),
+        Velocity::default(),
+    ))
+    .id();
 }
