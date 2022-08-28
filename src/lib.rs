@@ -6,6 +6,7 @@ pub mod follow;
 pub mod network;
 pub mod physics;
 pub mod player;
+pub mod store;
 
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
@@ -201,22 +202,22 @@ fn setup_map(
         .id();
 
     let thorns = commands
-    .spawn_bundle(SceneBundle {
-        scene: asset_server.load("models/thorns.glb#Scene0"),
-        transform: Transform {
-            translation: Vec3::new(-2.5, 1.3, -0.075),
-            scale: Vec3::splat(1.),
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/thorns.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-2.5, 10.3, -0.075),
+                scale: Vec3::splat(10.),
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-    })
-    .insert(Ingredient)
-    .insert(crate::deposit::Value::new(1))
-    .insert_bundle((
-        Collider::ball(0.3),
-        RigidBody::Dynamic,
-        Name::new("Thorns"),
-        Velocity::default(),
-    ))
-    .id();
+        })
+        .insert(Ingredient)
+        .insert(crate::deposit::Value::new(1))
+        .insert_bundle((
+            Collider::ball(0.3),
+            RigidBody::Dynamic,
+            Name::new("Thorns"),
+            Velocity::default(),
+        ))
+        .id();
 }

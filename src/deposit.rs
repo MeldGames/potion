@@ -25,6 +25,10 @@ impl Value {
         self.0
     }
 
+    pub fn enough(&self, value: &Self) -> bool {
+        self.0 >= value.0
+    }
+
     pub fn set(&mut self, value: u64) {
         self.0 = value;
     }

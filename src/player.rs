@@ -599,6 +599,7 @@ pub fn setup_player(
                         },
                         ..default()
                     })
+                    //.insert(crate::deposit::Value::new(500))
                     .insert(Speed::default())
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
