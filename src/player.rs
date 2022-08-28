@@ -198,6 +198,10 @@ impl PlayerInput {
         self.binary_inputs.contains(PlayerInputSet::JUMP)
     }
 
+    pub fn any_grabby_hands(&self) -> bool {
+        self.grabby_hands.iter().any(|grabby| *grabby)
+    }
+
     pub fn grabby_hands(&self, index: usize) -> bool {
         self.grabby_hands[index]
     }
@@ -1059,7 +1063,7 @@ pub fn player_movement(
         controller.jumping = player_input.jump();
 
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
-        let desired_dir = Vec2::new(dir.x, dir.z);
+        let mut desired_dir = Vec2::new(dir.x, dir.z);
 
         lines.line(
             global.translation(),
@@ -1071,6 +1075,12 @@ pub fn player_movement(
             global.translation() + Vec3::new(desired_dir.x, 0.0, desired_dir.y),
             0.0,
         );
+
+        // If we are grabby then make the character face the way we are grabbing.
+        if player_input.any_grabby_hands() {
+            let camera_dir = rotation * Vec3::Z;
+            desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
+        }
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
