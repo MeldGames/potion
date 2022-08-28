@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 #[derive(Debug, Clone, Component)]
 pub struct Follow(Entity);
@@ -78,6 +79,6 @@ pub struct FollowPlugin;
 
 impl Plugin for FollowPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PreUpdate, update_follow);
+        app.add_network_system(update_follow.label("update_follow"));
     }
 }
