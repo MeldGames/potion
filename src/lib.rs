@@ -250,27 +250,7 @@ fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
-        
-    let welt2 = commands
-    .spawn_bundle(SceneBundle {
-        scene: asset_server.load("models/welt3.glb#Scene0"),
-        transform: Transform {
-            translation: Vec3::new(-1.5, 2.3, -0.075),
-            scale: Vec3::splat(1.),
-            ..default()
-        },
-        ..default()
-    })
-    .insert(Ingredient)
-    .insert(crate::deposit::Value::new(1))
-    .insert_bundle((
-        Collider::ball(0.3),
-        RigidBody::Dynamic,
-        Name::new("Weltberry"),
-        Velocity::default(),
-        DEFAULT_FRICTION,
-    ))
-    .id();
+ 
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
