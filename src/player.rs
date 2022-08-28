@@ -270,7 +270,11 @@ pub fn window_focused(windows: Option<Res<Windows>>) -> bool {
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(target_os = "windows")]
+        app.add_loopless_state(MouseState::Free);
+        #[cfg(not(target_os = "windows"))]
         app.add_loopless_state(MouseState::Locked);
+
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
@@ -389,6 +393,14 @@ pub enum MouseState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LockToggle(bool);
 
+#[cfg(target_os = "windows")]
+impl Default for LockToggle {
+    fn default() -> Self {
+        Self(false)
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
 impl Default for LockToggle {
     fn default() -> Self {
         Self(true)
@@ -406,15 +418,15 @@ pub fn toggle_mouse_lock(
         toggle.0 = !toggle.0;
     }
 
-    let should_free = (kb.pressed(KeyCode::LAlt) || toggle.0)
+    let should_lock = (kb.pressed(KeyCode::LAlt) || toggle.0)
         && windows
             .get_primary()
             .and_then(|window| Some(window.is_focused()))
-            .unwrap_or(true);
+            .unwrap_or(false);
 
     match &state.0 {
-        MouseState::Free if !should_free => commands.insert_resource(NextState(MouseState::Locked)),
-        MouseState::Locked if should_free => commands.insert_resource(NextState(MouseState::Free)),
+        MouseState::Free if should_lock => commands.insert_resource(NextState(MouseState::Locked)),
+        MouseState::Locked if !should_lock => commands.insert_resource(NextState(MouseState::Free)),
         _ => {}
     }
 }
