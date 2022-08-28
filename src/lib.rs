@@ -257,8 +257,8 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-10.5, 1.3, -0.075),
-                scale: Vec3::splat(1.),
+                translation: Vec3::new(-10.5, 2.3, -0.075),
+                scale: Vec3::splat(1.5),
                 ..default()
             },
             ..default()
@@ -282,7 +282,7 @@ fn setup_map(
         scene: asset_server.load("models/walls_shop1.glb#Scene0"),
         transform: Transform {
             translation: Vec3::new(-10.5, 80.3, -0.075),
-            scale: Vec3::splat(1.),
+            scale: Vec3::splat(1.5),
             ..default()
         },
         ..default()
