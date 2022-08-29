@@ -47,10 +47,10 @@ pub fn setup_app(app: &mut App) {
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .insert_resource(WindowDescriptor {
-            title: "Brewification".to_string(),
+            title: "Brewalized".to_string(),
             width: 800.,
             height: 600.,
-            cursor_visible: false,
+            cursor_visible: true,
             cursor_locked: false,
             present_mode: bevy::window::PresentMode::Immediate,
             ..Default::default()
