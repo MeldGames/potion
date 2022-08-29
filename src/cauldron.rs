@@ -2,7 +2,7 @@ use bevy::{ecs::query::WorldQuery, prelude::*};
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::follow::Follow;
+use crate::{follow::Follow, ColliderLoad};
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -68,32 +68,30 @@ pub fn spawn_cauldron(
     asset_server: &AssetServer,
     position: Transform,
 ) -> Entity {
-    let cauldron_model = commands
+    let level_collision_mesh: Handle<Mesh> =
+    asset_server.load("models/cauldron.glb#Mesh0/Primitive0");
+    let cauldron = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-5.5, -0.3, -0.075),
-                scale: Vec3::splat(1.2),
+                translation: Vec3::new(0.5, 2.3, -1.075),
                 ..default()
             },
             ..default()
         })
-        .insert(Name::new("Cauldron Model"))
-        .id();
-
-    let cauldron = commands
-        .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle((
-            ColliderMassProperties::Density(15.0),
+            ColliderMassProperties::Density(5.0),
             RigidBody::Dynamic,
             Collider::cylinder(0.4, 0.75),
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert_bundle(VisibilityBundle::default())
-        .add_child(cauldron_model)
+        .insert(Name::new("Cauldron Model"))
+        .insert(ColliderLoad)
+        .insert(level_collision_mesh)
         .id();
-
+        
+ 
     commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle(Follow::all(cauldron))
@@ -106,7 +104,7 @@ pub fn spawn_cauldron(
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, 0.25, 0.0,
                 )))
-                .insert(Collider::cylinder(0.4, 0.6))
+                .insert(Collider::cylinder(0.4, 0.55))
                 .insert(Cauldron)
                 .insert(Sensor);
         });
