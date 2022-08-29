@@ -270,9 +270,6 @@ pub fn window_focused(windows: Option<Res<Windows>>) -> bool {
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
-        #[cfg(target_os = "windows")]
-        app.add_loopless_state(MouseState::Free);
-        #[cfg(not(target_os = "windows"))]
         app.add_loopless_state(MouseState::Locked);
 
         app.insert_resource(LockToggle::default());
@@ -289,6 +286,7 @@ impl Plugin for PlayerInputPlugin {
                 .run_if(window_focused)
                 .label("player_mouse_input"),
         )
+        .add_system(initial_mouse_click.label("initial_mouse_click"))
         .add_system(
             toggle_mouse_lock
                 .run_if(window_focused)
@@ -393,17 +391,25 @@ pub enum MouseState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LockToggle(bool);
 
-#[cfg(target_os = "windows")]
-impl Default for LockToggle {
-    fn default() -> Self {
-        Self(false)
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
 impl Default for LockToggle {
     fn default() -> Self {
         Self(true)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InitialClick;
+
+pub fn initial_mouse_click(
+    mut commands: Commands,
+    mouse_input: Res<Input<MouseButton>>,
+    initial_click: Option<Res<InitialClick>>,
+) {
+    if let None = initial_click {
+        if mouse_input.any_pressed([MouseButton::Left, MouseButton::Right]) {
+            info!("initial click");
+            commands.insert_resource(InitialClick);
+        }
     }
 }
 
@@ -413,6 +419,7 @@ pub fn toggle_mouse_lock(
     kb: Res<Input<KeyCode>>,
     state: Res<CurrentState<MouseState>>,
     mut toggle: ResMut<LockToggle>,
+    initial_click: Option<Res<InitialClick>>,
 ) {
     if kb.just_pressed(KeyCode::Delete) {
         toggle.0 = !toggle.0;
@@ -422,7 +429,8 @@ pub fn toggle_mouse_lock(
         && windows
             .get_primary()
             .and_then(|window| Some(window.is_focused()))
-            .unwrap_or(false);
+            .unwrap_or(false)
+        && initial_click.is_some();
 
     match &state.0 {
         MouseState::Free if should_lock => commands.insert_resource(NextState(MouseState::Locked)),
