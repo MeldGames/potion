@@ -20,8 +20,6 @@ pub mod ui;
 
 pub const PORT: u16 = 42069;
 
-pub const TICK_RATE: Duration = tick_hz(100);
-
 pub struct NetworkPlugin;
 
 impl Plugin for NetworkPlugin {

@@ -15,7 +15,7 @@ use bevy_mod_wanderlust::{
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
-use sabi::{prelude::*, Replicate};
+use sabi::prelude::*;
 
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
@@ -239,7 +239,7 @@ pub struct FromCamera(pub Entity);
     Inspectable,
     Serialize,
     Deserialize,
-    Replicate,
+    //Replicate,
 )]
 #[reflect(Component)]
 pub struct Speed(pub f32);
@@ -325,17 +325,19 @@ impl Plugin for PlayerPlugin {
 
         app.insert_resource(Events::<PlayerEvent>::default());
 
-        app.add_plugin(ReplicatePlugin::<Speed>::default());
+        //app.add_plugin(ReplicatePlugin::<Speed>::default());
 
         app.add_network_system(
             player_movement
                 .label("player_movement")
+                .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs")
                 .after("player_swivel_and_tilt"),
         )
         .add_network_system(
             player_grabby_hands
                 .label("player_grabby_hands")
+                .after(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs")
                 .after("player_movement"),
         )
@@ -352,12 +354,14 @@ impl Plugin for PlayerPlugin {
         .add_network_system(
             character_crouch
                 .label("character_crouch")
+                .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs"),
         )
         //.add_network_system(pull_up.label("pull_up").after("update_player_inputs"))
         .add_network_system(
             grab_collider
                 .label("grab_collider")
+                .after(bevy_mod_wanderlust::movement)
                 .after("target_position"),
         )
         .add_network_system(
@@ -372,7 +376,8 @@ impl Plugin for PlayerPlugin {
 
 pub fn update_local_player_inputs(
     player_input: Res<PlayerInput>,
-    mut query: Query<&mut PlayerInput, With<Owned>>,
+    //mut query: Query<&mut PlayerInput, With<Owned>>,
+    mut query: Query<&mut PlayerInput>,
 ) {
     if let Ok(mut input) = query.get_single_mut() {
         //info!("setting local player inputs: {:?}", player_input);
@@ -560,7 +565,7 @@ pub fn setup_player(
         info!("player event {:?}: {:?}", id, event);
         match event {
             &PlayerEvent::SetupLocal { id } => {
-                let player_entity = *lobby.players.get(&id).unwrap();
+                let player_entity = *lobby.players.get(&id).expect("Expected a player");
 
                 let reticle_cube =
                     meshes.add(Mesh::from(bevy::render::mesh::shape::Cube { size: 0.2 }));
@@ -641,6 +646,7 @@ pub fn setup_player(
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
+                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 100.0, 0.0));
                 // Spawn player cube
                 let player_entity = commands
                     .spawn_bundle(CharacterControllerBundle {
@@ -670,6 +676,8 @@ pub fn setup_player(
                             upright_spring_damping: 2.0,
                             ..default()
                         },
+                        transform: global_transform.compute_transform(),
+                        global_transform: global_transform,
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
@@ -677,21 +685,23 @@ pub fn setup_player(
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
-                    .insert(Owned)
+                    //.insert(Owned)
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
 
                 let distance_from_body = 0.7;
-                let (right_arm, right_hand) = attach_arm(
+                attach_arm(
                     &mut commands,
                     player_entity,
+                    global_transform.compute_transform(),
                     Vec3::new(distance_from_body, 0.5, 0.0),
                     0,
                 );
-                let (left_arm, left_hand) = attach_arm(
+                attach_arm(
                     &mut commands,
                     player_entity,
+                    global_transform.compute_transform(),
                     Vec3::new(-distance_from_body, 0.5, 0.0),
                     1,
                 );
@@ -714,37 +724,39 @@ pub fn setup_player(
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
-                if let Some(ref mut server) = server {
-                    for (existing_id, existing_entity) in lobby.players.iter() {
-                        let message = bincode::serialize(&ServerMessage::PlayerConnected {
-                            id: *existing_id,
-                            entity: (*existing_entity).into(),
-                        })
-                        .unwrap();
-
-                        server.send_message(id, ServerChannel::Message.id(), message);
-                    }
-                }
-
                 lobby.players.insert(id, player_entity);
+                /*
+                               if let Some(ref mut server) = server {
+                                   for (existing_id, existing_entity) in lobby.players.iter() {
+                                       let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                                           id: *existing_id,
+                                           entity: (*existing_entity).into(),
+                                       })
+                                       .unwrap();
 
-                if let Some(ref mut server) = server {
-                    let message = bincode::serialize(&ServerMessage::PlayerConnected {
-                        id: id,
-                        entity: player_entity.into(),
-                    })
-                    .unwrap();
-                    server.broadcast_message(ServerChannel::Message.id(), message);
+                                       server.send_message(id, ServerChannel::Message.id(), message);
+                                   }
+                               }
 
-                    let message = bincode::serialize(&ServerMessage::AssignOwnership {
-                        entity: player_entity.into(),
-                    })
-                    .unwrap();
-                    server.send_message(id, ServerChannel::Message.id(), message);
 
-                    let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
-                    server.send_message(id, ServerChannel::Message.id(), message);
-                }
+                               if let Some(ref mut server) = server {
+                                   let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                                       id: id,
+                                       entity: player_entity.into(),
+                                   })
+                                   .unwrap();
+                                   server.broadcast_message(ServerChannel::Message.id(), message);
+
+                                   let message = bincode::serialize(&ServerMessage::AssignOwnership {
+                                       entity: player_entity.into(),
+                                   })
+                                   .unwrap();
+                                   server.send_message(id, ServerChannel::Message.id(), message);
+
+                                   let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
+                                   server.send_message(id, ServerChannel::Message.id(), message);
+                               }
+                */
             }
         }
     }
@@ -753,7 +765,13 @@ pub fn setup_player(
 #[derive(Debug, Clone, Component)]
 pub struct ArmId(usize);
 
-pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -> (Entity, Entity) {
+pub fn attach_arm(
+    commands: &mut Commands,
+    to: Entity,
+    to_transform: Transform,
+    at: Vec3,
+    index: usize,
+) {
     let max_force = 1000.0;
     let twist_stiffness = 2.0;
     let twist_damping = 0.2;
@@ -765,7 +783,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
 
     let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (hand_radius * 2.0), 0.0);
 
-    let arm_joint = SphericalJointBuilder::new()
+    let mut arm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
         .local_anchor2(arm_height)
         .motor_model(JointAxis::AngX, motor_model)
@@ -776,12 +794,12 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
         .motor_max_force(JointAxis::AngZ, max_force)
         .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
-        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-    let mut arm_joint = arm_joint.build();
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .build();
     arm_joint.set_contacts_enabled(false);
 
     let arm_entity = commands
-        .spawn_bundle(TransformBundle::default())
+        .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Arm"))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
@@ -806,9 +824,7 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
     hand_joint.set_contacts_enabled(false);
 
     let hand_entity = commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            1.0, 10.0, 1.0,
-        )))
+        .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Hand"))
         .insert(Hand)
         .insert(TargetPosition(None))
@@ -820,8 +836,6 @@ pub fn attach_arm(commands: &mut Commands, to: Entity, at: Vec3, index: usize) -
         .insert(ImpulseJoint::new(arm_entity, hand_joint))
         .insert(ArmId(index))
         .id();
-
-    (arm_entity, hand_entity)
 }
 
 pub fn player_swivel_and_tilt(
@@ -1119,7 +1133,7 @@ pub fn player_movement(
             &LookTransform,
             &PlayerInput,
         ),
-        With<Owned>,
+        //With<Owned>,
     >,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -1170,6 +1184,14 @@ pub fn player_movement(
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
             controller.custom_torque.y = y * 0.1; // avoid overshooting
+        }
+    }
+}
+
+pub fn teleport_player_back(mut players: Query<&mut Transform, With<Player>>) {
+    for mut transform in &mut players {
+        if transform.translation.y < -100.0 {
+            transform.translation = Vec3::new(0.0, 10.0, 0.0);
         }
     }
 }

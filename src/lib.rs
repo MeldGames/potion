@@ -3,7 +3,7 @@ pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
 pub mod follow;
-pub mod network;
+//pub mod network;
 pub mod physics;
 pub mod player;
 pub mod store;
@@ -19,8 +19,11 @@ use cauldron::{Cauldron, CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use follow::Follow;
 use iyes_loopless::prelude::*;
+use player::PlayerInput;
+use sabi::stage::NetworkSimulationAppExt;
+use store::teleport_item_back;
 
-use crate::network::NetworkPlugin;
+//use crate::network::NetworkPlugin;
 use crate::player::{PlayerInputPlugin, PlayerPlugin};
 
 use bevy::prelude::*;
@@ -28,6 +31,7 @@ use bevy_inspector_egui::InspectableRegistry;
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
+pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(100);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -38,21 +42,27 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
+    app.add_plugin(sabi::plugin::SabiPlugin::<PlayerInput> {
+        tick_rate: TICK_RATE,
+        phantom: std::marker::PhantomData,
+    });
 
     app.insert_resource(InspectableRegistry::default());
 
-    app.insert_resource(bevy_framepace::FramepaceSettings {
-        warn_on_frame_drop: false,
-        ..default()
-    });
+    /*
+       app.insert_resource(bevy_framepace::FramepaceSettings {
+           warn_on_frame_drop: false,
+           ..default()
+       });
     app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.add_plugin(NetworkPlugin)
-        .insert_resource(Msaa { samples: 4 })
+    */
+    //app.add_plugin(NetworkPlugin);
+    app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .insert_resource(WindowDescriptor {
             title: "Brewalized".to_string(),
-            width: 800.,
-            height: 600.,
+            width: 1600.,
+            height: 900.,
             cursor_visible: true,
             cursor_locked: false,
             present_mode: bevy::window::PresentMode::Immediate,
@@ -70,11 +80,12 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    app.add_plugin(OutlinePlugin);
-    app.add_system(outline_meshes);
+    //app.add_plugin(OutlinePlugin);
+    //app.add_system(outline_meshes);
     app.add_startup_system(setup_map);
     app.add_event::<AssetEvent<Mesh>>();
     app.add_system(update_level_collision);
+    app.add_network_system(crate::player::teleport_player_back);
 
     app.add_plugin(InspectableRapierPlugin);
     app.add_plugin(crate::player::CustomWanderlustPlugin);
@@ -107,26 +118,23 @@ fn setup_map(
 ) {
     commands
         .spawn()
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            0.0, -10.0, 0.0,
-        )))
-        /*
-        .insert_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-            material: materials.add(assets.load("icons/autoattack.png").into()),
-            transform: Transform {
-                translation: Vec3::new(0.0, -2.00, 0.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        })*/
-        .insert_bundle((
-            RigidBody::Fixed,
-            Collider::cuboid(50.0, 10.0, 50.0),
-            Name::new("Plane"),
-            crate::physics::TERRAIN_GROUPING,
-            DEFAULT_FRICTION,
-        ));
+        .insert_bundle(SceneBundle {
+            scene: asset_server.load("models/ground.glb#Scene0"),
+            ..default()
+        })
+        .add_children(|children| {
+            children
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    0.0, -10.0, 0.0,
+                )))
+                .insert_bundle((
+                    RigidBody::Fixed,
+                    Collider::cuboid(50.0, 10.0, 50.0),
+                    Name::new("Plane"),
+                    crate::physics::TERRAIN_GROUPING,
+                    DEFAULT_FRICTION,
+                ));
+        });
 
     commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
@@ -266,7 +274,7 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/walls_shop1.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-20.5, 20.3, -0.075),
+                translation: Vec3::new(20.0, 20.3, 20.0),
                 scale: scale,
                 ..default()
             },
@@ -285,7 +293,9 @@ fn setup_map(
     let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
         .local_anchor1(Vec3::new(0.7, 0.02, 0.15) * scale)
         .local_anchor2(Vec3::new(0.7, 0.0, 0.13) * scale)
-        .limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
+        //.limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
+        .limits([-PI / 2.0 - PI / 8.0, 0.0])
+        //.limits([0.0, PI / 2.0 + PI / 8.0])
         .build();
 
     hinge_joint.set_contacts_enabled(false);

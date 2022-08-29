@@ -37,16 +37,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.add_startup_system(setup_map);
     app.add_system(rotate);
 
-    #[cfg(feature = "public")]
-    let ip = sabi::protocol::public_ip()?;
-    #[cfg(not(feature = "public"))]
-    let ip = sabi::protocol::localhost_ip();
+    /*
+       #[cfg(feature = "public")]
+       let ip = sabi::protocol::public_ip()?;
+       #[cfg(not(feature = "public"))]
+       let ip = sabi::protocol::localhost_ip();
 
-    let new_server: bevy_renet::renet::RenetServer =
-        sabi::protocol::new_renet_server(ip, None, sabi::protocol::PORT)
-            .expect("could not make new server");
-    app.insert_resource(new_server);
-
+       let new_server: bevy_renet::renet::RenetServer =
+           sabi::protocol::new_renet_server(ip, None, sabi::protocol::PORT)
+               .expect("could not make new server");
+       app.insert_resource(new_server);
+    */
     app.run();
 
     Ok(())

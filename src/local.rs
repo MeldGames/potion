@@ -1,4 +1,4 @@
-use potion::player::{PlayerEvent, PlayerInputPlugin};
+use potion::player::{Player, PlayerEvent, PlayerInputPlugin};
 
 use bevy::prelude::*;
 
@@ -8,22 +8,37 @@ fn main() {
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);
+    //app.add_system(spawn_delayed_local_player);
 
     app.run();
 }
 
-fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>,mut commands: Commands, _asset_server: Res<AssetServer>) {
-    println!("yessir");
-    info!("spawning new player");
+fn spawn_delayed_local_player(
+    time: Res<Time>,
+    mut spawn_player: EventWriter<PlayerEvent>,
+    mut commands: Commands,
+    _asset_server: Res<AssetServer>,
+    players: Query<&Player>,
+) {
+    if time.time_since_startup().as_secs_f32() < 5.0 {
+        return;
+    }
+
+    if players.iter().count() == 0 {
+        spawn_player.send(PlayerEvent::Spawn { id: 1 });
+        spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
+    }
+}
+
+fn spawn_local_player(
+    mut spawn_player: EventWriter<PlayerEvent>,
+    mut commands: Commands,
+    _asset_server: Res<AssetServer>,
+) {
     spawn_player.send(PlayerEvent::Spawn { id: 1 });
     spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
-    
-    commands.spawn_bundle(SceneBundle {
-        scene: _asset_server.load("models/ground.glb#Scene0"),
-        ..default()
-    });
-   
-
+    println!("yessir");
+    info!("spawning new player");
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
         brightness: 0.72,
