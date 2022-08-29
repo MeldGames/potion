@@ -8,6 +8,8 @@ pub mod physics;
 pub mod player;
 pub mod store;
 
+use std::f32::consts::PI;
+
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
@@ -24,7 +26,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::InspectableRegistry;
 use bevy_prototype_debug_lines::*;
 
-pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.7);
+pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -250,16 +252,46 @@ fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
- 
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
+
+    let level_collision_mesh: Handle<Mesh> =
+        asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
+
+    let scale = Vec3::new(2.0, 2.5, 2.0);
+    let walls = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/walls_shop1.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-20.5, 20.3, -0.075),
+                scale: scale,
+                ..default()
+            },
+            ..default()
+        })
+        .insert_bundle((
+            Collider::cuboid(1.0, 1.0, 1.0),
+            RigidBody::Dynamic,
+            Name::new("Walls Shop"),
+            Velocity::default(),
+        ))
+        .insert(ColliderLoad)
+        .insert(level_collision_mesh)
+        .id();
+
+    let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
+        .local_anchor1(Vec3::new(0.7, 0.02, 0.15) * scale)
+        .local_anchor2(Vec3::new(0.7, 0.0, 0.13) * scale)
+        .limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
+        .build();
+
+    hinge_joint.set_contacts_enabled(false);
 
     let door = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-10.5, 2.3, -0.075),
-                scale: Vec3::splat(1.5),
+                scale: scale,
                 ..default()
             },
             ..default()
@@ -273,30 +305,8 @@ fn setup_map(
         ))
         .insert(ColliderLoad)
         .insert(level_collision_mesh2)
+        .insert(ImpulseJoint::new(walls, hinge_joint))
         .id();
-
-    let level_collision_mesh: Handle<Mesh> =
-        asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
-
-    let walls = commands
-    .spawn_bundle(SceneBundle {
-        scene: asset_server.load("models/walls_shop1.glb#Scene0"),
-        transform: Transform {
-            translation: Vec3::new(-10.5, 80.3, -0.075),
-            scale: Vec3::splat(1.5),
-            ..default()
-        },
-        ..default()
-    })
-    .insert_bundle((
-        Collider::cuboid(1.0, 1.0, 1.0),
-        RigidBody::Dynamic,
-        Name::new("Walls Shop"),
-        Velocity::default(),
-    ))
-    .insert(ColliderLoad)
-    .insert(level_collision_mesh)
-    .id();
 
     // Bounds
     commands
@@ -373,3 +383,5 @@ fn update_level_collision(
         }
     }
 }
+
+pub fn spawn_hinge(commands: &mut Commands, on: Entity, position: Vec3) {}
