@@ -794,9 +794,18 @@ pub struct Grabbing(bool);
 pub fn player_grabby_hands(
     inputs: Query<(&GlobalTransform, &LookTransform, &PlayerInput)>,
     joints: Query<&ImpulseJoint>,
-    mut hands: Query<(Entity, &mut TargetPosition, &mut Grabbing, &ArmId), With<Hand>>,
+    mut hands: Query<
+        (
+            Entity,
+            &mut TargetPosition,
+            &mut Grabbing,
+            &mut CollisionGroups,
+            &ArmId,
+        ),
+        With<Hand>,
+    >,
 ) {
-    for (hand, mut target_position, mut grabbing, arm_id) in &mut hands {
+    for (hand, mut target_position, mut grabbing, mut collision_groups, arm_id) in &mut hands {
         target_position.0 = None;
 
         let arm_entity = if let Ok(joint) = joints.get(hand) {
@@ -822,8 +831,10 @@ pub fn player_grabby_hands(
             grabbing.0 = true;
             target_position.0 =
                 Some(global.translation() + (direction.rotation() * -Vec3::Z * 2.) + Vec3::Y);
+            *collision_groups = GRAB_GROUPING;
         } else {
             grabbing.0 = false;
+            *collision_groups = REST_GROUPING;
         }
     }
 }
