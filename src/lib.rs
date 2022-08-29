@@ -146,7 +146,7 @@ fn setup_map(
         &mut commands,
         &*asset_server,
         &mut meshes,
-        Transform::from_xyz(2.0, 3.0, -2.0),
+        Transform::from_xyz(4.0, 3.0, -2.0),
     );
 
     let stone = commands

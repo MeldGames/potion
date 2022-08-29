@@ -74,7 +74,7 @@ pub fn spawn_cauldron(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(0.5, 2.3, -1.075),
+                translation: Vec3::new(5.5, 2.3, -1.075),
                 ..default()
             },
             ..default()
