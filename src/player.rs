@@ -1057,14 +1057,13 @@ pub fn grab_collider(
 
                 if let Ok(other_global) = globals.get(other_collider) {
                     // convert back to local space.
-                    let anchor1 = other_global
-                        .compute_matrix()
-                        .inverse()
-                        .project_point3(closest_point);
-                    let anchor2 = global
-                        .compute_matrix()
-                        .inverse()
-                        .project_point3(closest_point);
+                    let other_transform = other_global.compute_transform();
+                    let other_matrix = other_global.compute_matrix();
+                    let anchor1 = other_matrix.inverse().project_point3(closest_point)
+                        * other_transform.scale;
+                    let transform = global.compute_transform();
+                    let matrix = global.compute_matrix();
+                    let anchor2 = matrix.inverse().project_point3(closest_point) * transform.scale;
 
                     if let Ok(name) = name.get(other_collider) {
                         info!("grabbing {:?}", name.as_str());
