@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use bevy::input::mouse::MouseWheel;
 use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
@@ -281,6 +282,17 @@ impl Plugin for PlayerInputPlugin {
                 .label("binary_inputs"),
         )
         .add_system(
+            zoom_on_scroll
+                .run_in_state(MouseState::Locked)
+                .run_if(window_focused)
+                .label("zoom_scroll"),
+        )
+        .add_system(
+            zoom_scroll_for_toi
+                .label("zoom_scroll_for_toi")
+                .after("zoom_scroll"),
+        )
+        .add_system(
             player_mouse_inputs
                 .run_in_state(MouseState::Locked)
                 .run_if(window_focused)
@@ -473,6 +485,42 @@ pub fn player_binary_inputs(
     );
 }
 
+#[derive(Debug, Clone, Component)]
+pub struct ZoomScroll {
+    pub current: f32,
+    pub scroll_sensitivity: f32,
+    pub min: f32,
+    pub max: f32,
+}
+
+pub fn zoom_on_scroll(
+    mut mouse_scroll: EventReader<MouseWheel>,
+    mut zooms: Query<&mut ZoomScroll>,
+) {
+    let mut cumulative_scroll = 0.0;
+    for event in mouse_scroll.iter() {
+        cumulative_scroll += event.y;
+    }
+
+    for mut zoom in &mut zooms {
+        zoom.current =
+            (zoom.current + cumulative_scroll * zoom.scroll_sensitivity).clamp(zoom.min, zoom.max);
+    }
+}
+
+#[derive(Debug, Clone, Component)]
+
+pub struct ZoomScrollForToi;
+
+pub fn zoom_scroll_for_toi(
+    mut mouse_scroll: EventReader<MouseWheel>,
+    mut zooms: Query<(&ZoomScroll, &mut AvoidIntersecting)>,
+) {
+    for (zoom, mut avoid) in &mut zooms {
+        avoid.max_toi = zoom.current;
+    }
+}
+
 pub fn player_mouse_inputs(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
@@ -528,6 +576,13 @@ pub fn setup_player(
                         max_toi: 4.0,
                         buffer: 0.075,
                     })
+                    .insert(ZoomScroll {
+                        current: 4.0,
+                        scroll_sensitivity: -0.5,
+                        min: 2.0,
+                        max: 8.0,
+                    })
+                    .insert(ZoomScrollForToi)
                     .insert(Name::new("Player Camera"))
                     .id();
 
