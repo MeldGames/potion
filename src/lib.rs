@@ -11,6 +11,7 @@ pub mod store;
 use std::f32::consts::PI;
 
 use bevy_egui::EguiPlugin;
+use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
@@ -30,7 +31,9 @@ pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins_with(DefaultPlugins, |group| {
+        group.add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
+    });
     app.add_plugin(EguiPlugin);
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);

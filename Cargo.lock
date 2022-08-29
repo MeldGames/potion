@@ -506,6 +506,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_embedded_assets"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ce178d2804119cf19829bca46c58a30324c1211bc610955d67413b0ee10e3da"
+dependencies = [
+ "bevy",
+ "cargo-emit",
+]
+
+[[package]]
 name = "bevy_encase_derive"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1179,6 +1189,12 @@ name = "cache-padded"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1db59621ec70f09c5e9b597b220c7a2b43611f4710dc03ceb8748637775692c"
+
+[[package]]
+name = "cargo-emit"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1582e1c9e755dd6ad6b224dcffb135d199399a4568d454bd89fe515ca8425695"
 
 [[package]]
 name = "cc"
@@ -3310,6 +3326,7 @@ dependencies = [
  "bevy-inspector-egui-rapier",
  "bevy_editor_pls",
  "bevy_egui",
+ "bevy_embedded_assets",
  "bevy_fly_camera",
  "bevy_framepace",
  "bevy_mod_outline",
