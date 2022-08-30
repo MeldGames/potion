@@ -94,8 +94,7 @@ pub fn push_item_back(
                                                 o!("push: {}", tangential_push);
                             */
 
-                            impulse.impulse = security_check.push * 10.0;
-                            impulse.torque_impulse = Vec3::Y * 10.0;
+                            impulse.impulse = security_check.push;
                         }
                         None => {
                             commands.entity(item_entity).insert(ExternalImpulse {
