@@ -76,7 +76,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(RapierDebugRenderPlugin {
             depth_test: true,
             style: Default::default(),
-            mode: Default::default(),
+            mode: DebugRenderMode::COLLIDER_SHAPES,
         })
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -310,8 +310,8 @@ fn setup_map(
         .local_anchor1(Vec3::new(0.7, 0.02, 0.15) * scale)
         .local_anchor2(Vec3::new(0.7, 0.0, 0.13) * scale)
         //.limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
-        .limits([-PI / 2.0 - PI / 8.0, 0.0])
-        //.limits([0.0, PI / 2.0 + PI / 8.0])
+        //.limits([-PI / 2.0 - PI / 8.0, 0.0])
+        .limits([0.0, PI / 2.0 + PI / 8.0])
         .build();
 
     hinge_joint.set_contacts_enabled(false);
@@ -412,5 +412,3 @@ fn update_level_collision(
         }
     }
 }
-
-pub fn spawn_hinge(commands: &mut Commands, on: Entity, position: Vec3) {}

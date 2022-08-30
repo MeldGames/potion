@@ -827,7 +827,7 @@ pub fn attach_arm(
         .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Hand"))
         .insert(Hand)
-        .insert(TargetPosition(None))
+        .insert(TargetPosition::default())
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
         .insert(RigidBody::Dynamic)
@@ -854,8 +854,11 @@ pub fn player_swivel_and_tilt(
     }
 }
 
-#[derive(Debug, Component, Clone, Copy)]
-pub struct TargetPosition(Option<Vec3>);
+#[derive(Default, Debug, Component, Clone, Copy)]
+pub struct TargetPosition {
+    pub translation: Option<Vec3>,
+    pub rotation: Option<Quat>,
+}
 
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Grabbing(bool);
@@ -875,7 +878,8 @@ pub fn player_grabby_hands(
     >,
 ) {
     for (hand, mut target_position, mut grabbing, mut collision_groups, arm_id) in &mut hands {
-        target_position.0 = None;
+        target_position.translation = None;
+        target_position.rotation = None;
 
         let arm_entity = if let Ok(joint) = joints.get(hand) {
             joint.parent
@@ -898,8 +902,9 @@ pub fn player_grabby_hands(
 
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
-            target_position.0 =
+            target_position.translation =
                 Some(global.translation() + (direction.rotation() * -Vec3::Z * 2.) + Vec3::Y);
+            target_position.rotation = Some(direction.rotation());
             *collision_groups = GRAB_GROUPING;
         } else {
             grabbing.0 = false;
@@ -909,13 +914,42 @@ pub fn player_grabby_hands(
 }
 
 pub fn target_position(
-    mut hands: Query<(&TargetPosition, &GlobalTransform, &mut ExternalImpulse), With<Hand>>,
+    mut hands: Query<
+        (
+            &TargetPosition,
+            &GlobalTransform,
+            &mut ExternalImpulse,
+            &mut ImpulseJoint,
+        ),
+        With<Hand>,
+    >,
+    mut lines: ResMut<DebugLines>,
 ) {
-    for (target, global, mut impulse) in &mut hands {
-        let current = global.translation();
-        if let Some(target) = target.0 {
-            impulse.impulse = (target - current) * 0.02;
-            //info!("impulse: {:?}", impulse);
+    for (target, global, mut impulse, mut joint) in &mut hands {
+        let current = global.compute_transform();
+        if let Some(target) = target.translation {
+            impulse.impulse = (target - current.translation) * 0.03;
+        }
+
+        if let Some(rotation) = target.rotation {
+            let current_dir = current.rotation * -Vec3::Y;
+            let desired_dir = rotation * -Vec3::Z;
+
+            lines.line_colored(
+                global.translation(),
+                global.translation() + current_dir,
+                0.0,
+                Color::RED,
+            );
+            lines.line_colored(
+                global.translation(),
+                global.translation() + desired_dir,
+                0.0,
+                Color::BLUE,
+            );
+
+            //impulse.torque_impulse = Vec3::new(x, y, z) * 0.2;
+            //info!("torque: {:?}", impulse.torque_impulse);
         }
     }
 }
