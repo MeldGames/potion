@@ -21,7 +21,7 @@ use follow::Follow;
 use iyes_loopless::prelude::*;
 use player::PlayerInput;
 use sabi::stage::NetworkSimulationAppExt;
-use store::teleport_item_back;
+use store::{push_item_back, SecurityCheck, StoreItem, StorePlugin};
 
 //use crate::network::NetworkPlugin;
 use crate::player::{PlayerInputPlugin, PlayerPlugin};
@@ -70,6 +70,7 @@ pub fn setup_app(app: &mut App) {
         })
         .add_plugin(PlayerPlugin)
         .add_plugin(CauldronPlugin)
+        .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
@@ -80,8 +81,8 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    //app.add_plugin(OutlinePlugin);
-    //app.add_system(outline_meshes);
+    app.add_plugin(OutlinePlugin);
+    app.add_system(outline_meshes);
     app.add_startup_system(setup_map);
     app.add_event::<AssetEvent<Mesh>>();
     app.add_system(update_level_collision);
@@ -172,8 +173,9 @@ fn setup_map(
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
         .insert_bundle((
-            Collider::ball(0.3),
+            Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
+            StoreItem,
             Name::new("Stone"),
             Velocity::default(),
             DEFAULT_FRICTION,
@@ -269,6 +271,19 @@ fn setup_map(
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
+    let security_check = commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            7.5, 1.0, 10.0,
+        )))
+        .insert_bundle((
+            Collider::cuboid(1.0, 2.0, 1.0),
+            RigidBody::Fixed,
+            Sensor,
+            SecurityCheck,
+            Name::new("Security Check"),
+        ))
+        .id();
+
     let scale = Vec3::new(2.0, 2.5, 2.0);
     let walls = commands
         .spawn_bundle(SceneBundle {
@@ -288,6 +303,7 @@ fn setup_map(
         ))
         .insert(ColliderLoad)
         .insert(level_collision_mesh)
+        //.add_child(security_check)
         .id();
 
     let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
