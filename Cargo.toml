@@ -6,7 +6,8 @@ version = "0.1.0"
 [dependencies]
 bevy = "0.8"
 bevy_egui = "0.15"
-sabi = {path = "../sabi/sabi", features = []}
+#sabi = {path = "../sabi/sabi", features = ["public"]}
+sabi = {git = "https://github.com/aceeri/sabi", rev = "136551e46", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 
 bevy_embedded_assets = "0.4"
@@ -44,6 +45,7 @@ renet_visualizer = "0.0.2"
 
 [patch.crates-io]
 bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
+#parry3d = {path = "../parry/crates/parry3d"}
 
 [[bin]]
 name = "local"

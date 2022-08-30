@@ -42,11 +42,6 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
-    app.add_plugin(sabi::plugin::SabiPlugin::<PlayerInput> {
-        tick_rate: TICK_RATE,
-        phantom: std::marker::PhantomData,
-    });
-
     app.insert_resource(InspectableRegistry::default());
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
@@ -268,15 +263,14 @@ fn setup_map(
         ))
         .id();
 
-    
-        let tree_positions = vec![
-            Vec3::new(12.5, 0., -0.075),
-            Vec3::new(16.5, 0., 3.),
-            Vec3::new(20.5, 0., -4.),
-            Vec3::new(26.5, 0., 2.),
-        ];
-        for i in tree_positions{
-            let tree = commands
+    let tree_positions = vec![
+        Vec3::new(12.5, 0., -0.075),
+        Vec3::new(16.5, 0., 3.),
+        Vec3::new(20.5, 0., -4.),
+        Vec3::new(26.5, 0., 2.),
+    ];
+    for i in tree_positions {
+        let tree = commands
             .spawn_bundle(SceneBundle {
                 scene: asset_server.load("models/tree.gltf#Scene0"),
                 transform: Transform {
@@ -294,26 +288,26 @@ fn setup_map(
                 crate::physics::TERRAIN_GROUPING,
             ))
             .id();
-            commands
-                .spawn_bundle(SceneBundle {
-                    scene: asset_server.load("models/weltberry.glb#Scene0"),
-                    transform: Transform {
-                        translation: i.clone(),
-                        scale: Vec3::splat(1.),
-                        ..default()
-                    },
+        commands
+            .spawn_bundle(SceneBundle {
+                scene: asset_server.load("models/weltberry.glb#Scene0"),
+                transform: Transform {
+                    translation: i.clone(),
+                    scale: Vec3::splat(1.),
                     ..default()
-                })
-                .insert(Ingredient)
-                .insert(crate::deposit::Value::new(1))
-                .insert_bundle((
-                    Collider::ball(0.3),
-                    RigidBody::Dynamic,
-                    Name::new("Weltberry"),
-                    Velocity::default(),
-                    DEFAULT_FRICTION,
-                ));
-        }
+                },
+                ..default()
+            })
+            .insert(Ingredient)
+            .insert(crate::deposit::Value::new(1))
+            .insert_bundle((
+                Collider::ball(0.3),
+                RigidBody::Dynamic,
+                Name::new("Weltberry"),
+                Velocity::default(),
+                DEFAULT_FRICTION,
+            ));
+    }
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
@@ -457,7 +451,11 @@ fn update_level_collision(
                     if *inner_handle == *handle {
                         *col = Collider::from_bevy_mesh(
                             loaded_mesh,
-                            &ComputedColliderShape::ConvexDecomposition(VHACDParameters::default()),
+                            &ComputedColliderShape::ConvexDecomposition(VHACDParameters {
+                                resolution: 128,
+                                ..default()
+                            }),
+                            //&ComputedColliderShape::TriMesh,
                         )
                         .unwrap();
                         commands.entity(e).remove::<ColliderLoad>();

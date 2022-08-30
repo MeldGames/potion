@@ -549,7 +549,7 @@ pub fn setup_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    _asset_server: ResMut<AssetServer>,
+    asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
     mut lobby: ResMut<Lobby>,
@@ -674,14 +674,16 @@ pub fn setup_player(
                         global_transform: global_transform,
                         ..default()
                     })
-                    .insert_bundle(SceneBundle {
-                        scene: asset_server.load("models/character.glb#Scene0"),
-                        transform: Transform {
-                            translation: Vec3::new(0., 0., 0.),
-                            ..default()
-                        },
-                        ..default()
-                    })
+                    /*
+                            .insert_bundle(SceneBundle {
+                                scene: asset_server.load("models/character.glb#Scene0"),
+                                transform: Transform {
+                                    translation: Vec3::new(0., 0., 0.),
+                                    ..default()
+                                },
+                                ..default()
+                            })
+                    */
                     //.insert(crate::deposit::Value::new(500))
                     .insert(Speed::default())
                     .insert(PlayerInput::default())

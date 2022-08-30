@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../sabi"
+		},
+		{
+			"path": "../bevy_rapier"
+		},
+		{
+			"path": "../parry"
 		}
 	],
 	"settings": {}
