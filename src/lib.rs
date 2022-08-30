@@ -256,6 +256,53 @@ fn setup_map(
         ))
         .id();
 
+    
+        let tree_positions = vec![
+            Vec3::new(12.5, 0., -0.075),
+            Vec3::new(16.5, 0., 3.),
+            Vec3::new(20.5, 0., -4.),
+            Vec3::new(26.5, 0., 2.),
+        ];
+        for i in tree_positions{
+            let tree = commands
+            .spawn_bundle(SceneBundle {
+                scene: asset_server.load("models/tree.gltf#Scene0"),
+                transform: Transform {
+                    translation: i.clone(),
+                    scale: Vec3::splat(1.),
+                    ..default()
+                },
+                ..default()
+            })
+            .insert_bundle((
+                ColliderMassProperties::Density(5.0),
+                RigidBody::Fixed,
+                Collider::cylinder(3.4, 0.2),
+                Name::new("Cauldron"),
+                crate::physics::TERRAIN_GROUPING,
+            ))
+            .id();
+            commands
+                .spawn_bundle(SceneBundle {
+                    scene: asset_server.load("models/weltberry.glb#Scene0"),
+                    transform: Transform {
+                        translation: i.clone(),
+                        scale: Vec3::splat(1.),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Ingredient)
+                .insert(crate::deposit::Value::new(1))
+                .insert_bundle((
+                    Collider::ball(0.3),
+                    RigidBody::Dynamic,
+                    Name::new("Weltberry"),
+                    Velocity::default(),
+                    DEFAULT_FRICTION,
+                ));
+        }
+
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
     let level_collision_mesh: Handle<Mesh> =

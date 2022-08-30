@@ -672,6 +672,14 @@ pub fn setup_player(
                         },
                         ..default()
                     })
+                    .insert_bundle(SceneBundle {
+                        scene: asset_server.load("models/character.glb#Scene0"),
+                        transform: Transform {
+                            translation: Vec3::new(0., 0., 0.),
+                            ..default()
+                        },
+                        ..default()
+                    })
                     //.insert(crate::deposit::Value::new(500))
                     .insert(Speed::default())
                     .insert(PlayerInput::default())
