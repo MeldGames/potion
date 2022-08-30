@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
+use sabi::stage::NetworkSimulationAppExt;
 
 #[derive(Debug, Clone, Component)]
 pub struct Follow(Entity);

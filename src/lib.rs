@@ -15,16 +15,15 @@ use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
-use cauldron::{Cauldron, CauldronPlugin, Ingredient};
+use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
-use follow::Follow;
-use iyes_loopless::prelude::*;
+
 use player::PlayerInput;
 use sabi::stage::NetworkSimulationAppExt;
-use store::{push_item_back, SecurityCheck, StoreItem, StorePlugin};
+use store::{SecurityCheck, StoreItem, StorePlugin};
 
 //use crate::network::NetworkPlugin;
-use crate::player::{PlayerInputPlugin, PlayerPlugin};
+use crate::player::PlayerPlugin;
 
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectableRegistry;
@@ -95,7 +94,7 @@ pub fn setup_app(app: &mut App) {
 fn outline_meshes(
     mut commands: Commands,
     mut outlines: ResMut<Assets<Outline>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<Handle<Outline>>)>,
 ) {
     for (entity, mesh) in &query {
@@ -114,8 +113,8 @@ fn setup_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    assets: Res<AssetServer>,
+    _materials: ResMut<Assets<StandardMaterial>>,
+    _assets: Res<AssetServer>,
 ) {
     commands
         .spawn()
@@ -161,7 +160,7 @@ fn setup_map(
         Transform::from_xyz(4.0, 3.0, -2.0),
     );
 
-    let stone = commands
+    let _stone = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/rock1.glb#Scene0"),
             transform: Transform {
@@ -182,7 +181,7 @@ fn setup_map(
         ))
         .id();
 
-    let donut = commands
+    let _donut = commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {
                 radius: 0.4,
@@ -203,7 +202,7 @@ fn setup_map(
         ))
         .id();
 
-    let prallet = commands
+    let _prallet = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/prallet.glb#Scene0"),
             transform: Transform {
@@ -224,7 +223,7 @@ fn setup_map(
         ))
         .id();
 
-    let thorns = commands
+    let _thorns = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/thorns.glb#Scene0"),
             transform: Transform {
@@ -245,7 +244,7 @@ fn setup_map(
         ))
         .id();
 
-    let welt = commands
+    let _welt = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/weltberry.glb#Scene0"),
             transform: Transform {
@@ -271,7 +270,7 @@ fn setup_map(
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
-    let security_check = commands
+    let _security_check = commands
         .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
             7.5, 1.0, 10.0,
         )))
@@ -316,7 +315,7 @@ fn setup_map(
 
     hinge_joint.set_contacts_enabled(false);
 
-    let door = commands
+    let _door = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
@@ -407,8 +406,8 @@ fn update_level_collision(
                     }
                 }
             }
-            AssetEvent::Modified { handle } => {}
-            AssetEvent::Removed { handle } => {}
+            AssetEvent::Modified { handle: _ } => {}
+            AssetEvent::Removed { handle: _ } => {}
         }
     }
 }

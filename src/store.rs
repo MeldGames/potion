@@ -29,7 +29,7 @@ pub fn push_item_back(
     security_checks: Query<(Entity, Option<&Children>), With<SecurityCheck>>,
     mut store_items: Query<(Entity, Option<&mut ExternalImpulse>, &StoreItem)>,
 ) {
-    for (entity, children) in &security_checks {
+    for (entity, _children) in &security_checks {
         for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
             let potential = if collider1 == entity {
                 collider2
@@ -38,7 +38,7 @@ pub fn push_item_back(
             };
 
             if intersecting {
-                if let Ok((item_entity, mut impulse, store_item)) = store_items.get_mut(potential) {
+                if let Ok((item_entity, impulse, _store_item)) = store_items.get_mut(potential) {
                     info!("Player is trying to steal {:?}", name.named(potential));
                     let push_direction = Vec3::Z * 0.01;
                     match impulse {
@@ -66,7 +66,7 @@ pub fn buy_item(
     store_items: Query<(&Value, &StoreItem)>,
     mut player_value: ResMut<Value>,
 ) {
-    for (entity, children) in &registers {
+    for (entity, _children) in &registers {
         for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
             let potential = if collider1 == entity {
                 collider2

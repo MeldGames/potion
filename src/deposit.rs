@@ -117,7 +117,7 @@ pub fn display_money(mut egui_context: ResMut<bevy_egui::EguiContext>, value: Re
 pub fn spawn_deposit_box(
     commands: &mut Commands,
     asset_server: &AssetServer,
-    meshes: &mut Assets<Mesh>,
+    _meshes: &mut Assets<Mesh>,
     position: Transform,
 ) -> Entity {
     let model = commands

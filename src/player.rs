@@ -4,13 +4,11 @@ use bevy::input::mouse::MouseWheel;
 use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
-use std::f32::consts::{PI, TAU};
+use std::f32::consts::PI;
 
-use bevy_egui::EguiContext;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
-    CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
-    ControllerState,
+    CharacterControllerBundle, ControllerInput, ControllerSettings, ControllerState,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -22,10 +20,6 @@ use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 use serde::{Deserialize, Serialize};
 
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-use smooth_bevy_cameras::{
-    controllers::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin},
-    LookTransformPlugin,
-};
 
 use crate::follow::{Follow, FollowPlugin};
 use crate::physics::{GRAB_GROUPING, REST_GROUPING};
@@ -518,7 +512,7 @@ pub fn zoom_on_scroll(
 pub struct ZoomScrollForToi;
 
 pub fn zoom_scroll_for_toi(
-    mut mouse_scroll: EventReader<MouseWheel>,
+    _mouse_scroll: EventReader<MouseWheel>,
     mut zooms: Query<(&ZoomScroll, &mut AvoidIntersecting)>,
 ) {
     for (zoom, mut avoid) in &mut zooms {
@@ -555,11 +549,11 @@ pub fn setup_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut asset_server: ResMut<AssetServer>,
+    _asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
     mut lobby: ResMut<Lobby>,
-    mut server: Option<ResMut<RenetServer>>,
+    _server: Option<ResMut<RenetServer>>,
 ) {
     for (event, id) in player_reader.iter_with_id() {
         info!("player event {:?}: {:?}", id, event);
@@ -823,7 +817,7 @@ pub fn attach_arm(
     let mut hand_joint = hand_joint.build();
     hand_joint.set_contacts_enabled(false);
 
-    let hand_entity = commands
+    let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Hand"))
         .insert(Hand)
@@ -925,7 +919,7 @@ pub fn target_position(
     >,
     mut lines: ResMut<DebugLines>,
 ) {
-    for (target, global, mut impulse, mut joint) in &mut hands {
+    for (target, global, mut impulse, _joint) in &mut hands {
         let current = global.compute_transform();
         if let Some(target) = target.translation {
             impulse.impulse = (target - current.translation) * 0.03;
@@ -1171,7 +1165,7 @@ pub fn player_movement(
     >,
     mut lines: ResMut<DebugLines>,
 ) {
-    for (global, mut controller, look_transform, player_input) in query.iter_mut() {
+    for (global, mut controller, _look_transform, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
         if player_input.left() {
             dir.x += -1.;
