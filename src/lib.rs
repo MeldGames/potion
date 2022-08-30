@@ -3,7 +3,7 @@ pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
 pub mod follow;
-//pub mod network;
+pub mod network;
 pub mod physics;
 pub mod player;
 pub mod store;
@@ -18,6 +18,7 @@ use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 
+use follow::Follow;
 use player::PlayerInput;
 use sabi::stage::NetworkSimulationAppExt;
 use store::{SecurityCheck, StoreItem, StorePlugin};
@@ -48,14 +49,12 @@ pub fn setup_app(app: &mut App) {
 
     app.insert_resource(InspectableRegistry::default());
 
-    /*
-       app.insert_resource(bevy_framepace::FramepaceSettings {
-           warn_on_frame_drop: false,
-           ..default()
-       });
+    app.insert_resource(bevy_framepace::FramepaceSettings {
+        warn_on_frame_drop: false,
+        ..default()
+    });
     app.add_plugin(bevy_framepace::FramepacePlugin);
-    */
-    //app.add_plugin(NetworkPlugin);
+    app.add_plugin(crate::network::NetworkPlugin);
     app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .insert_resource(WindowDescriptor {
@@ -150,7 +149,10 @@ fn setup_map(
     crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
-        Transform::from_xyz(-2.0, 3.0, -2.0),
+        Transform {
+            translation: Vec3::new(5.0, 3.0, 0.0),
+            ..default()
+        },
     );
 
     crate::deposit::spawn_deposit_box(
@@ -175,6 +177,7 @@ fn setup_map(
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
+            ExternalImpulse::default(),
             Name::new("Stone"),
             Velocity::default(),
             DEFAULT_FRICTION,
@@ -317,19 +320,6 @@ fn setup_map(
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
-    let _security_check = commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            7.5, 1.0, 10.0,
-        )))
-        .insert_bundle((
-            Collider::cuboid(1.0, 2.0, 1.0),
-            RigidBody::Fixed,
-            Sensor,
-            SecurityCheck,
-            Name::new("Security Check"),
-        ))
-        .id();
-
     let scale = Vec3::new(2.0, 2.5, 2.0);
     let walls = commands
         .spawn_bundle(SceneBundle {
@@ -349,7 +339,26 @@ fn setup_map(
         ))
         .insert(ColliderLoad)
         .insert(level_collision_mesh)
-        //.add_child(security_check)
+        .id();
+
+    let security_check = commands
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            1.1, 1.0, 0.5,
+        )))
+        .insert_bundle((
+            Collider::cuboid(0.5, 1.0, 0.5),
+            RigidBody::Fixed,
+            Sensor,
+            SecurityCheck { push: -Vec3::Z },
+            Name::new("Security Check"),
+        ))
+        .id();
+
+    let shop_follower = commands
+        .spawn_bundle(TransformBundle::default())
+        .insert_bundle(Follow::all(walls))
+        .insert(Name::new("Shop Followers"))
+        .add_child(security_check)
         .id();
 
     let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
@@ -446,9 +455,11 @@ fn update_level_collision(
                 let loaded_mesh = assets.get_mut(handle).unwrap();
                 for (mut col, inner_handle, e) in replace.iter_mut() {
                     if *inner_handle == *handle {
-                        *col =
-                            Collider::from_bevy_mesh(loaded_mesh, &ComputedColliderShape::TriMesh)
-                                .unwrap();
+                        *col = Collider::from_bevy_mesh(
+                            loaded_mesh,
+                            &ComputedColliderShape::ConvexDecomposition(VHACDParameters::default()),
+                        )
+                        .unwrap();
                         commands.entity(e).remove::<ColliderLoad>();
                     }
                 }

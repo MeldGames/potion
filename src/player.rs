@@ -640,7 +640,7 @@ pub fn setup_player(
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
-                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 100.0, 0.0));
+                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 5.0, 0.0));
                 // Spawn player cube
                 let player_entity = commands
                     .spawn_bundle(CharacterControllerBundle {
@@ -805,7 +805,7 @@ pub fn attach_arm(
         .insert(Name::new("Arm"))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
-        .insert(crate::physics::PLAYER_GROUPING)
+        .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
         .insert(ImpulseJoint::new(to, arm_joint))
         .insert(ArmId(index))
@@ -833,7 +833,7 @@ pub fn attach_arm(
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
         .insert(RigidBody::Dynamic)
-        .insert(crate::physics::PLAYER_GROUPING)
+        .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(arm_entity, hand_joint))
         .insert(ArmId(index))

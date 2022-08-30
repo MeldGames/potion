@@ -73,15 +73,22 @@ pub fn spawn_cauldron(
     let cauldron = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(5.5, 2.3, -1.075),
-                ..default()
-            },
+            transform: position,
             ..default()
         })
         .insert_bundle((
-            ColliderMassProperties::Density(5.0),
+            ColliderMassProperties::Density(15.0),
+            /*
+                       ColliderMassProperties::MassProperties(MassProperties {
+                           //local_center_of_mass: Vec3::new(0.0, -0.25, 0.0),
+                           mass: 10.0,
+                           ..default()
+                       }),
+            */
+            ReadMassProperties::default(),
             RigidBody::Dynamic,
+            Velocity::default(),
+            ExternalImpulse::default(),
             crate::store::StoreItem,
             Collider::cylinder(0.4, 0.75),
             Name::new("Cauldron"),

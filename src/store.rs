@@ -16,38 +16,90 @@ pub struct StoreItem;
 
 /// Teleports store items back into the store they should be in.
 #[derive(Debug, Component, Clone, Copy)]
-pub struct SecurityCheck;
+pub struct SecurityCheck {
+    pub push: Vec3,
+}
 
 /// Buy a store item here.
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Register;
 
+#[derive(Debug, Component, Clone, Copy)]
+pub struct CaughtItem {
+    pub caught_time: f32,
+    pub by: Entity,
+}
+
+impl CaughtItem {
+    pub fn new(by: Entity) -> Self {
+        CaughtItem {
+            caught_time: 0.0,
+            by: by,
+        }
+    }
+}
+
 pub fn push_item_back(
     mut commands: Commands,
+    time: Res<Time>,
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
-    security_checks: Query<(Entity, Option<&Children>), With<SecurityCheck>>,
-    mut store_items: Query<(Entity, Option<&mut ExternalImpulse>, &StoreItem)>,
+    security_checks: Query<(Entity, &GlobalTransform, &SecurityCheck, Option<&Children>)>,
+    mut store_items: Query<(
+        Entity,
+        &GlobalTransform,
+        Option<&mut ExternalImpulse>,
+        &StoreItem,
+    )>,
 ) {
-    for (entity, _children) in &security_checks {
-        for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
-            let potential = if collider1 == entity {
+    for (security_entity, security_transform, security_check, _children) in &security_checks {
+        for (collider1, collider2, intersecting) in
+            rapier_context.intersections_with(security_entity)
+        {
+            let potential = if collider1 == security_entity {
                 collider2
             } else {
                 collider1
             };
 
             if intersecting {
-                if let Ok((item_entity, impulse, _store_item)) = store_items.get_mut(potential) {
+                if let Ok((item_entity, item_transform, impulse, _store_item)) =
+                    store_items.get_mut(potential)
+                {
                     info!("Player is trying to steal {:?}", name.named(potential));
-                    let push_direction = Vec3::Z * 0.01;
+                    commands
+                        .entity(item_entity)
+                        .insert(CaughtItem::new(security_entity));
                     match impulse {
                         Some(mut impulse) => {
-                            impulse.impulse += push_direction;
+                            /*
+                                                // Push object tangential to the push direction as well, to avoid
+                                                // getting stuck on walls hopefully.
+                                                let center_dir = (security_transform.translation()
+                                                    - item_transform.translation())
+                                                .normalize_or_zero();
+                                                let center_dir = (item_transform.translation()
+                                                    - security_transform.translation())
+                                                .normalize_or_zero();
+
+                                                let push_dir = security_check.push.normalize_or_zero();
+                                                let (tangent1, tangent2) = push_dir.any_orthonormal_pair();
+                                                let tangent = (tangent1.abs() + tangent2.abs()).normalize_or_zero();
+                                                let mut tangential_push = tangent * center_dir;
+                                                tangential_push.x *= 20.0;
+
+                                                info!("center_dir: {center_dir}");
+                                                info!("tangent: {tangent}");
+                                                inf
+                                                o!("push: {}", tangential_push);
+                            */
+
+                            impulse.impulse = security_check.push * 10.0;
+                            impulse.torque_impulse = Vec3::Y * 10.0;
                         }
                         None => {
                             commands.entity(item_entity).insert(ExternalImpulse {
-                                impulse: push_direction,
+                                impulse: security_check.push,
                                 ..default()
                             });
                         }

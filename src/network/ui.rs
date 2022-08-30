@@ -3,10 +3,7 @@ use bevy_egui::EguiContext;
 
 use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
 use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
-use sabi::{
-    prelude::ServerEntities,
-    protocol::{update::UpdateMessages, NetworkTick},
-};
+use sabi::{prelude::ServerEntities, protocol::update::UpdateMessages, tick::NetworkTick};
 
 pub const DATA_POINTS: usize = 100;
 

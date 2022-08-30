@@ -33,7 +33,7 @@ impl Plugin for NetworkPlugin {
         );
 
         app.add_plugin(SabiPlugin::<PlayerInput> {
-            tick_rate: TICK_RATE,
+            tick_rate: crate::TICK_RATE,
             ..Default::default()
         });
 
