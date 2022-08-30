@@ -289,7 +289,7 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/walls_shop1.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(20.0, 20.3, 20.0),
+                translation: Vec3::new(0.0, 0.0, -10.0),
                 scale: scale,
                 ..default()
             },
@@ -297,7 +297,7 @@ fn setup_map(
         })
         .insert_bundle((
             Collider::cuboid(1.0, 1.0, 1.0),
-            RigidBody::Dynamic,
+            RigidBody::Fixed,
             Name::new("Walls Shop"),
             Velocity::default(),
         ))

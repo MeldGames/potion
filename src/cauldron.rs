@@ -87,7 +87,6 @@ pub fn spawn_cauldron(
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(Name::new("Cauldron Model"))
         .insert(ColliderLoad)
         .insert(level_collision_mesh)
         .id();
