@@ -12,18 +12,15 @@ fn main() {
     app.run();
 }
 
-fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>,mut commands: Commands, _asset_server: Res<AssetServer>) {
-    println!("yessir");
-    info!("spawning new player");
+fn spawn_local_player(
+    mut spawn_player: EventWriter<PlayerEvent>,
+    mut commands: Commands,
+    _asset_server: Res<AssetServer>,
+) {
     spawn_player.send(PlayerEvent::Spawn { id: 1 });
     spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
-    
-    commands.spawn_bundle(SceneBundle {
-        scene: _asset_server.load("models/ground.glb#Scene0"),
-        ..default()
-    });
-   
-
+    println!("yessir");
+    info!("spawning new player");
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
         brightness: 0.72,

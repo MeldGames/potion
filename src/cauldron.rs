@@ -69,7 +69,7 @@ pub fn spawn_cauldron(
     position: Transform,
 ) -> Entity {
     let level_collision_mesh: Handle<Mesh> =
-    asset_server.load("models/cauldron.glb#Mesh0/Primitive0");
+        asset_server.load("models/cauldron.glb#Mesh0/Primitive0");
     let cauldron = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron.glb#Scene0"),
@@ -82,16 +82,15 @@ pub fn spawn_cauldron(
         .insert_bundle((
             ColliderMassProperties::Density(5.0),
             RigidBody::Dynamic,
+            crate::store::StoreItem,
             Collider::cylinder(0.4, 0.75),
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(Name::new("Cauldron Model"))
         .insert(ColliderLoad)
         .insert(level_collision_mesh)
         .id();
-        
- 
+
     commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle(Follow::all(cauldron))

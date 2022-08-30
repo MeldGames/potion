@@ -38,7 +38,7 @@ pub fn display_diagnostics(mut egui_context: ResMut<EguiContext>, diagnostics: R
 pub struct DiagnosticsEguiPlugin;
 
 impl Plugin for DiagnosticsEguiPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         //app.add_system(display_diagnostics);
     }
 }

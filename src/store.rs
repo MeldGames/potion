@@ -12,10 +12,7 @@ pub struct StoreSlot {
 }
 
 #[derive(Debug, Component, Clone, Copy)]
-pub struct StoreItem {
-    pub store: Entity,
-    pub location: Transform,
-}
+pub struct StoreItem;
 
 /// Teleports store items back into the store they should be in.
 #[derive(Debug, Component, Clone, Copy)]
@@ -25,15 +22,14 @@ pub struct SecurityCheck;
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Register;
 
-pub fn teleport_item_back(
+pub fn push_item_back(
     mut commands: Commands,
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     security_checks: Query<(Entity, Option<&Children>), With<SecurityCheck>>,
-    store_items: Query<&StoreItem>,
-    mut transforms: Query<&mut Transform>,
+    mut store_items: Query<(Entity, Option<&mut ExternalImpulse>, &StoreItem)>,
 ) {
-    for (entity, children) in &security_checks {
+    for (entity, _children) in &security_checks {
         for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
             let potential = if collider1 == entity {
                 collider2
@@ -42,12 +38,20 @@ pub fn teleport_item_back(
             };
 
             if intersecting {
-                if let Ok(store_item) = store_items.get(potential) {
-                    info!("Player tried to steal {:?}", name.named(potential));
-                    let mut transform = transforms
-                        .get_mut(potential)
-                        .expect("Store item should have a transform");
-                    *transform = store_item.location;
+                if let Ok((item_entity, impulse, _store_item)) = store_items.get_mut(potential) {
+                    info!("Player is trying to steal {:?}", name.named(potential));
+                    let push_direction = Vec3::Z * 0.01;
+                    match impulse {
+                        Some(mut impulse) => {
+                            impulse.impulse += push_direction;
+                        }
+                        None => {
+                            commands.entity(item_entity).insert(ExternalImpulse {
+                                impulse: push_direction,
+                                ..default()
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -62,7 +66,7 @@ pub fn buy_item(
     store_items: Query<(&Value, &StoreItem)>,
     mut player_value: ResMut<Value>,
 ) {
-    for (entity, children) in &registers {
+    for (entity, _children) in &registers {
         for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
             let potential = if collider1 == entity {
                 collider2
@@ -80,5 +84,14 @@ pub fn buy_item(
                 }
             }
         }
+    }
+}
+
+pub struct StorePlugin;
+impl Plugin for StorePlugin {
+    fn build(&self, app: &mut App) {
+        use sabi::stage::NetworkSimulationAppExt;
+        app.add_network_system(push_item_back);
+        app.add_network_system(buy_item);
     }
 }
