@@ -432,7 +432,7 @@ pub fn toggle_mouse_lock(
     mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
-    if kb.just_pressed(KeyCode::Delete) {
+    if kb.just_pressed(KeyCode::Escape) || kb.just_pressed(KeyCode::Delete) {
         toggle.0 = !toggle.0;
     }
 
@@ -948,7 +948,7 @@ pub fn target_position(
                 );
 
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                impulse.torque_impulse = desired_axis * 0.1;
+                //impulse.torque_impulse = desired_axis * 0.1;
                 //info!("torque: {:?}", impulse.torque_impulse);
             }
         }
@@ -979,7 +979,7 @@ pub fn target_position(
                     );
 
                     let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                    impulse.torque_impulse = desired_axis * 0.1;
+                    //impulse.torque_impulse = desired_axis * 0.1;
                     //info!("torque: {:?}", impulse.torque_impulse);
                 }
             }
@@ -1268,13 +1268,13 @@ pub fn teleport_player_back(
     kb: Res<Input<KeyCode>>,
 ) {
     for mut transform in &mut players {
-        let mut should_teleport = transform.translation.y > 1000.0;
+        let mut should_teleport = kb.just_pressed(KeyCode::Equals);
         should_teleport = should_teleport || transform.translation.y < -100.0;
+        should_teleport = should_teleport || transform.translation.y > 1000.0;
         should_teleport = should_teleport || transform.translation.x < -1000.0;
         should_teleport = should_teleport || transform.translation.x > 1000.0;
         should_teleport = should_teleport || transform.translation.z < -1000.0;
         should_teleport = should_teleport || transform.translation.z > 1000.0;
-        should_teleport = should_teleport || kb.just_pressed(KeyCode::Equals);
 
         if should_teleport {
             transform.translation = Vec3::new(0.0, 10.0, 0.0);
