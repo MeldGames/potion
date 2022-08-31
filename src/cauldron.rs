@@ -77,7 +77,7 @@ pub fn spawn_cauldron(
             ..default()
         })
         .insert_bundle((
-            ColliderMassProperties::Density(10.0),
+            ColliderMassProperties::Density(100.0),
             /*
                        ColliderMassProperties::MassProperties(MassProperties {
                            //local_center_of_mass: Vec3::new(0.0, -0.25, 0.0),

@@ -29,7 +29,7 @@ pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     //info!("integration: {:?}", context.integration_parameters);
 }
 
-pub const VELOCITY_CAP: f32 = 30.0;
+pub const VELOCITY_CAP: f32 = 300.0;
 pub const MAX_VELOCITY: Vec3 = Vec3::splat(VELOCITY_CAP);
 pub const MIN_VELOCITY: Vec3 = Vec3::splat(-VELOCITY_CAP);
 
