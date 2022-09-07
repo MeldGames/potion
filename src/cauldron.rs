@@ -79,7 +79,7 @@ pub fn spawn_cauldron(
         .insert_bundle((
             //ColliderMassProperties::Density(100.0),
             ColliderMassProperties::MassProperties(MassProperties {
-                local_center_of_mass: Vec3::new(0.0, -0.6, 0.0),
+                local_center_of_mass: Vec3::new(0.0, -0.2, 0.0),
                 mass: 15.0,
                 principal_inertia: Vec3::ONE,
                 principal_inertia_local_frame: Quat::IDENTITY,
