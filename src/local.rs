@@ -36,7 +36,7 @@ fn spawn_local_player(
                 bottom: -HALF_SIZE,
                 top: HALF_SIZE,
                 near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
+                far: 10000.0 * HALF_SIZE,
                 ..default()
             },
             shadows_enabled: true,

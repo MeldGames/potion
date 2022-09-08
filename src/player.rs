@@ -568,6 +568,10 @@ pub fn setup_player(
                     .spawn_bundle(Camera3dBundle {
                         transform: Transform::from_translation(Vec3::new(0., 0., 4.))
                             .looking_at(Vec3::ZERO, Vec3::Y),
+                        projection: PerspectiveProjection {
+                            far: 10000.,
+                            ..default()
+                        }.into(),
                         ..Default::default()
                     })
                     .insert(AvoidIntersecting {

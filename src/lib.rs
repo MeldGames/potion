@@ -75,7 +75,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
-    app.add_system(outline_meshes);
+    //app.add_system(outline_meshes);
     app.add_startup_system(setup_map);
     app.add_event::<AssetEvent<Mesh>>();
     app.add_system(update_level_collision);
@@ -179,6 +179,33 @@ fn setup_map(
         ))
         .id();
 
+    
+    let _sky = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/sky.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 1.075),
+                ..default()
+            },
+            ..default()
+        })
+        .id();
+
+    
+    let sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
+
+    let _sky_clouds = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/sky_clouds.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 1.075),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(SkyLoad)
+        .id();
+
     let _donut = commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {
@@ -272,7 +299,7 @@ fn setup_map(
     for i in tree_positions {
         let tree = commands
             .spawn_bundle(SceneBundle {
-                scene: asset_server.load("models/tree.gltf#Scene0"),
+                scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
                 transform: Transform {
                     translation: i.clone(),
                     scale: Vec3::splat(1.),
@@ -467,3 +494,8 @@ fn update_level_collision(
         }
     }
 }
+
+
+#[derive(Debug, Component, Clone, Copy)]
+pub struct SkyLoad;
+
