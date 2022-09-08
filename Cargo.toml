@@ -44,7 +44,7 @@ renet_visualizer = "0.0.2"
 
 [patch.crates-io]
 bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
-parry3d = {path = "../parry/crates/parry3d"}
+#parry3d = {path = "../parry/crates/parry3d"}
 
 [[bin]]
 name = "local"

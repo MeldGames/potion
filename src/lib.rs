@@ -76,6 +76,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
     //app.add_system(outline_meshes);
+    
     app.add_startup_system(setup_map);
     app.add_event::<AssetEvent<Mesh>>();
     app.add_system(update_level_collision);
@@ -488,12 +489,10 @@ fn update_level_collision(
     }
 }
 
-<<<<<<< HEAD
 
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
 
-=======
 pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape = ComputedColliderShape::TriMesh;
 /*
 pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
@@ -548,4 +547,3 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
     });
 
  */
->>>>>>> aac97d4753133a6b3107b038a1eadd334e7b1fb2
