@@ -351,7 +351,14 @@ impl Plugin for PlayerPlugin {
                 .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs"),
         )
-        //.add_network_system(pull_up.label("pull_up").after("update_player_inputs"))
+        .add_network_system(
+            pull_up
+                .label("pull_up")
+                .before(bevy_mod_wanderlust::movement)
+                .after("update_player_inputs")
+                .after("player_swivel_and_tilt")
+                .after("player_movement"),
+        )
         .add_network_system(
             grab_collider
                 .label("grab_collider")
@@ -432,7 +439,7 @@ pub fn toggle_mouse_lock(
     mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
-    if kb.just_pressed(KeyCode::Delete) {
+    if kb.just_pressed(KeyCode::Escape) || kb.just_pressed(KeyCode::Delete) {
         toggle.0 = !toggle.0;
     }
 
@@ -658,7 +665,7 @@ pub fn setup_player(
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 4.0,
+                            jump_initial_force: 10.0,
                             jump_stop_force: 0.3,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
@@ -689,7 +696,6 @@ pub fn setup_player(
                             })
                     */
                     //.insert(crate::deposit::Value::new(500))
-                    .insert(Speed::default())
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
@@ -781,8 +787,8 @@ pub fn attach_arm(
     index: usize,
 ) {
     let max_force = 1000.0;
-    let twist_stiffness = 2.0;
-    let twist_damping = 0.2;
+    let twist_stiffness = 20.0;
+    let twist_damping = 2.0;
     let resting_stiffness = 2.0;
     let resting_damping = 0.2;
     let arm_radius = 0.15;
@@ -811,6 +817,7 @@ pub fn attach_arm(
         .insert(Name::new("Arm"))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
+        .insert(ExternalImpulse::default())
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
         .insert(ImpulseJoint::new(to, arm_joint))
@@ -922,42 +929,75 @@ pub fn player_grabby_hands(
 }
 
 pub fn target_position(
-    mut hands: Query<
-        (
-            &TargetPosition,
-            &GlobalTransform,
-            &mut ExternalImpulse,
-            &mut ImpulseJoint,
-        ),
-        With<Hand>,
-    >,
+    mut impulses: Query<&mut ExternalImpulse>,
+    globals: Query<&GlobalTransform>,
+    hands: Query<(Entity, &TargetPosition, &GlobalTransform, &ImpulseJoint), With<Hand>>,
     mut lines: ResMut<DebugLines>,
 ) {
-    for (target, global, mut impulse, _joint) in &mut hands {
-        let current = global.compute_transform();
-        if let Some(target) = target.translation {
-            impulse.impulse = (target - current.translation) * 0.03;
+    for (hand_entity, target, global, joint) in &hands {
+        if let Ok(mut impulse) = impulses.get_mut(hand_entity) {
+            let current = global.compute_transform();
+            if let Some(target) = target.translation {
+                impulse.impulse = (target - current.translation) * 0.03;
+            }
+
+            if let Some(rotation) = target.rotation {
+                let current_dir = current.rotation * -Vec3::Y;
+                let desired_dir = rotation * -Vec3::Z;
+
+                /*
+                               lines.line_colored(
+                                   global.translation(),
+                                   global.translation() + current_dir,
+                                   0.0,
+                                   Color::RED,
+                               );
+                               lines.line_colored(
+                                   global.translation(),
+                                   global.translation() + desired_dir,
+                                   0.0,
+                                   Color::BLUE,
+                               );
+                */
+
+                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
+                //impulse.torque_impulse = desired_axis * 0.1;
+                //info!("torque: {:?}", impulse.torque_impulse);
+            }
         }
 
-        if let Some(rotation) = target.rotation {
-            let current_dir = current.rotation * -Vec3::Y;
-            let desired_dir = rotation * -Vec3::Z;
+        if let Ok(mut impulse) = impulses.get_mut(joint.parent) {
+            if let Ok(global) = globals.get(joint.parent) {
+                let current = global.compute_transform();
 
-            lines.line_colored(
-                global.translation(),
-                global.translation() + current_dir,
-                0.0,
-                Color::RED,
-            );
-            lines.line_colored(
-                global.translation(),
-                global.translation() + desired_dir,
-                0.0,
-                Color::BLUE,
-            );
+                if let Some(target) = target.translation {
+                    impulse.impulse = (target - current.translation) * 0.03;
+                }
 
-            //impulse.torque_impulse = Vec3::new(x, y, z) * 0.2;
-            //info!("torque: {:?}", impulse.torque_impulse);
+                if let Some(rotation) = target.rotation {
+                    let current_dir = current.rotation * -Vec3::Y;
+                    let desired_dir = rotation * -Vec3::Z;
+
+                    /*
+                                       lines.line_colored(
+                                           global.translation(),
+                                           global.translation() + current_dir,
+                                           0.0,
+                                           Color::RED,
+                                       );
+                                       lines.line_colored(
+                                           global.translation(),
+                                           global.translation() + desired_dir,
+                                           0.0,
+                                           Color::BLUE,
+                                       );
+                    */
+
+                    let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
+                    //impulse.torque_impulse = desired_axis * 0.1;
+                    //info!("torque: {:?}", impulse.torque_impulse);
+                }
+            }
         }
     }
 }
@@ -1019,19 +1059,73 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSet
 
 pub fn pull_up(
     grab_joints: Query<&GrabJoint>,
-    hands: Query<(Entity, &Children), With<Hand>>,
+    mut hands: Query<
+        (
+            Entity,
+            &GlobalTransform,
+            &mut ExternalImpulse,
+            Option<&Children>,
+        ),
+        With<Hand>,
+    >,
     impulse_joints: Query<&ImpulseJoint>,
-    mut controllers: Query<(&mut ControllerInput, &PlayerInput)>,
+    mut controllers: Query<(
+        &mut ControllerInput,
+        &mut ControllerSettings,
+        &GlobalTransform,
+        &LookTransform,
+        &PlayerInput,
+    )>,
+    mut lines: ResMut<DebugLines>,
 ) {
-    for (hand, children) in &hands {
-        let should_pull_up = children.iter().any(|child| grab_joints.contains(*child));
+    for (hand, hand_position, mut hand_impulse, children) in &mut hands {
+        let should_pull_up = children
+            .map(|children| children.iter().any(|child| grab_joints.contains(*child)))
+            .unwrap_or_default();
         if should_pull_up {
+            // Get the direction from the body to the hand
+            let mut strength = 0.0;
+
             let mut child_entity = hand;
             while let Ok(joint) = impulse_joints.get(child_entity) {
                 child_entity = joint.parent;
-                if let Ok((mut controller, input)) = controllers.get_mut(child_entity) {
-                    let power = 1.0 - ((input.pitch + PI / 2.) / PI);
-                    controller.custom_impulse += Vec3::Y * 1.5 * power;
+                if let Ok((mut controller, mut settings, body_transform, direction, input)) =
+                    controllers.get_mut(child_entity)
+                {
+                    let desired_dir = direction.rotation() * Vec3::Z * 2.0;
+                    info!("desired_dir: {desired_dir}");
+
+                    let desired_position = hand_position.translation() + desired_dir;
+
+                    let current_position = body_transform.translation();
+
+                    /*
+                                       lines.line_colored(
+                                           hand_position.translation(),
+                                           body_transform.translation(),
+                                           0.0,
+                                           Color::CRIMSON,
+                                       );
+                    */
+                    lines.line_colored(
+                        hand_position.translation(),
+                        desired_position,
+                        crate::TICK_RATE.as_secs_f32() * 2.0,
+                        Color::BLUE,
+                    );
+                    lines.line_colored(
+                        current_position,
+                        desired_position,
+                        crate::TICK_RATE.as_secs_f32() * 2.0,
+                        Color::CRIMSON,
+                    );
+                    controller.custom_impulse += (desired_position - current_position) * 2.0;
+                    //strength = 1.0 - ((input.pitch + PI / 2.) / PI);
+                    //settings.gravity = 0.0;
+                    //let impulse = Vec3::Y * strength;
+                    //controller.jumping = true;
+                    //controller.custom_impulse += impulse;
+                    //info!("custom_impulse: {:.4?}", controller.custom_impulse);
                     break;
                 }
             }
@@ -1131,7 +1225,7 @@ pub fn grab_collider(
                     let max_force = 1000.0;
                     let stiffness = 10.0;
                     let damping = 1.0;
-                    let grab_joint = SphericalJointBuilder::new()
+                    let mut grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
                         .local_anchor2(anchor2)
                         .motor_model(JointAxis::AngX, motor_model)
@@ -1142,8 +1236,8 @@ pub fn grab_collider(
                         .motor_max_force(JointAxis::AngZ, max_force)
                         .motor_position(JointAxis::AngX, 0.0, stiffness, damping)
                         .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
-                        .motor_position(JointAxis::AngY, 0.0, stiffness, damping);
-                    let mut grab_joint = grab_joint.build();
+                        .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
+                        .build();
                     grab_joint.set_contacts_enabled(false);
 
                     commands.entity(hand).add_children(|children| {
@@ -1206,16 +1300,18 @@ pub fn player_movement(
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
         let mut desired_dir = Vec2::new(dir.x, dir.z);
 
-        lines.line(
-            global.translation(),
-            global.translation() + Vec3::new(current_dir.x, 0.0, current_dir.y),
-            0.0,
-        );
-        lines.line(
-            global.translation(),
-            global.translation() + Vec3::new(desired_dir.x, 0.0, desired_dir.y),
-            0.0,
-        );
+        /*
+               lines.line(
+                   global.translation(),
+                   global.translation() + Vec3::new(current_dir.x, 0.0, current_dir.y),
+                   0.0,
+               );
+               lines.line(
+                   global.translation(),
+                   global.translation() + Vec3::new(desired_dir.x, 0.0, desired_dir.y),
+                   0.0,
+               );
+        */
 
         // If we are grabby then make the character face the way we are grabbing.
         if player_input.any_grabby_hands() {
@@ -1230,10 +1326,24 @@ pub fn player_movement(
     }
 }
 
-pub fn teleport_player_back(mut players: Query<&mut Transform, With<Player>>) {
-    for mut transform in &mut players {
-        if transform.translation.y < -100.0 {
+pub fn teleport_player_back(
+    mut players: Query<(&mut Transform, &mut Velocity), With<Player>>,
+    kb: Res<Input<KeyCode>>,
+) {
+    for (mut transform, mut velocity) in &mut players {
+        let mut should_teleport = kb.just_pressed(KeyCode::Equals);
+        should_teleport = should_teleport || transform.translation.y < -100.0;
+        should_teleport = should_teleport || transform.translation.y > 1000.0;
+        should_teleport = should_teleport || transform.translation.x < -1000.0;
+        should_teleport = should_teleport || transform.translation.x > 1000.0;
+        should_teleport = should_teleport || transform.translation.z < -1000.0;
+        should_teleport = should_teleport || transform.translation.z > 1000.0;
+
+        if should_teleport {
             transform.translation = Vec3::new(0.0, 10.0, 0.0);
+            transform.rotation = Quat::IDENTITY;
+            velocity.linvel = Vec3::ZERO;
+            velocity.angvel = Vec3::ZERO;
         }
     }
 }

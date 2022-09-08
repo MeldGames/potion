@@ -70,37 +70,30 @@ pub fn push_item_back(
                     commands
                         .entity(item_entity)
                         .insert(CaughtItem::new(security_entity));
+
+                    // Push object tangential to the push direction as well, to avoid
+                    // getting stuck on walls hopefully.
+                    let center_dir = (security_transform.translation()
+                        - item_transform.translation())
+                    .normalize_or_zero();
+
+                    let push_dir = security_check.push.normalize_or_zero();
+                    let (tangent1, tangent2) = push_dir.any_orthonormal_pair();
+                    let tangent = (tangent1.abs() + tangent2.abs()).normalize_or_zero();
+                    let tangential_push = tangent * center_dir;
+
+                    let new_impulse = ExternalImpulse {
+                        impulse: security_check.push * 0.1,
+                        torque_impulse: tangential_push * 0.1,
+                    };
+
                     match impulse {
                         Some(mut impulse) => {
-                            /*
-                                                // Push object tangential to the push direction as well, to avoid
-                                                // getting stuck on walls hopefully.
-                                                let center_dir = (security_transform.translation()
-                                                    - item_transform.translation())
-                                                .normalize_or_zero();
-                                                let center_dir = (item_transform.translation()
-                                                    - security_transform.translation())
-                                                .normalize_or_zero();
-
-                                                let push_dir = security_check.push.normalize_or_zero();
-                                                let (tangent1, tangent2) = push_dir.any_orthonormal_pair();
-                                                let tangent = (tangent1.abs() + tangent2.abs()).normalize_or_zero();
-                                                let mut tangential_push = tangent * center_dir;
-                                                tangential_push.x *= 20.0;
-
-                                                info!("center_dir: {center_dir}");
-                                                info!("tangent: {tangent}");
-                                                inf
-                                                o!("push: {}", tangential_push);
-                            */
-
-                            impulse.impulse = security_check.push;
+                            impulse.impulse += new_impulse.impulse;
+                            impulse.torque_impulse += new_impulse.torque_impulse;
                         }
                         None => {
-                            commands.entity(item_entity).insert(ExternalImpulse {
-                                impulse: security_check.push,
-                                ..default()
-                            });
+                            commands.entity(item_entity).insert(new_impulse);
                         }
                     }
                 }

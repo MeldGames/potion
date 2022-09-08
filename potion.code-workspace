@@ -11,6 +11,12 @@
 		},
 		{
 			"path": "../parry"
+		},
+		{
+			"path": "../bevy"
+		},
+		{
+			"path": "../bevy_mod_wanderlust"
 		}
 	],
 	"settings": {}

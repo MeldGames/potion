@@ -126,15 +126,6 @@ checksum = "1485d4d2cc45e7b201ee3767015c96faa5904387c9d87c6efdd0fb511f12d305"
 
 [[package]]
 name = "approx"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f2a05fd1bd10b2527e20a2cd32d8873d115b8b39fe219ee25f42a8aca6ba278"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
-name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cab112f0a86d568ea0e627cc1d6be74a1e9cd55214684db5561995f6dad897c6"
@@ -1054,7 +1045,7 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98b15fee4b75472e3441b0c7221467303e4ce59b342a94a328e447e7cdb5a43c"
 dependencies = [
- "approx 0.5.1",
+ "approx",
  "bevy_app",
  "bevy_ecs",
  "bevy_input",
@@ -2104,7 +2095,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc32c2334f00ca5ac3695c5009ae35da21da8c62d255b5b96d56e2597a637a38"
 dependencies = [
  "ab_glyph",
- "approx 0.5.1",
+ "approx",
  "xi-unicode",
 ]
 
@@ -2740,7 +2731,7 @@ version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9e0a04ce089f9401aac565c740ed30c46291260f27d4911fdbaa6ca65fa3044"
 dependencies = [
- "approx 0.5.1",
+ "approx",
  "glam",
  "matrixmultiply",
  "nalgebra-macros",
@@ -3214,10 +3205,8 @@ dependencies = [
 [[package]]
 name = "parry3d"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89cd07f0e1e9e207662f430a4e758c357fdf89450a548ef1ce59113822fd5fa7"
 dependencies = [
- "approx 0.5.1",
+ "approx",
  "arrayvec",
  "bitflags",
  "downcast-rs",
@@ -3349,7 +3338,6 @@ dependencies = [
  "ron 0.8.0",
  "sabi",
  "serde",
- "smooth-bevy-cameras",
  "vec-collections",
  "wgpu-types",
 ]
@@ -3458,7 +3446,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32f2decdbd39b70bfb3a5dc9e725ea0465b39401052cc8b03c0f81206f4b9129"
 dependencies = [
- "approx 0.5.1",
+ "approx",
  "arrayvec",
  "bit-vec",
  "bitflags",
@@ -3783,7 +3771,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c48e45e5961033db030b56ad67aef22e9c908c493a6e8348c0a0f6b93433cd77"
 dependencies = [
- "approx 0.5.1",
+ "approx",
  "num-complex",
  "num-traits",
  "paste",
@@ -3814,16 +3802,6 @@ version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 dependencies = [
- "serde",
-]
-
-[[package]]
-name = "smooth-bevy-cameras"
-version = "0.4.0"
-source = "git+https://github.com/bonsairobo/smooth-bevy-cameras?rev=a1095b9#a1095b9bc563d459c79b59e12ef620fa4567e04e"
-dependencies = [
- "approx 0.4.0",
- "bevy",
  "serde",
 ]
 
