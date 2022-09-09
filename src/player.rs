@@ -8,7 +8,8 @@ use std::f32::consts::PI;
 
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
-    CharacterControllerBundle, ControllerInput, ControllerSettings, ControllerState,
+    CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
+    ControllerState,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -578,7 +579,8 @@ pub fn setup_player(
                         projection: PerspectiveProjection {
                             far: 10000.,
                             ..default()
-                        }.into(),
+                        }
+                        .into(),
                         ..Default::default()
                     })
                     .insert(AvoidIntersecting {
@@ -662,10 +664,10 @@ pub fn setup_player(
                             up_vector: Vec3::Y,
                             gravity: 9.8,
                             max_ground_angle: 45.0 * (PI / 180.0),
-                            min_float_offset: -0.3,
+                            min_float_offset: -0.1,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 10.0,
+                            jump_initial_force: 0.0,
                             jump_stop_force: 0.3,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
@@ -681,6 +683,7 @@ pub fn setup_player(
                             upright_spring_damping: 2.0,
                             ..default()
                         },
+                        physics: ControllerPhysicsBundle { ..default() },
                         transform: global_transform.compute_transform(),
                         global_transform: global_transform,
                         ..default()
@@ -696,6 +699,7 @@ pub fn setup_player(
                             })
                     */
                     //.insert(crate::deposit::Value::new(500))
+                    //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
@@ -1084,20 +1088,27 @@ pub fn pull_up(
             .unwrap_or_default();
         if should_pull_up {
             // Get the direction from the body to the hand
-            let mut strength = 0.0;
 
             let mut child_entity = hand;
             while let Ok(joint) = impulse_joints.get(child_entity) {
                 child_entity = joint.parent;
-                if let Ok((mut controller, mut settings, body_transform, direction, input)) =
-                    controllers.get_mut(child_entity)
+                if let Ok((
+                    mut controller_input,
+                    mut settings,
+                    body_transform,
+                    direction,
+                    player_input,
+                )) = controllers.get_mut(child_entity)
                 {
-                    let desired_dir = direction.rotation() * Vec3::Z * 2.0;
-                    info!("desired_dir: {desired_dir}");
+                    let strength = 1.0 - (player_input.pitch + (PI / 2.0)) / PI;
+                    //info!("strength: {strength}");
+                    //let desired_dir = (direction.rotation() * Vec3::Z * 1.5)
+                    //    + (direction.rotation() * Vec3::X * 0.5);
+                    //info!("desired_dir: {desired_dir}");
 
-                    let desired_position = hand_position.translation() + desired_dir;
+                    //let desired_position = hand_position.translation() + desired_dir;
 
-                    let current_position = body_transform.translation();
+                    //let current_position = body_transform.translation();
 
                     /*
                                        lines.line_colored(
@@ -1107,19 +1118,23 @@ pub fn pull_up(
                                            Color::CRIMSON,
                                        );
                     */
-                    lines.line_colored(
-                        hand_position.translation(),
-                        desired_position,
-                        crate::TICK_RATE.as_secs_f32() * 2.0,
-                        Color::BLUE,
-                    );
-                    lines.line_colored(
-                        current_position,
-                        desired_position,
-                        crate::TICK_RATE.as_secs_f32() * 2.0,
-                        Color::CRIMSON,
-                    );
-                    controller.custom_impulse += (desired_position - current_position) * 2.0;
+                    /*
+                                       lines.line_colored(
+                                           hand_position.translation(),
+                                           desired_position,
+                                           crate::TICK_RATE.as_secs_f32() * 2.0,
+                                           Color::BLUE,
+                                       );
+                                       lines.line_colored(
+                                           current_position,
+                                           desired_position,
+                                           crate::TICK_RATE.as_secs_f32() * 2.0,
+                                           Color::CRIMSON,
+                                       );
+                    */
+                    //controller.custom_impulse += (desired_position - current_position) * 2.0;
+                    //controller_input.jumping = true;
+                    controller_input.custom_impulse += Vec3::Y * strength;
                     //strength = 1.0 - ((input.pitch + PI / 2.) / PI);
                     //settings.gravity = 0.0;
                     //let impulse = Vec3::Y * strength;
