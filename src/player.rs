@@ -654,6 +654,9 @@ pub fn setup_player(
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
                 let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 5.0, 0.0));
+
+                let player_height = 0.5;
+                let player_radius = 0.35;
                 // Spawn player cube
                 let player_entity = commands
                     .spawn_bundle(CharacterControllerBundle {
@@ -667,7 +670,7 @@ pub fn setup_player(
                             min_float_offset: -0.1,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 0.0,
+                            jump_initial_force: 3.0,
                             jump_stop_force: 0.3,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
@@ -675,7 +678,7 @@ pub fn setup_player(
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 0.5,
-                            float_cast_collider: Collider::ball(0.45),
+                            float_cast_collider: Collider::ball(player_radius - 0.05),
                             float_distance: 0.25,
                             float_strength: 3.0,
                             float_dampen: 0.6,
@@ -683,7 +686,14 @@ pub fn setup_player(
                             upright_spring_damping: 2.0,
                             ..default()
                         },
-                        physics: ControllerPhysicsBundle { ..default() },
+                        physics: ControllerPhysicsBundle {
+                            collider: Collider::capsule(
+                                Vec3::new(0.0, 0.0, 0.0),
+                                Vec3::new(0.0, 0.5, 0.0),
+                                player_radius,
+                            ),
+                            ..default()
+                        },
                         transform: global_transform.compute_transform(),
                         global_transform: global_transform,
                         ..default()
@@ -708,19 +718,19 @@ pub fn setup_player(
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
 
-                let distance_from_body = 0.7;
+                let distance_from_body = player_radius + 0.2;
                 attach_arm(
                     &mut commands,
                     player_entity,
                     global_transform.compute_transform(),
-                    Vec3::new(distance_from_body, 0.5, 0.0),
+                    Vec3::new(distance_from_body, player_height, 0.0),
                     0,
                 );
                 attach_arm(
                     &mut commands,
                     player_entity,
                     global_transform.compute_transform(),
-                    Vec3::new(-distance_from_body, 0.5, 0.0),
+                    Vec3::new(-distance_from_body, player_height, 0.0),
                     1,
                 );
 
@@ -791,10 +801,10 @@ pub fn attach_arm(
     index: usize,
 ) {
     let max_force = 1000.0;
-    let twist_stiffness = 20.0;
-    let twist_damping = 2.0;
+    let twist_stiffness = 30.0;
+    let twist_damping = 6.0;
     let resting_stiffness = 2.0;
-    let resting_damping = 0.2;
+    let resting_damping = 0.4;
     let arm_radius = 0.15;
     let hand_radius = 0.175;
     let motor_model = MotorModel::ForceBased;
@@ -836,8 +846,18 @@ pub fn attach_arm(
         .motor_max_force(JointAxis::AngX, max_force)
         .motor_max_force(JointAxis::AngY, max_force)
         .motor_max_force(JointAxis::AngZ, max_force)
-        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        .motor_position(
+            JointAxis::AngX,
+            0.0,
+            resting_stiffness * 2.0,
+            resting_damping * 2.0,
+        )
+        .motor_position(
+            JointAxis::AngZ,
+            0.0,
+            resting_stiffness * 2.0,
+            resting_damping * 2.0,
+        )
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut hand_joint = hand_joint.build();
     hand_joint.set_contacts_enabled(false);
@@ -965,7 +985,7 @@ pub fn target_position(
                 */
 
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                impulse.torque_impulse = desired_axis * 1.0;
+                impulse.torque_impulse = desired_axis * 0.1;
                 //info!("torque: {:?}", impulse.torque_impulse);
             }
         }
@@ -998,7 +1018,7 @@ pub fn target_position(
                     */
 
                     let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                    //impulse.torque_impulse = desired_axis * 0.1;
+                    impulse.torque_impulse = desired_axis * 0.1;
                     //info!("torque: {:?}", impulse.torque_impulse);
                 }
             }
