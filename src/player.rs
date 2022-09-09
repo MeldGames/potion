@@ -674,11 +674,11 @@ pub fn setup_player(
                             coyote_time_duration: 0.16,
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
-                            float_cast_length: 1.0,
+                            float_cast_length: 0.5,
                             float_cast_collider: Collider::ball(0.45),
                             float_distance: 0.25,
-                            float_strength: 10.0,
-                            float_dampen: 1.0,
+                            float_strength: 3.0,
+                            float_dampen: 0.6,
                             upright_spring_strength: 10.0,
                             upright_spring_damping: 2.0,
                             ..default()
@@ -942,7 +942,7 @@ pub fn target_position(
         if let Ok(mut impulse) = impulses.get_mut(hand_entity) {
             let current = global.compute_transform();
             if let Some(target) = target.translation {
-                impulse.impulse = (target - current.translation) * 0.03;
+                impulse.impulse = (target - current.translation) * 0.02;
             }
 
             if let Some(rotation) = target.rotation {
@@ -965,7 +965,7 @@ pub fn target_position(
                 */
 
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                //impulse.torque_impulse = desired_axis * 0.1;
+                impulse.torque_impulse = desired_axis * 1.0;
                 //info!("torque: {:?}", impulse.torque_impulse);
             }
         }
@@ -975,7 +975,7 @@ pub fn target_position(
                 let current = global.compute_transform();
 
                 if let Some(target) = target.translation {
-                    impulse.impulse = (target - current.translation) * 0.03;
+                    //impulse.impulse = (target - current.translation) * 0.02;
                 }
 
                 if let Some(rotation) = target.rotation {
@@ -1086,63 +1086,68 @@ pub fn pull_up(
         let should_pull_up = children
             .map(|children| children.iter().any(|child| grab_joints.contains(*child)))
             .unwrap_or_default();
-        if should_pull_up {
-            // Get the direction from the body to the hand
+        // Get the direction from the body to the hand
 
-            let mut child_entity = hand;
-            while let Ok(joint) = impulse_joints.get(child_entity) {
-                child_entity = joint.parent;
-                if let Ok((
-                    mut controller_input,
-                    mut settings,
-                    body_transform,
-                    direction,
-                    player_input,
-                )) = controllers.get_mut(child_entity)
-                {
-                    let strength = 1.0 - (player_input.pitch + (PI / 2.0)) / PI;
-                    //info!("strength: {strength}");
-                    //let desired_dir = (direction.rotation() * Vec3::Z * 1.5)
-                    //    + (direction.rotation() * Vec3::X * 0.5);
-                    //info!("desired_dir: {desired_dir}");
-
-                    //let desired_position = hand_position.translation() + desired_dir;
-
-                    //let current_position = body_transform.translation();
-
-                    /*
-                                       lines.line_colored(
-                                           hand_position.translation(),
-                                           body_transform.translation(),
-                                           0.0,
-                                           Color::CRIMSON,
-                                       );
-                    */
-                    /*
-                                       lines.line_colored(
-                                           hand_position.translation(),
-                                           desired_position,
-                                           crate::TICK_RATE.as_secs_f32() * 2.0,
-                                           Color::BLUE,
-                                       );
-                                       lines.line_colored(
-                                           current_position,
-                                           desired_position,
-                                           crate::TICK_RATE.as_secs_f32() * 2.0,
-                                           Color::CRIMSON,
-                                       );
-                    */
-                    //controller.custom_impulse += (desired_position - current_position) * 2.0;
-                    //controller_input.jumping = true;
-                    controller_input.custom_impulse += Vec3::Y * strength;
-                    //strength = 1.0 - ((input.pitch + PI / 2.) / PI);
-                    //settings.gravity = 0.0;
-                    //let impulse = Vec3::Y * strength;
-                    //controller.jumping = true;
-                    //controller.custom_impulse += impulse;
-                    //info!("custom_impulse: {:.4?}", controller.custom_impulse);
-                    break;
+        let mut child_entity = hand;
+        while let Ok(joint) = impulse_joints.get(child_entity) {
+            child_entity = joint.parent;
+            if let Ok((
+                mut controller_input,
+                mut settings,
+                body_transform,
+                direction,
+                player_input,
+            )) = controllers.get_mut(child_entity)
+            {
+                if should_pull_up && player_input.pitch <= 0.0 {
+                    let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
+                    let strength = ease_sine(angle_strength);
+                    //controller_input.custom_impulse += Vec3::Y * strength * 0.1;
+                    settings.float_cast_length = 0.0;
+                } else {
+                    settings.float_cast_length = 0.5;
                 }
+
+                //info!("strength: {strength}");
+                //let desired_dir = (direction.rotation() * Vec3::Z * 1.5)
+                //    + (direction.rotation() * Vec3::X * 0.5);
+                //info!("desired_dir: {desired_dir}");
+
+                //let desired_position = hand_position.translation() + desired_dir;
+
+                //let current_position = body_transform.translation();
+
+                /*
+                                   lines.line_colored(
+                                       hand_position.translation(),
+                                       body_transform.translation(),
+                                       0.0,
+                                       Color::CRIMSON,
+                                   );
+                */
+                /*
+                                   lines.line_colored(
+                                       hand_position.translation(),
+                                       desired_position,
+                                       crate::TICK_RATE.as_secs_f32() * 2.0,
+                                       Color::BLUE,
+                                   );
+                                   lines.line_colored(
+                                       current_position,
+                                       desired_position,
+                                       crate::TICK_RATE.as_secs_f32() * 2.0,
+                                       Color::CRIMSON,
+                                   );
+                */
+                //controller.custom_impulse += (desired_position - current_position) * 2.0;
+                //controller_input.jumping = true;
+                //strength = 1.0 - ((input.pitch + PI / 2.) / PI);
+                //settings.gravity = 0.0;
+                //let impulse = Vec3::Y * strength;
+                //controller.jumping = true;
+                //controller.custom_impulse += impulse;
+                //info!("custom_impulse: {:.4?}", controller.custom_impulse);
+                break;
             }
         }
     }
@@ -1361,4 +1366,8 @@ pub fn teleport_player_back(
             velocity.angvel = Vec3::ZERO;
         }
     }
+}
+
+pub fn ease_sine(x: f32) -> f32 {
+    -((PI * x).cos() - 1.0) / 2.0
 }
