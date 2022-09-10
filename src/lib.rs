@@ -81,7 +81,12 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
     //app.add_system(outline_meshes);
+<<<<<<< HEAD
     
+=======
+
+    app.add_startup_system(setup_map);
+>>>>>>> 6e9c4b28b3918fbda82588614e2994f5dac2db54
     app.add_event::<AssetEvent<Mesh>>();
 
     app.add_startup_system(setup_map);
@@ -192,7 +197,6 @@ fn setup_map(
         ))
         .id();
 
-    
     let _sky = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/sky.glb#Scene0"),
@@ -204,7 +208,6 @@ fn setup_map(
         })
         .id();
 
-    
     let sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
 
     let _sky_clouds = commands
@@ -441,12 +444,13 @@ fn update_level_collision(
     for ev in ev_asset.iter() {
         match ev {
             AssetEvent::Created { handle } => {
-                let loaded_mesh = assets.get_mut(handle).unwrap();
-                for (mut col, inner_handle, e) in replace.iter_mut() {
-                    if *inner_handle == *handle {
-                        *col =
-                            Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS).unwrap();
-                        commands.entity(e).remove::<ColliderLoad>();
+                if let Some(loaded_mesh) = assets.get_mut(handle) {
+                    for (mut col, inner_handle, e) in replace.iter_mut() {
+                        if *inner_handle == *handle {
+                            *col = Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS)
+                                .unwrap();
+                            commands.entity(e).remove::<ColliderLoad>();
+                        }
                     }
                 }
             }
@@ -456,9 +460,12 @@ fn update_level_collision(
     }
 }
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 6e9c4b28b3918fbda82588614e2994f5dac2db54
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
 

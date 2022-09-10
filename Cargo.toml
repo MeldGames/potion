@@ -1,4 +1,5 @@
 [package]
+default-run = "local"
 edition = "2021"
 name = "potion"
 version = "0.1.0"
@@ -52,6 +53,7 @@ bevy_shader_utils = {path = "../bevy_shader_utils"}
 [patch.crates-io]
 bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
 #parry3d = {path = "../parry/crates/parry3d"}
+bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 
 [[bin]]
 name = "local"
