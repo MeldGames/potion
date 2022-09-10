@@ -81,12 +81,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
     //app.add_system(outline_meshes);
-<<<<<<< HEAD
     
-=======
-
-    app.add_startup_system(setup_map);
->>>>>>> 6e9c4b28b3918fbda82588614e2994f5dac2db54
     app.add_event::<AssetEvent<Mesh>>();
 
     app.add_startup_system(setup_map);
@@ -460,12 +455,9 @@ fn update_level_collision(
     }
 }
 
-<<<<<<< HEAD
 
 
 
-=======
->>>>>>> 6e9c4b28b3918fbda82588614e2994f5dac2db54
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
 
