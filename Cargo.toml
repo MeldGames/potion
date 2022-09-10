@@ -3,6 +3,12 @@ edition = "2021"
 name = "potion"
 version = "0.1.0"
 
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
 [dependencies]
 bevy = "0.8"
 bevy_egui = "0.15"
@@ -41,6 +47,7 @@ wgpu-types = "0.13"
 
 bevy_renet = "0.0.5"
 renet_visualizer = "0.0.2"
+bevy_shader_utils = {path = "../bevy_shader_utils"}
 
 [patch.crates-io]
 bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}

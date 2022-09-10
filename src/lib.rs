@@ -7,6 +7,7 @@ pub mod network;
 pub mod physics;
 pub mod player;
 pub mod store;
+pub mod trees;
 
 use std::f32::consts::PI;
 
@@ -17,6 +18,7 @@ use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
+use trees::TreesPlugin;
 
 use follow::Follow;
 use player::PlayerInput;
@@ -26,12 +28,14 @@ use store::{SecurityCheck, StoreItem, StorePlugin};
 //use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 
-use bevy::prelude::*;
+use bevy::{prelude::*};
 use bevy_inspector_egui::InspectableRegistry;
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(100);
+
+
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -65,6 +69,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(CauldronPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
+        .add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
             depth_test: true,
@@ -77,8 +82,9 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(OutlinePlugin);
     //app.add_system(outline_meshes);
     
-    app.add_startup_system(setup_map);
     app.add_event::<AssetEvent<Mesh>>();
+
+    app.add_startup_system(setup_map);
     app.add_system(update_level_collision);
     app.add_network_system(crate::player::teleport_player_back);
 
@@ -156,6 +162,12 @@ fn setup_map(
         &*asset_server,
         &mut meshes,
         Transform::from_xyz(4.0, 3.0, -2.0),
+    );
+
+    crate::trees::spawn_trees(
+        &mut commands,
+        &*asset_server,
+        &mut meshes,
     );
 
     let _stone = commands
@@ -291,51 +303,6 @@ fn setup_map(
         ))
         .id();
 
-    let tree_positions = vec![
-        Vec3::new(12.5, 0., -0.075),
-        Vec3::new(16.5, 0., 3.),
-        Vec3::new(20.5, 0., -4.),
-        Vec3::new(26.5, 0., 2.),
-    ];
-    for i in tree_positions {
-        let tree = commands
-            .spawn_bundle(SceneBundle {
-                scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
-                transform: Transform {
-                    translation: i.clone(),
-                    scale: Vec3::splat(1.),
-                    ..default()
-                },
-                ..default()
-            })
-            .insert_bundle((
-                ColliderMassProperties::Density(5.0),
-                RigidBody::Fixed,
-                Collider::cylinder(3.4, 0.2),
-                Name::new("Tree"),
-                crate::physics::TERRAIN_GROUPING,
-            ))
-            .id();
-        commands
-            .spawn_bundle(SceneBundle {
-                scene: asset_server.load("models/weltberry.glb#Scene0"),
-                transform: Transform {
-                    translation: i.clone(),
-                    scale: Vec3::splat(1.),
-                    ..default()
-                },
-                ..default()
-            })
-            .insert(Ingredient)
-            .insert(crate::deposit::Value::new(1))
-            .insert_bundle((
-                Collider::ball(0.3),
-                RigidBody::Dynamic,
-                Name::new("Weltberry"),
-                Velocity::default(),
-                DEFAULT_FRICTION,
-            ));
-    }
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
@@ -490,8 +457,11 @@ fn update_level_collision(
 }
 
 
+
+
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
+
 
 pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape = ComputedColliderShape::TriMesh;
 /*
