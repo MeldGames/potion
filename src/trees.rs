@@ -117,10 +117,10 @@ impl Material for CustomMaterial {
 pub struct CustomMaterial {
     #[uniform(0)]
     time: f32,
-    #[uniform(1)]
+    #[uniform(0)]
     color: Color,
-    #[texture(2)]
-    #[sampler(3)]
+    #[texture(1)]
+    #[sampler(2)]
     color_texture: Option<Handle<Image>>,
     alpha_mode: AlphaMode,
 }
@@ -161,7 +161,7 @@ fn mod_scene(
             let custom_material =
                 custom_materials.add(CustomMaterial {
                     color: Color::BLUE,
-                    color_texture: None,
+                    color_texture: Some(asset_server.load("shaders/leaf.png")),
                     alpha_mode: AlphaMode::Blend,
                     time: 0.5,
                 });

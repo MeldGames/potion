@@ -1,12 +1,16 @@
 use potion::player::{PlayerEvent, PlayerInputPlugin};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, asset::AssetServerSettings};
 
 fn main() {
     let mut app = App::new();
     app.insert_resource(sabi::Local);
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
+    app.insert_resource(AssetServerSettings {
+        watch_for_changes: true,
+        ..default()
+    });
     app.add_startup_system(spawn_local_player);
 
     app.run();
@@ -36,7 +40,7 @@ fn spawn_local_player(
                 bottom: -HALF_SIZE,
                 top: HALF_SIZE,
                 near: -10.0 * HALF_SIZE,
-                far: 10000.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
                 ..default()
             },
             shadows_enabled: true,

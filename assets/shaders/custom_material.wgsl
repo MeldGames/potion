@@ -1,8 +1,8 @@
 #import bevy_shader_utils::simplex_noise_3d
 
 struct CustomMaterial {
-    // color: vec4<f32>,
     time: f32,
+    color: vec4<f32>,
 };
 
 @group(1) @binding(0)
@@ -27,9 +27,11 @@ fn fragment(
     // var input: vec3<f32> = vec3<f32>(uv.x * 40.0, uv.y * 40.0, 1.);
     var noise = simplexNoise3(vec3<f32>(world_normal.xyz * 2.0));
     var alpha = (noise + 1.0) / 2.0;
-    // return material.color * textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
+    return material.color * textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
     // return material.color * vec4<f32>(1.0, 1.0, 1.0, alpha);
     // return vec4<f32>(uv.x, uv.y, 0.0, 1.0);
 
-    return vec4<f32>(world_normal.xyz, smoothstep(-1.0, 3.0, noise));
+    //return vec4<f32>(world_normal.xyz, smoothstep(-1.0, 3.0, noise) );
+
+  
 }
