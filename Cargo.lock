@@ -717,7 +717,6 @@ dependencies = [
 [[package]]
 name = "bevy_mod_wanderlust"
 version = "0.2.2"
-source = "git+https://github.com/aceeri/bevy_mod_wanderlust#3bbb16d4048a1893ab8f9124fde018bdea5429af"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
@@ -893,7 +892,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_shader_utils"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "bevy",
 ]

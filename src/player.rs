@@ -618,7 +618,7 @@ pub fn setup_player(
                             coyote_time_duration: 0.16,
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
-                            float_cast_length: 1.0,
+                            float_cast_length: 0.55,
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 0.55,
                             float_strength: 10.0,
@@ -1066,18 +1066,25 @@ pub fn pull_up(
                 player_input,
             )) = controllers.get_mut(child_entity)
             {
-                if should_pull_up && player_input.pitch <= 0.0 {
-                    let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
-                    let strength = ease_sine(angle_strength);
+                controller_input.no_downward_float = should_pull_up;
+                /*
+                               if should_pull_up && player_input.pitch <= 0.0 {
+                                   let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
+                                   let strength = ease_sine(angle_strength);
 
-                    // move forward/backward when pulling on something
-                    let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
-                    let dir = (rotation * -Vec3::Z).normalize_or_zero();
-                    //controller_input.movement += dir * 0.1;
-                    //settings.float_cast_length = 0.0;
-                } else {
-                    settings.float_cast_length = 1.0;
-                }
+                                   // move forward/backward when pulling on something
+                                   let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
+                                   let dir = (rotation * -Vec3::Z).normalize_or_zero();
+                                   controller_input.no_downward_float = true;
+                                   //controller_input.movement += dir * 0.1;
+                                   //controller_input.ignore_force = Vec3::new(0.0, 10.0, 0.0);
+                                   //settings.float_cast_length = 0.0;
+                               } else {
+                                   //controller_input.ignore_force = Vec3::new(0.0, 0.0, 0.0);
+                                   controller_input.no_downward_float = false;
+                                   //settings.float_cast_length = 1.0;
+                               }
+                */
                 break;
             }
         }
@@ -1132,7 +1139,7 @@ pub fn related_entities(
     childrens: Query<&Children>,
     parents: Query<&Parent>,
     joint_childrens: Query<&JointChildren>,
-    joints: Query<&ImpulseJoint, Without<GrabJoint>>,
+    joints: Query<&ImpulseJoint>,
 ) {
     for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
@@ -1232,7 +1239,7 @@ pub fn grab_collider(
                 };
 
                 if related.contains(&other_collider) {
-                    continue;
+                    //continue;
                 }
 
                 let contact_points = contact_pair
