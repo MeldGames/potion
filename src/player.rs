@@ -613,9 +613,9 @@ pub fn setup_player(
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 0.5,
                             float_cast_collider: Collider::ball(player_radius - 0.05),
-                            float_distance: 0.4,
+                            float_distance: 0.6,
                             float_strength: 3.0,
-                            float_dampen: 0.6,
+                            float_dampen: 0.4,
                             upright_spring_strength: 10.0,
                             upright_spring_damping: 2.0,
                             ..default()
@@ -842,35 +842,29 @@ pub fn player_grabby_hands(
         &PlayerInput,
         &PlayerCamera,
     )>,
+    mut impulses: Query<&mut ExternalImpulse>,
     globals: Query<&GlobalTransform>,
     joints: Query<(&GlobalTransform, &ImpulseJoint)>,
-    mut hands: Query<
-        (
-            Entity,
-            &mut ExternalImpulse,
-            &mut Grabbing,
-            &mut CollisionGroups,
-            &ArmId,
-        ),
-        With<Hand>,
-    >,
+    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
     mut lines: ResMut<DebugLines>,
 ) {
-    for (hand_entity, mut hand_impulse, mut grabbing, mut collision_groups, arm_id) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id) in &mut hands {
         let (hand_global, hand_joint) = if let Ok((global, joint)) = joints.get(hand_entity) {
             (global, joint)
         } else {
             continue;
         };
 
-        let (arm_global, arm_joint) = if let Ok((global, joint)) = joints.get(hand_joint.parent) {
+        let arm_entity = hand_joint.parent;
+        let (arm_global, arm_joint) = if let Ok((global, joint)) = joints.get(arm_entity) {
             (global, joint)
         } else {
             continue;
         };
 
+        let player_entity = arm_joint.parent;
         let (player_global, direction, input, camera_entity) =
-            if let Ok((global, direction, input, camera_entity)) = inputs.get(arm_joint.parent) {
+            if let Ok((global, direction, input, camera_entity)) = inputs.get(player_entity) {
                 (global, direction, input, camera_entity)
             } else {
                 continue;
@@ -891,10 +885,6 @@ pub fn player_grabby_hands(
 
         let camera = camera_global.translation();
         let camera_dir = (shoulder - camera).normalize_or_zero();
-
-        let current_dir = hand_transform.rotation * -Vec3::Y;
-        let desired_dir = camera_dir;
-        let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
         lines.line_colored(
             shoulder,
@@ -920,13 +910,27 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
-            let hand_strength = 0.1;
-            let wrist_strength = 0.1;
+            if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
+                let current_dir = hand_transform.rotation * -Vec3::Y;
+                let desired_dir = camera_dir;
+                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-            // what we really want here is the rotation from the shoulder to the hand
-            // to be aligned with the camera direction.
-            hand_impulse.impulse = (camera_dir - arm_dir) * hand_strength;
-            hand_impulse.torque_impulse = desired_axis * wrist_strength;
+                let hand_strength = 0.2;
+                let wrist_strength = 0.2;
+                hand_impulse.impulse = (camera_dir - arm_dir) * hand_strength;
+                hand_impulse.torque_impulse = desired_axis * wrist_strength;
+            }
+
+            if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
+                let current_dir = arm_transform.rotation * -Vec3::Y;
+                let desired_dir = camera_dir;
+                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
+
+                let arm_strength = 0.2;
+                let back_strength = 0.2;
+                arm_impulse.impulse = (camera_dir - arm_dir) * arm_strength;
+                arm_impulse.torque_impulse = desired_axis * back_strength;
+            }
 
             *collision_groups = GRAB_GROUPING;
         } else {
@@ -974,15 +978,15 @@ pub fn avoid_intersecting(
 }
 
 pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
-    let crouch_height = 0.1;
-    let full_height = 0.4;
-    let threshold = -0.3;
+    let crouch_height = 0.25;
+    let full_height = 0.55;
+    let threshold = -PI / 4.0;
     for (input, mut controller) in &mut controllers {
         // Are we looking sufficiently down?
         if input.pitch < threshold {
-            info!("pitch: {:?}", input.pitch);
             // interpolate between crouch and full based on how far we are pitched downwards
-            let crouch_coefficient = input.pitch.abs() / ((PI / 2.0) - threshold.abs());
+            let crouch_coefficient =
+                (input.pitch.abs() - threshold.abs()) / ((PI / 2.0) - threshold.abs());
             let interpolated =
                 full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
             controller.float_distance = interpolated;
@@ -1189,7 +1193,7 @@ pub fn grab_collider(
                         .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
                         .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
                         .build();
-                    //grab_joint.set_contacts_enabled(false);
+                    grab_joint.set_contacts_enabled(false);
 
                     commands.entity(hand).add_children(|children| {
                         children
