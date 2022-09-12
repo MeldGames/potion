@@ -9,7 +9,7 @@ use std::f32::consts::PI;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
     CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
-    ControllerState,
+    ControllerState, RelatedEntities,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -323,7 +323,12 @@ impl Plugin for PlayerPlugin {
                 .after("player_swivel_and_tilt")
                 .after("player_movement"),
         );
-        app.add_network_system(related_entities.label("related_entities"));
+        app.add_network_system(joint_children.label("joint_children"));
+        app.add_network_system(
+            related_entities
+                .label("related_entities")
+                .after("joint_children"),
+        );
         app.add_network_system(
             grab_collider
                 .label("grab_collider")
@@ -614,7 +619,7 @@ pub fn setup_player(
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 1.0,
-                            float_cast_collider: Collider::ball(player_radius - 0.05),
+                            float_cast_collider: Collider::ball(player_radius),
                             float_distance: 0.55,
                             float_strength: 10.0,
                             float_dampen: 0.5,
@@ -649,6 +654,7 @@ pub fn setup_player(
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
+                    .insert(RelatedEntities::default())
                     //.insert(Owned)
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
@@ -671,19 +677,22 @@ pub fn setup_player(
                 );
                 // for some body horror
                 /*
-                attach_arm(
-                    &mut commands,
-                    player_entity,
-                    Vec3::new(0.0, 0.5, distance_from_body),
-                );
+                               attach_arm(
+                                   &mut commands,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(0.0, 0.5, distance_from_body),
+                                   2,
+                               );
 
-                attach_arm(
-                    &mut commands,
-                    player_entity,
-                    Vec3::new(0.0, 0.5, -distance_from_body),
-                );
+                               attach_arm(
+                                   &mut commands,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(0.0, 0.5, -distance_from_body),
+                                   2,
+                               );
                 */
-
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
@@ -763,7 +772,7 @@ pub fn attach_arm(
 
     let arm_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
-        .insert(Name::new("Arm"))
+        .insert(Name::new(format!("Arm {}", index)))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
         .insert(ExternalImpulse::default())
@@ -800,7 +809,7 @@ pub fn attach_arm(
 
     let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
-        .insert(Name::new("Hand"))
+        .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(RelatedEntities::default())
         .insert(Grabbing(false))
@@ -1075,32 +1084,71 @@ pub fn pull_up(
     }
 }
 
+/*
 #[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
 #[reflect(Component)]
 pub struct RelatedEntities(HashSet<Entity>);
+ */
+
+#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
+#[reflect(Component)]
+pub struct JointChildren(pub Vec<Entity>);
+
+pub fn joint_children(
+    mut commands: Commands,
+    mut children: Query<&mut JointChildren>,
+    joints: Query<(Entity, &ImpulseJoint)>,
+) {
+    for (entity, joint) in &joints {
+        match children.get_mut(joint.parent) {
+            Ok(mut children) => {
+                if !children.contains(&entity) {
+                    children.push(entity);
+                }
+            }
+            _ => {
+                commands
+                    .entity(joint.parent)
+                    .insert(JointChildren(vec![entity]));
+            }
+        }
+    }
+}
 
 /// Traverse the transform hierarchy and joint hierarchy to find all related entities.
 pub fn related_entities(
+    names: Query<&Name>,
     mut related: Query<
         (Entity, &mut RelatedEntities),
-        Or<(Changed<Children>, Changed<ImpulseJoint>)>,
+        /*
+               Or<(
+                   Changed<Children>,
+                   Changed<Parent>,
+                   Changed<ImpulseJoint>,
+                   Changed<JointChildren>,
+               )>,
+        */
     >,
     childrens: Query<&Children>,
+    parents: Query<&Parent>,
+    joint_childrens: Query<&JointChildren>,
     joints: Query<&ImpulseJoint>,
 ) {
-    for (entity, mut related) in &mut related {
+    for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
-
-        let mut child_entity = entity;
-        while let Ok(impulse) = joints.get(child_entity) {
-            related_entities.insert(impulse.parent);
-            child_entity = impulse.parent;
-        }
+        related_entities.insert(core_entity);
 
         let mut entity_stack = related_entities.clone();
         while entity_stack.len() > 0 {
             let mut new_stack = HashSet::new();
             for entity in entity_stack.iter() {
+                if let Ok(parent) = parents.get(*entity) {
+                    let entity = parent.get();
+                    if related_entities.insert(entity) {
+                        new_stack.insert(entity);
+                    }
+                }
+
                 if let Ok(children) = childrens.get(*entity) {
                     for child in children {
                         let entity = *child;
@@ -1116,12 +1164,28 @@ pub fn related_entities(
                         new_stack.insert(entity);
                     }
                 }
+
+                if let Ok(joint_children) = joint_childrens.get(*entity) {
+                    for child in &joint_children.0 {
+                        let entity = *child;
+                        if related_entities.insert(entity) {
+                            new_stack.insert(entity);
+                        }
+                    }
+                }
             }
 
             entity_stack = new_stack;
         }
 
-        related.0 = related_entities;
+        let mut named = Vec::new();
+        for entity in &related_entities {
+            named.push(match names.get(*entity) {
+                Ok(name) => name.as_str().to_owned(),
+                _ => format!("{:?}", entity),
+            });
+        }
+        related.related = related_entities;
     }
 }
 
