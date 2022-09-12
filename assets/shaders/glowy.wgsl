@@ -46,7 +46,7 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32>{
     col = mix(col, vec3(0.1, 0.1, 0.6), glow);
 
     let bump_coords = dir_to_equirectangular(N * vec3(1.0, -0.5, 1.0) - vec3(0.0,0.5,0.0));
-    let bump = textureSample(texture, texture_sampler, bump_coords).r;
+    let bump = textureSample(texture, texture_sampler, bump_coords).b;
     
     var reflect_coords = dir_to_equirectangular(reflect(-V, N));
     let reflection = textureSample(texture, texture_sampler, reflect_coords).rgb;

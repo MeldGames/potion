@@ -69,3 +69,8 @@ path = "src/server.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+
+[[example]]
+name = "tree"
+path = "examples/tree_shader.rs"

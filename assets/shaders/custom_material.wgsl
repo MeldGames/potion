@@ -25,9 +25,11 @@ fn fragment(
 ) -> @location(0) vec4<f32> {
     // return material.color * textureSample(base_color_texture, base_color_sampler, uv);
     // var input: vec3<f32> = vec3<f32>(uv.x * 40.0, uv.y * 40.0, 1.);
-    var noise = simplexNoise3(vec3<f32>(world_normal.xyz * 2.0));
+    var noise = simplexNoise3(vec3<f32>(world_normal.xyz * 10.0));
     var alpha = (noise + 1.0) / 2.0;
-    return material.color * textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
+    var cutout = textureSample(base_color_texture, base_color_sampler, uv);
+    //return material.color * textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
+    return vec4<f32>(0.0, 0.6, 0.2, cutout.a * alpha);
     // return material.color * vec4<f32>(1.0, 1.0, 1.0, alpha);
     // return vec4<f32>(uv.x, uv.y, 0.0, 1.0);
 

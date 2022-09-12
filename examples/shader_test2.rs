@@ -82,7 +82,8 @@ fn setup(
                     point_light: PointLight {
                         intensity: 10000.0,
                         radius: 1.0,
-                        color: Color::rgb(0.5, 0.1, 0.0),
+                        color: Color::rgb(0.1
+                            , 0.1, 0.5),
                         ..default()
                     },
                     ..default()
