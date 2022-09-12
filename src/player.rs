@@ -1074,7 +1074,7 @@ pub fn pull_up(
                     let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
                     let dir = (rotation * -Vec3::Z).normalize_or_zero();
                     //controller_input.movement += dir * 0.1;
-                    settings.float_cast_length = 0.0;
+                    //settings.float_cast_length = 0.0;
                 } else {
                     settings.float_cast_length = 1.0;
                 }
@@ -1097,7 +1097,7 @@ pub struct JointChildren(pub Vec<Entity>);
 pub fn joint_children(
     mut commands: Commands,
     mut children: Query<&mut JointChildren>,
-    joints: Query<(Entity, &ImpulseJoint)>,
+    joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
 ) {
     for (entity, joint) in &joints {
         match children.get_mut(joint.parent) {
@@ -1132,7 +1132,7 @@ pub fn related_entities(
     childrens: Query<&Children>,
     parents: Query<&Parent>,
     joint_childrens: Query<&JointChildren>,
-    joints: Query<&ImpulseJoint>,
+    joints: Query<&ImpulseJoint, Without<GrabJoint>>,
 ) {
     for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
