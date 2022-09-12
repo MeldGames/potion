@@ -323,11 +323,13 @@ impl Plugin for PlayerPlugin {
                 .after("player_swivel_and_tilt")
                 .after("player_movement"),
         );
+        app.add_network_system(related_entities.label("related_entities"));
         app.add_network_system(
             grab_collider
                 .label("grab_collider")
                 .after(bevy_mod_wanderlust::movement)
-                .after("target_position"),
+                .after("target_position")
+                .after("related_entities"),
         );
         app.add_network_system(
             player_swivel_and_tilt
@@ -653,22 +655,20 @@ pub fn setup_player(
                     .id();
 
                 let distance_from_body = player_radius + 0.2;
-                /*
-                               attach_arm(
-                                   &mut commands,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(distance_from_body, player_height, 0.0),
-                                   0,
-                               );
-                               attach_arm(
-                                   &mut commands,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(-distance_from_body, player_height, 0.0),
-                                   1,
-                               );
-                */
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(distance_from_body, player_height, 0.0),
+                    0,
+                );
+                attach_arm(
+                    &mut commands,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(-distance_from_body, player_height, 0.0),
+                    1,
+                );
                 // for some body horror
                 /*
                 attach_arm(
@@ -802,6 +802,7 @@ pub fn attach_arm(
         .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Hand"))
         .insert(Hand)
+        .insert(RelatedEntities::default())
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
@@ -1074,15 +1075,20 @@ pub fn pull_up(
     }
 }
 
-#[derive(Debug, Component, Clone)]
+#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
+#[reflect(Component)]
 pub struct RelatedEntities(HashSet<Entity>);
 
+/// Traverse the transform hierarchy and joint hierarchy to find all related entities.
 pub fn related_entities(
-    mut related: Query<(Entity, &mut RelatedEntities)>,
+    mut related: Query<
+        (Entity, &mut RelatedEntities),
+        Or<(Changed<Children>, Changed<ImpulseJoint>)>,
+    >,
     childrens: Query<&Children>,
     joints: Query<&ImpulseJoint>,
 ) {
-    for (entity, related) in &mut related {
+    for (entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
 
         let mut child_entity = entity;
@@ -1097,14 +1103,25 @@ pub fn related_entities(
             for entity in entity_stack.iter() {
                 if let Ok(children) = childrens.get(*entity) {
                     for child in children {
-                        related_entities.insert(*child);
-                        new_stack.insert(*child);
+                        let entity = *child;
+                        if related_entities.insert(entity) {
+                            new_stack.insert(entity);
+                        }
+                    }
+                }
+
+                if let Ok(joint) = joints.get(*entity) {
+                    let entity = joint.parent;
+                    if related_entities.insert(entity) {
+                        new_stack.insert(entity);
                     }
                 }
             }
 
             entity_stack = new_stack;
         }
+
+        related.0 = related_entities;
     }
 }
 
@@ -1113,48 +1130,30 @@ pub fn grab_collider(
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    childrens: Query<&Children>,
-    hands: Query<(Entity, &Grabbing, &GlobalTransform, Option<&Children>), With<Hand>>,
-    impulse_joints: Query<&ImpulseJoint>,
+    hands: Query<
+        (
+            Entity,
+            &Grabbing,
+            &GlobalTransform,
+            Option<&Children>,
+            &RelatedEntities,
+        ),
+        With<Hand>,
+    >,
     grab_joints: Query<&GrabJoint>,
 ) {
-    for (hand, grabbing, global, children) in &hands {
+    for (hand, grabbing, global, children, related) in &hands {
         if grabbing.0 {
             let mut already_grabbing = false;
-            let mut related_entities = HashSet::new();
 
             if let Some(children) = children {
                 for child in children.iter() {
-                    related_entities.insert(*child);
-                    if let Ok(impulse) = impulse_joints.get(*child) {
+                    if grab_joints.contains(*child) {
                         // We are already grabbing something so just skip this hand.
                         already_grabbing = true;
-                        related_entities.insert(impulse.parent);
+                        break;
                     }
                 }
-            }
-
-            // Walk up chain of impulse joints to make sure we aren't grabbing ourselves*
-            // *TODO: should also walk down the hierarchy to check that.
-            let mut child_entity = hand;
-            while let Ok(impulse) = impulse_joints.get(child_entity) {
-                related_entities.insert(impulse.parent);
-                child_entity = impulse.parent;
-            }
-
-            let mut entity_stack = related_entities.clone();
-            while entity_stack.len() > 0 {
-                let mut new_stack = HashSet::new();
-                for entity in entity_stack.iter() {
-                    if let Ok(children) = childrens.get(*entity) {
-                        for child in children {
-                            related_entities.insert(*child);
-                            new_stack.insert(*child);
-                        }
-                    }
-                }
-
-                entity_stack = new_stack;
             }
 
             if already_grabbing {
@@ -1168,7 +1167,7 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                if related_entities.contains(&other_collider) {
+                if related.contains(&other_collider) {
                     continue;
                 }
 
