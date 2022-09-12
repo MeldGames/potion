@@ -717,8 +717,6 @@ dependencies = [
 [[package]]
 name = "bevy_mod_wanderlust"
 version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5f035ca654e955873a627188d886a5f67969257da65bdbdde41ef2315c11a4a"
 dependencies = [
  "bevy",
  "bevy_rapier3d",

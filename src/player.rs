@@ -601,7 +601,7 @@ pub fn setup_player(
                             up_vector: Vec3::Y,
                             gravity: 9.8,
                             max_ground_angle: 45.0 * (PI / 180.0),
-                            min_float_offset: -0.1,
+                            min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
                             jump_initial_force: 3.0,
@@ -611,13 +611,13 @@ pub fn setup_player(
                             coyote_time_duration: 0.16,
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
-                            float_cast_length: 0.5,
+                            float_cast_length: 1.0,
                             float_cast_collider: Collider::ball(player_radius - 0.05),
-                            float_distance: 0.6,
-                            float_strength: 3.0,
-                            float_dampen: 0.4,
+                            float_distance: 0.55,
+                            float_strength: 10.0,
+                            float_dampen: 0.5,
                             upright_spring_strength: 10.0,
-                            upright_spring_damping: 2.0,
+                            upright_spring_damping: 1.0,
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
@@ -653,21 +653,22 @@ pub fn setup_player(
                     .id();
 
                 let distance_from_body = player_radius + 0.2;
-                attach_arm(
-                    &mut commands,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(distance_from_body, player_height, 0.0),
-                    0,
-                );
-                attach_arm(
-                    &mut commands,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(-distance_from_body, player_height, 0.0),
-                    1,
-                );
-
+                /*
+                               attach_arm(
+                                   &mut commands,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(distance_from_body, player_height, 0.0),
+                                   0,
+                               );
+                               attach_arm(
+                                   &mut commands,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(-distance_from_body, player_height, 0.0),
+                                   1,
+                               );
+                */
                 // for some body horror
                 /*
                 attach_arm(
@@ -766,6 +767,7 @@ pub fn attach_arm(
         .insert(Arm)
         .insert(RigidBody::Dynamic)
         .insert(ExternalImpulse::default())
+        .insert(Velocity::default())
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
         .insert(ImpulseJoint::new(to, arm_joint))
@@ -802,6 +804,7 @@ pub fn attach_arm(
         .insert(Hand)
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
+        .insert(Velocity::default())
         .insert(RigidBody::Dynamic)
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
@@ -844,35 +847,39 @@ pub fn player_grabby_hands(
     )>,
     mut impulses: Query<&mut ExternalImpulse>,
     globals: Query<&GlobalTransform>,
-    joints: Query<(&GlobalTransform, &ImpulseJoint)>,
+    joints: Query<(&GlobalTransform, &Velocity, &ImpulseJoint)>,
     mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
     mut lines: ResMut<DebugLines>,
 ) {
     for (hand_entity, mut grabbing, mut collision_groups, arm_id) in &mut hands {
-        let (hand_global, hand_joint) = if let Ok((global, joint)) = joints.get(hand_entity) {
-            (global, joint)
+        let (hand_global, hand_velocity, hand_joint) = if let Ok(joint) = joints.get(hand_entity) {
+            joint
         } else {
+            warn!("hand does not have a joint/velocity/global");
             continue;
         };
 
         let arm_entity = hand_joint.parent;
-        let (arm_global, arm_joint) = if let Ok((global, joint)) = joints.get(arm_entity) {
-            (global, joint)
+        let (arm_global, arm_velocity, arm_joint) = if let Ok(joint) = joints.get(arm_entity) {
+            joint
         } else {
+            warn!("arm does not have a joint/velocity/global");
             continue;
         };
 
         let player_entity = arm_joint.parent;
         let (player_global, direction, input, camera_entity) =
-            if let Ok((global, direction, input, camera_entity)) = inputs.get(player_entity) {
-                (global, direction, input, camera_entity)
+            if let Ok(input) = inputs.get(player_entity) {
+                input
             } else {
+                warn!("player does not have an input/direction/global");
                 continue;
             };
 
         let camera_global = if let Ok(global) = globals.get(camera_entity.0) {
             global
         } else {
+            warn!("camera does not have an global");
             continue;
         };
 
@@ -910,15 +917,28 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
+            const STRENGTH: f32 = 0.01;
+            const MAX_IMPULSE: f32 = 0.1;
+            const MAX_TORQUE: f32 = 0.1;
+
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let hand_strength = 0.2;
-                let wrist_strength = 0.2;
-                hand_impulse.impulse = (camera_dir - arm_dir) * hand_strength;
-                hand_impulse.torque_impulse = desired_axis * wrist_strength;
+                let local_velocity = hand_velocity.linvel - arm_velocity.linvel;
+                let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
+
+                let hand_strength = STRENGTH;
+                let hand_damping = hand_strength / 10.0;
+                let wrist_strength = STRENGTH;
+                let wrist_damping = 0.04;
+
+                let hand_spring = ((camera_dir - arm_dir).normalize_or_zero() * hand_strength)
+                    - (local_velocity * hand_damping);
+                let wrist_spring = desired_axis.normalize_or_zero() * wrist_strength;
+                hand_impulse.impulse = hand_spring.clamp_length_max(MAX_IMPULSE);
+                hand_impulse.torque_impulse = wrist_spring.clamp_length_max(MAX_TORQUE);
             }
 
             if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
@@ -926,10 +946,12 @@ pub fn player_grabby_hands(
                 let desired_dir = camera_dir;
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let arm_strength = 0.2;
-                let back_strength = 0.2;
-                arm_impulse.impulse = (camera_dir - arm_dir) * arm_strength;
-                arm_impulse.torque_impulse = desired_axis * back_strength;
+                let arm_strength = STRENGTH;
+                let back_strength = STRENGTH;
+                let arm_spring = ((camera_dir - arm_dir).normalize_or_zero() * arm_strength);
+                let back_spring = desired_axis.normalize_or_zero() * back_strength;
+                arm_impulse.impulse = arm_spring.clamp_length_max(MAX_IMPULSE);
+                arm_impulse.torque_impulse = back_spring.clamp_length_max(MAX_TORQUE);
             }
 
             *collision_groups = GRAB_GROUPING;
@@ -1037,53 +1059,51 @@ pub fn pull_up(
                 if should_pull_up && player_input.pitch <= 0.0 {
                     let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
                     let strength = ease_sine(angle_strength);
-                    //controller_input.custom_impulse += Vec3::Y * strength * 0.1;
+
+                    // move forward/backward when pulling on something
+                    let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
+                    let dir = (rotation * -Vec3::Z).normalize_or_zero();
+                    //controller_input.movement += dir * 0.1;
                     settings.float_cast_length = 0.0;
                 } else {
-                    settings.float_cast_length = 0.5;
+                    settings.float_cast_length = 1.0;
                 }
-
-                //info!("strength: {strength}");
-                //let desired_dir = (direction.rotation() * Vec3::Z * 1.5)
-                //    + (direction.rotation() * Vec3::X * 0.5);
-                //info!("desired_dir: {desired_dir}");
-
-                //let desired_position = hand_position.translation() + desired_dir;
-
-                //let current_position = body_transform.translation();
-
-                /*
-                                   lines.line_colored(
-                                       hand_position.translation(),
-                                       body_transform.translation(),
-                                       0.0,
-                                       Color::CRIMSON,
-                                   );
-                */
-                /*
-                                   lines.line_colored(
-                                       hand_position.translation(),
-                                       desired_position,
-                                       crate::TICK_RATE.as_secs_f32() * 2.0,
-                                       Color::BLUE,
-                                   );
-                                   lines.line_colored(
-                                       current_position,
-                                       desired_position,
-                                       crate::TICK_RATE.as_secs_f32() * 2.0,
-                                       Color::CRIMSON,
-                                   );
-                */
-                //controller.custom_impulse += (desired_position - current_position) * 2.0;
-                //controller_input.jumping = true;
-                //strength = 1.0 - ((input.pitch + PI / 2.) / PI);
-                //settings.gravity = 0.0;
-                //let impulse = Vec3::Y * strength;
-                //controller.jumping = true;
-                //controller.custom_impulse += impulse;
-                //info!("custom_impulse: {:.4?}", controller.custom_impulse);
                 break;
             }
+        }
+    }
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct RelatedEntities(HashSet<Entity>);
+
+pub fn related_entities(
+    mut related: Query<(Entity, &mut RelatedEntities)>,
+    childrens: Query<&Children>,
+    joints: Query<&ImpulseJoint>,
+) {
+    for (entity, related) in &mut related {
+        let mut related_entities = HashSet::new();
+
+        let mut child_entity = entity;
+        while let Ok(impulse) = joints.get(child_entity) {
+            related_entities.insert(impulse.parent);
+            child_entity = impulse.parent;
+        }
+
+        let mut entity_stack = related_entities.clone();
+        while entity_stack.len() > 0 {
+            let mut new_stack = HashSet::new();
+            for entity in entity_stack.iter() {
+                if let Ok(children) = childrens.get(*entity) {
+                    for child in children {
+                        related_entities.insert(*child);
+                        new_stack.insert(*child);
+                    }
+                }
+            }
+
+            entity_stack = new_stack;
         }
     }
 }
@@ -1093,6 +1113,7 @@ pub fn grab_collider(
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
+    childrens: Query<&Children>,
     hands: Query<(Entity, &Grabbing, &GlobalTransform, Option<&Children>), With<Hand>>,
     impulse_joints: Query<&ImpulseJoint>,
     grab_joints: Query<&GrabJoint>,
@@ -1119,6 +1140,21 @@ pub fn grab_collider(
             while let Ok(impulse) = impulse_joints.get(child_entity) {
                 related_entities.insert(impulse.parent);
                 child_entity = impulse.parent;
+            }
+
+            let mut entity_stack = related_entities.clone();
+            while entity_stack.len() > 0 {
+                let mut new_stack = HashSet::new();
+                for entity in entity_stack.iter() {
+                    if let Ok(children) = childrens.get(*entity) {
+                        for child in children {
+                            related_entities.insert(*child);
+                            new_stack.insert(*child);
+                        }
+                    }
+                }
+
+                entity_stack = new_stack;
             }
 
             if already_grabbing {
