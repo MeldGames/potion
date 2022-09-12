@@ -28,14 +28,12 @@ use store::{SecurityCheck, StoreItem, StorePlugin};
 //use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use bevy_inspector_egui::InspectableRegistry;
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(100);
-
-
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -81,7 +79,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
     //app.add_system(outline_meshes);
-    
+
     app.add_event::<AssetEvent<Mesh>>();
 
     app.add_startup_system(setup_map);
@@ -164,17 +162,13 @@ fn setup_map(
         Transform::from_xyz(4.0, 3.0, -2.0),
     );
 
-    crate::trees::spawn_trees(
-        &mut commands,
-        &*asset_server,
-        &mut meshes,
-    );
+    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/rock1.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-1.5, 1.3, 1.075),
+                translation: Vec3::new(-2.0, 5.0, 2.0),
                 ..default()
             },
             ..default()
@@ -300,7 +294,6 @@ fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
-
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
@@ -455,12 +448,8 @@ fn update_level_collision(
     }
 }
 
-
-
-
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
-
 
 pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape = ComputedColliderShape::TriMesh;
 /*

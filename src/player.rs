@@ -216,40 +216,13 @@ pub struct GrabJoint;
 pub struct Neck;
 
 #[derive(Component, Debug)]
-pub struct Reticle {
-    pub max_distance: f32,
-    pub from_height: f32,
-}
-
-#[derive(Component, Debug)]
-pub struct FromCamera(pub Entity);
-
-#[derive(
-    Component,
-    Debug,
-    Clone,
-    Reflect,
-    PartialEq,
-    PartialOrd,
-    Inspectable,
-    Serialize,
-    Deserialize,
-    //Replicate,
-)]
-#[reflect(Component)]
-pub struct Speed(pub f32);
-impl Default for Speed {
-    fn default() -> Self {
-        Self(3.)
-    }
-}
+pub struct PlayerCamera(pub Entity);
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub player_component: Player,
-    pub speed: Speed,
     pub name: Name,
 }
 
@@ -314,13 +287,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(FollowPlugin);
-        app.register_type::<Speed>();
-        app.register_inspectable::<Speed>();
         app.register_type::<Player>();
 
         app.insert_resource(Events::<PlayerEvent>::default());
-
-        //app.add_plugin(ReplicatePlugin::<Speed>::default());
 
         app.add_network_system(
             player_movement
@@ -328,51 +297,45 @@ impl Plugin for PlayerPlugin {
                 .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs")
                 .after("player_swivel_and_tilt"),
-        )
-        .add_network_system(
+        );
+        app.add_network_system(
             player_grabby_hands
                 .label("player_grabby_hands")
                 .after(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs")
                 .after("player_movement"),
-        )
-        .add_network_system(
-            target_position
-                .label("target_position")
-                .after("update_player_inputs")
-                .after("player_grabby_hands"),
-        )
-        .add_system_to_network_stage(
+        );
+        app.add_system_to_network_stage(
             NetworkCoreStage::PostUpdate,
             avoid_intersecting.label("avoid_intersecting"),
-        )
-        .add_network_system(
+        );
+        app.add_network_system(
             character_crouch
                 .label("character_crouch")
                 .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs"),
-        )
-        .add_network_system(
+        );
+        app.add_network_system(
             pull_up
                 .label("pull_up")
                 .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs")
                 .after("player_swivel_and_tilt")
                 .after("player_movement"),
-        )
-        .add_network_system(
+        );
+        app.add_network_system(
             grab_collider
                 .label("grab_collider")
                 .after(bevy_mod_wanderlust::movement)
                 .after("target_position"),
-        )
-        .add_network_system(
+        );
+        app.add_network_system(
             player_swivel_and_tilt
                 .label("player_swivel_and_tilt")
                 .after("update_player_inputs"),
-        )
-        .add_meta_network_system(setup_player)
-        .add_meta_network_system(Events::<PlayerEvent>::update_system);
+        );
+        app.add_meta_network_system(setup_player);
+        app.add_meta_network_system(Events::<PlayerEvent>::update_system);
     }
 }
 
@@ -569,9 +532,6 @@ pub fn setup_player(
             &PlayerEvent::SetupLocal { id } => {
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
 
-                let reticle_cube =
-                    meshes.add(Mesh::from(bevy::render::mesh::shape::Cube { size: 0.2 }));
-
                 let camera = commands
                     .spawn_bundle(Camera3dBundle {
                         transform: Transform::from_translation(Vec3::new(0., 0., 4.))
@@ -592,26 +552,10 @@ pub fn setup_player(
                         current: 4.0,
                         scroll_sensitivity: -0.5,
                         min: 2.0,
-                        max: 8.0,
+                        max: 12.0,
                     })
                     .insert(ZoomScrollForToi)
                     .insert(Name::new("Player Camera"))
-                    .id();
-
-                let reticle = commands
-                    .spawn_bundle((
-                        Transform {
-                            translation: Vec3::new(0., 0., 0.),
-                            ..Default::default()
-                        },
-                        GlobalTransform::identity(),
-                        Reticle {
-                            max_distance: 6.0,
-                            from_height: 4.0,
-                        },
-                        Name::new("Reticle"),
-                        FromCamera(camera),
-                    ))
                     .id();
 
                 let neck = commands
@@ -635,21 +579,11 @@ pub fn setup_player(
                 material.reflectance = 0.0;
                 let red = materials.add(material);
 
-                let ret_mesh = commands
-                    .spawn_bundle(PbrBundle {
-                        material: red.clone(),
-                        mesh: reticle_cube.clone(),
-                        ..Default::default()
-                    })
-                    .id();
-
-                commands.entity(reticle).push_children(&[ret_mesh]);
-
                 commands
                     .entity(player_entity)
                     .insert(PlayerInput::default())
-                    .insert(LookTransform::default())
-                    .push_children(&[reticle]);
+                    .insert(PlayerCamera(camera))
+                    .insert(LookTransform::default());
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -679,7 +613,7 @@ pub fn setup_player(
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 0.5,
                             float_cast_collider: Collider::ball(player_radius - 0.05),
-                            float_distance: 0.25,
+                            float_distance: 0.4,
                             float_strength: 3.0,
                             float_dampen: 0.6,
                             upright_spring_strength: 10.0,
@@ -801,10 +735,10 @@ pub fn attach_arm(
     index: usize,
 ) {
     let max_force = 1000.0;
-    let twist_stiffness = 30.0;
-    let twist_damping = 6.0;
+    let twist_stiffness = 20.0;
+    let twist_damping = twist_stiffness / 10.0;
     let resting_stiffness = 2.0;
-    let resting_damping = 0.4;
+    let resting_damping = resting_stiffness / 10.0;
     let arm_radius = 0.15;
     let hand_radius = 0.175;
     let motor_model = MotorModel::ForceBased;
@@ -824,7 +758,7 @@ pub fn attach_arm(
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
-    arm_joint.set_contacts_enabled(false);
+    //arm_joint.set_contacts_enabled(false);
 
     let arm_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
@@ -860,13 +794,12 @@ pub fn attach_arm(
         )
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut hand_joint = hand_joint.build();
-    hand_joint.set_contacts_enabled(false);
+    //hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new("Hand"))
         .insert(Hand)
-        .insert(TargetPosition::default())
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
         .insert(RigidBody::Dynamic)
@@ -903,125 +836,102 @@ pub struct TargetPosition {
 pub struct Grabbing(bool);
 
 pub fn player_grabby_hands(
-    inputs: Query<(&GlobalTransform, &LookTransform, &PlayerInput)>,
-    joints: Query<&ImpulseJoint>,
+    inputs: Query<(
+        &GlobalTransform,
+        &LookTransform,
+        &PlayerInput,
+        &PlayerCamera,
+    )>,
+    globals: Query<&GlobalTransform>,
+    joints: Query<(&GlobalTransform, &ImpulseJoint)>,
     mut hands: Query<
         (
             Entity,
-            &mut TargetPosition,
+            &mut ExternalImpulse,
             &mut Grabbing,
             &mut CollisionGroups,
             &ArmId,
         ),
         With<Hand>,
     >,
+    mut lines: ResMut<DebugLines>,
 ) {
-    for (hand, mut target_position, mut grabbing, mut collision_groups, arm_id) in &mut hands {
-        target_position.translation = None;
-        target_position.rotation = None;
-
-        let arm_entity = if let Ok(joint) = joints.get(hand) {
-            joint.parent
+    for (hand_entity, mut hand_impulse, mut grabbing, mut collision_groups, arm_id) in &mut hands {
+        let (hand_global, hand_joint) = if let Ok((global, joint)) = joints.get(hand_entity) {
+            (global, joint)
         } else {
             continue;
         };
 
-        let player_entity = if let Ok(joint) = joints.get(arm_entity) {
-            joint.parent
+        let (arm_global, arm_joint) = if let Ok((global, joint)) = joints.get(hand_joint.parent) {
+            (global, joint)
         } else {
             continue;
         };
 
-        let (global, direction, input) =
-            if let Ok((global, direction, input)) = inputs.get(player_entity) {
-                (global, direction, input)
+        let (player_global, direction, input, camera_entity) =
+            if let Ok((global, direction, input, camera_entity)) = inputs.get(arm_joint.parent) {
+                (global, direction, input, camera_entity)
             } else {
                 continue;
             };
 
+        let camera_global = if let Ok(global) = globals.get(camera_entity.0) {
+            global
+        } else {
+            continue;
+        };
+
+        let arm_transform = arm_global.compute_transform();
+        let shoulder = arm_transform * arm_joint.data.local_anchor2();
+
+        let hand_transform = hand_global.compute_transform();
+        let hand = hand_global.translation();
+        let arm_dir = (hand - shoulder).normalize_or_zero();
+
+        let camera = camera_global.translation();
+        let camera_dir = (shoulder - camera).normalize_or_zero();
+
+        let current_dir = hand_transform.rotation * -Vec3::Y;
+        let desired_dir = camera_dir;
+        let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
+
+        lines.line_colored(
+            shoulder,
+            shoulder + camera_dir,
+            crate::TICK_RATE.as_secs_f32(),
+            Color::BLUE,
+        );
+
+        lines.line_colored(
+            shoulder,
+            shoulder + arm_dir,
+            crate::TICK_RATE.as_secs_f32(),
+            Color::RED,
+        );
+
+        lines.line_colored(
+            shoulder,
+            shoulder + camera_dir,
+            crate::TICK_RATE.as_secs_f32(),
+            Color::BLUE,
+        );
+
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
-            target_position.translation =
-                Some(global.translation() + (direction.rotation() * -Vec3::Z * 2.) + Vec3::Y);
-            target_position.rotation = Some(direction.rotation());
+
+            let hand_strength = 0.1;
+            let wrist_strength = 0.1;
+
+            // what we really want here is the rotation from the shoulder to the hand
+            // to be aligned with the camera direction.
+            hand_impulse.impulse = (camera_dir - arm_dir) * hand_strength;
+            hand_impulse.torque_impulse = desired_axis * wrist_strength;
+
             *collision_groups = GRAB_GROUPING;
         } else {
             grabbing.0 = false;
             *collision_groups = REST_GROUPING;
-        }
-    }
-}
-
-pub fn target_position(
-    mut impulses: Query<&mut ExternalImpulse>,
-    globals: Query<&GlobalTransform>,
-    hands: Query<(Entity, &TargetPosition, &GlobalTransform, &ImpulseJoint), With<Hand>>,
-    mut lines: ResMut<DebugLines>,
-) {
-    for (hand_entity, target, global, joint) in &hands {
-        if let Ok(mut impulse) = impulses.get_mut(hand_entity) {
-            let current = global.compute_transform();
-            if let Some(target) = target.translation {
-                impulse.impulse = (target - current.translation) * 0.02;
-            }
-
-            if let Some(rotation) = target.rotation {
-                let current_dir = current.rotation * -Vec3::Y;
-                let desired_dir = rotation * -Vec3::Z;
-
-                /*
-                               lines.line_colored(
-                                   global.translation(),
-                                   global.translation() + current_dir,
-                                   0.0,
-                                   Color::RED,
-                               );
-                               lines.line_colored(
-                                   global.translation(),
-                                   global.translation() + desired_dir,
-                                   0.0,
-                                   Color::BLUE,
-                               );
-                */
-
-                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                impulse.torque_impulse = desired_axis * 0.1;
-                //info!("torque: {:?}", impulse.torque_impulse);
-            }
-        }
-
-        if let Ok(mut impulse) = impulses.get_mut(joint.parent) {
-            if let Ok(global) = globals.get(joint.parent) {
-                let current = global.compute_transform();
-
-                if let Some(target) = target.translation {
-                    //impulse.impulse = (target - current.translation) * 0.02;
-                }
-
-                if let Some(rotation) = target.rotation {
-                    let current_dir = current.rotation * -Vec3::Y;
-                    let desired_dir = rotation * -Vec3::Z;
-
-                    /*
-                                       lines.line_colored(
-                                           global.translation(),
-                                           global.translation() + current_dir,
-                                           0.0,
-                                           Color::RED,
-                                       );
-                                       lines.line_colored(
-                                           global.translation(),
-                                           global.translation() + desired_dir,
-                                           0.0,
-                                           Color::BLUE,
-                                       );
-                    */
-
-                    let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-                    impulse.torque_impulse = desired_axis * 0.1;
-                    //info!("torque: {:?}", impulse.torque_impulse);
-                }
-            }
         }
     }
 }
@@ -1064,12 +974,13 @@ pub fn avoid_intersecting(
 }
 
 pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
-    let crouch_height = 0.05;
-    let full_height = 0.45;
+    let crouch_height = 0.1;
+    let full_height = 0.4;
     let threshold = -0.3;
     for (input, mut controller) in &mut controllers {
         // Are we looking sufficiently down?
         if input.pitch < threshold {
+            info!("pitch: {:?}", input.pitch);
             // interpolate between crouch and full based on how far we are pitched downwards
             let crouch_coefficient = input.pitch.abs() / ((PI / 2.0) - threshold.abs());
             let interpolated =
@@ -1278,7 +1189,7 @@ pub fn grab_collider(
                         .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
                         .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
                         .build();
-                    grab_joint.set_contacts_enabled(false);
+                    //grab_joint.set_contacts_enabled(false);
 
                     commands.entity(hand).add_children(|children| {
                         children

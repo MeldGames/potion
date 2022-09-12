@@ -12,7 +12,7 @@ use sabi::{
 
 use bevy_rapier3d::prelude::*;
 
-use crate::player::{FromCamera, Neck, PlayerBundle, PlayerEvent, Reticle, Speed};
+use crate::player::{Neck, PlayerBundle, PlayerCamera, PlayerEvent};
 
 use crate::player::{Player, PlayerInput};
 

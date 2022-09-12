@@ -14,7 +14,7 @@ opt-level = 3
 bevy = "0.8"
 bevy_egui = "0.15"
 #sabi = {path = "../sabi/sabi", features = ["public"]}
-sabi = {git = "https://github.com/aceeri/sabi", rev = "136551e46", features = ["public"]}
+sabi = {git = "https://github.com/aceeri/sabi", rev = "6871dea", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 
 bevy_embedded_assets = "0.4"
@@ -47,8 +47,8 @@ vec-collections = "0.4"
 wgpu-types = "0.13"
 
 bevy_renet = "0.0.5"
-renet_visualizer = "0.0.2"
 bevy_shader_utils = {path = "../bevy_shader_utils"}
+renet_visualizer = "0.0.2"
 
 [patch.crates-io]
 bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
