@@ -5,18 +5,17 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
 };
 
-fn main(){
-    let mut app = App::new();  
-    app    
-        .insert_resource(AssetServerSettings {
-            watch_for_changes: true,
-            ..default()
-        })
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins)
-        .add_plugin(MaterialPlugin::<GlowyMaterial>::default())
-        .add_startup_system(setup);
-    
+fn main() {
+    let mut app = App::new();
+    app.insert_resource(AssetServerSettings {
+        watch_for_changes: true,
+        ..default()
+    })
+    .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+    .add_plugins(DefaultPlugins)
+    .add_plugin(MaterialPlugin::<GlowyMaterial>::default())
+    .add_startup_system(setup);
+
     app.run();
 }
 
@@ -26,23 +25,21 @@ fn setup(
     mut glowys: ResMut<Assets<GlowyMaterial>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     assets: Res<AssetServer>,
-){
+) {
     let env_texture = assets.load("stone_alley_02_1k.hdr");
-    let material = glowys.add(GlowyMaterial{
+    let material = glowys.add(GlowyMaterial {
         env_texture: Some(env_texture),
     });
 
-
     // camera
-    commands.spawn().insert_bundle(Camera3dBundle{
-        transform: Transform::from_xyz(5.0,2.0,5.0)
-        .looking_at(Vec3::new(0.,0.,0.), Vec3::Y),
+    commands.spawn().insert_bundle(Camera3dBundle {
+        transform: Transform::from_xyz(5.0, 2.0, 5.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
     // plane
-    commands.spawn_bundle(PbrBundle{
-        mesh: meshes.add(Mesh::from(shape::Plane{ size: 100.0})),
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
         material: materials.add(Color::rgb(0.1, 0.1, 0.1).into()),
         ..default()
     });
@@ -82,8 +79,7 @@ fn setup(
                     point_light: PointLight {
                         intensity: 10000.0,
                         radius: 1.0,
-                        color: Color::rgb(0.1
-                            , 0.1, 0.5),
+                        color: Color::rgb(0.1, 0.1, 0.5),
                         ..default()
                     },
                     ..default()
@@ -94,14 +90,14 @@ fn setup(
 
 #[derive(AsBindGroup, Debug, Clone, TypeUuid)]
 #[uuid = "717f64fe-6844-4822-8926-e0ed374294c8"]
-pub struct GlowyMaterial{
+pub struct GlowyMaterial {
     #[texture(0)]
     #[sampler(1)]
     pub env_texture: Option<Handle<Image>>,
 }
 
-impl Material for GlowyMaterial{
-    fn fragment_shader() -> ShaderRef{
+impl Material for GlowyMaterial {
+    fn fragment_shader() -> ShaderRef {
         "shaders/glowy.wgsl".into()
     }
 }

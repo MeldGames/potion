@@ -1,6 +1,6 @@
 use potion::player::{PlayerEvent, PlayerInputPlugin};
 
-use bevy::{prelude::*, asset::AssetServerSettings};
+use bevy::{asset::AssetServerSettings, prelude::*};
 
 fn main() {
     let mut app = App::new();

@@ -9,7 +9,7 @@ pub mod player;
 pub mod store;
 pub mod trees;
 
-use std::f32::consts::PI;
+use std::{f32::consts::PI, fs::File, io::BufReader};
 
 use bevy_egui::EguiPlugin;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
@@ -18,6 +18,7 @@ use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
+use obj::Obj;
 use trees::TreesPlugin;
 
 use follow::Follow;
@@ -84,6 +85,7 @@ pub fn setup_app(app: &mut App) {
 
     app.add_startup_system(setup_map);
     app.add_system(update_level_collision);
+    app.add_system(decomp_load);
     app.add_network_system(crate::player::teleport_player_back);
 
     app.add_plugin(InspectableRapierPlugin);
@@ -295,8 +297,8 @@ fn setup_map(
         ))
         .id();
 
-    
-    let level_collision_mesh3: Handle<Mesh> = asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
+    let level_collision_mesh3: Handle<Mesh> =
+        asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
 
     let _stirrer = commands
         .spawn_bundle(SceneBundle {
@@ -339,7 +341,7 @@ fn setup_map(
             Name::new("Walls Shop"),
             Velocity::default(),
         ))
-        .insert(ColliderLoad)
+        .insert(DecompLoad("models/walls_shop1_decomp.obj".to_owned()))
         .insert(level_collision_mesh)
         .id();
 
@@ -442,6 +444,37 @@ fn setup_map(
             Name::new("Bound Wall"),
             crate::physics::TERRAIN_GROUPING,
         ));
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct DecompLoad(String);
+
+fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &DecompLoad, Entity)>) {
+    for (collider, decomp, entity) in &mut replace {
+        let decomp = Obj::load("assets/models/walls_shop1_decomp.obj").unwrap();
+        let mut colliders = Vec::new();
+        for object in decomp.data.objects {
+            let vertices = object
+                .groups
+                .iter()
+                .map(|group| {
+                    group
+                        .polys
+                        .iter()
+                        .map(|poly| poly.0.iter().map(|index| index.0))
+                })
+                .flatten()
+                .flatten()
+                .map(|index| decomp.data.position[index])
+                .map(|f| Vec3::from(f))
+                .collect::<Vec<_>>();
+            let collider = Collider::convex_hull(&vertices).unwrap();
+            colliders.push((Vec3::ZERO, Quat::IDENTITY, collider));
+        }
+
+        let collider = Collider::compound(colliders);
+        commands.entity(entity).insert(collider);
+    }
 }
 
 #[derive(Debug, Component, Clone, Copy)]

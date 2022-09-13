@@ -48,6 +48,7 @@ wgpu-types = "0.13"
 
 bevy_renet = "0.0.5"
 bevy_shader_utils = {path = "../bevy_shader_utils"}
+obj = "0.10.2"
 renet_visualizer = "0.0.2"
 
 [patch.crates-io]

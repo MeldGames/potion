@@ -3,12 +3,9 @@ use bevy::{
     prelude::*,
     reflect::TypeUuid,
     render::{
-        mesh::{
-            MeshVertexBufferLayout, VertexAttributeValues,
-        },
+        mesh::{MeshVertexBufferLayout, VertexAttributeValues},
         render_resource::{
-            AsBindGroup, Face, RenderPipelineDescriptor,
-            ShaderRef, SpecializedMeshPipelineError,
+            AsBindGroup, Face, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
         },
     },
     scene::SceneInstance,
@@ -17,14 +14,10 @@ use bevy_shader_utils::ShaderUtilsPlugin;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(
-            Color::hex("071f3c").unwrap(),
-        ))
+        .insert_resource(ClearColor(Color::hex("071f3c").unwrap()))
         .add_plugins(DefaultPlugins)
         .add_plugin(ShaderUtilsPlugin)
-        .add_plugin(
-            MaterialPlugin::<CustomMaterial>::default(),
-        )
+        .add_plugin(MaterialPlugin::<CustomMaterial>::default())
         .add_startup_system(setup)
         .add_system(update_time_for_custom_material)
         // for the time to update in the shader,
@@ -41,10 +34,7 @@ struct GLTFScene;
 struct Inserted;
 
 /// set up a simple 3D scene
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
         brightness: 0.72,
@@ -75,27 +65,20 @@ fn setup(
     });
     commands
         .spawn_bundle(SceneBundle {
-            scene: asset_server.load(
-                "models/tree_stylized.gltf#Scene0",
-            ),
+            scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
             ..default()
         })
         .insert(GLTFScene);
     // camera
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(-2.0, 15.5, 15.0)
-            .looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(-2.0, 15.5, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }
 
-fn update_time_for_custom_material(
-    mut materials: ResMut<Assets<CustomMaterial>>,
-    time: Res<Time>,
-) {
+fn update_time_for_custom_material(mut materials: ResMut<Assets<CustomMaterial>>, time: Res<Time>) {
     for material in materials.iter_mut() {
-        material.1.time =
-            time.seconds_since_startup() as f32;
+        material.1.time = time.seconds_since_startup() as f32;
     }
 }
 
@@ -105,7 +88,6 @@ impl Material for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material.wgsl".into()
     }
-
 
     fn alpha_mode(&self) -> AlphaMode {
         self.alpha_mode
@@ -138,53 +120,34 @@ pub struct CustomMaterial {
     alpha_mode: AlphaMode,
 }
 
-
 fn mod_scene(
     mut commands: Commands,
-    spheres: Query<
-        (Entity, &Handle<Mesh>, &Name),
-        Without<Inserted>,
-    >,
+    spheres: Query<(Entity, &Handle<Mesh>, &Name), Without<Inserted>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
-        if name.as_str().contains("testplane"){
+        if name.as_str().contains("testplane") {
             let mesh = meshes.get_mut(hand).unwrap();
-            if let Some(VertexAttributeValues::Float32x3(
-                positions,
-            )) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+            if let Some(VertexAttributeValues::Float32x3(positions)) =
+                mesh.attribute(Mesh::ATTRIBUTE_POSITION)
             {
                 let colors: Vec<[f32; 4]> = positions
                     .iter()
-                    .map(|[r, g, b]| {
-                        [
-                            (1. - *r) / 2.,
-                            (1. - *g) / 2.,
-                            (1. - *b) / 2.,
-                            1.,
-                        ]
-                    })
+                    .map(|[r, g, b]| [(1. - *r) / 2., (1. - *g) / 2., (1. - *b) / 2., 1.])
                     .collect();
-                mesh.insert_attribute(
-                    Mesh::ATTRIBUTE_COLOR,
-                    colors,
-                );
+                mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
             }
-            let custom_material =
-                custom_materials.add(CustomMaterial {
-                    color: Color::BLUE,
-                    color_texture: Some(asset_server.load("shaders/leaf.png")),
-                    alpha_mode: AlphaMode::Blend,
-                    time: 0.5,
-                });
-            commands
-                .entity(e)
-                .remove::<Handle<StandardMaterial>>();
+            let custom_material = custom_materials.add(CustomMaterial {
+                color: Color::BLUE,
+                color_texture: Some(asset_server.load("shaders/leaf.png")),
+                alpha_mode: AlphaMode::Blend,
+                time: 0.5,
+            });
+            commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands.entity(e).insert(custom_material);
             commands.entity(e).insert(Inserted);
         }
-        
     }
 }

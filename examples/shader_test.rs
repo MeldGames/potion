@@ -1,4 +1,3 @@
-
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -16,28 +15,27 @@ use bevy::{
     window::PresentMode,
 };
 
-
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-fn main(){
-    let mut app = App::new();  
+fn main() {
+    let mut app = App::new();
     app.insert_resource(ClearColor(CLEAR))
-    .insert_resource(WindowDescriptor {
-        width: HEIGHT * RESOLUTION,
-        height: HEIGHT,
-        title: "Bevy Material Tutorial".to_string(),
-        present_mode: PresentMode::Fifo,
-        resizable: false,
-        ..Default::default()
-    })
+        .insert_resource(WindowDescriptor {
+            width: HEIGHT * RESOLUTION,
+            height: HEIGHT,
+            title: "Bevy Material Tutorial".to_string(),
+            present_mode: PresentMode::Fifo,
+            resizable: false,
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(Material2dPlugin::<DopeMaterial>::default())
         .add_startup_system(spawn_camera)
         .add_plugin(ExtractResourcePlugin::<ExtractedTime>::default())
         .add_startup_system(setup);
-    
+
     app.sub_app_mut(RenderApp)
         .add_system_to_stage(RenderStage::Extract, extract_health)
         .add_system_to_stage(RenderStage::Prepare, prepare_my_material);
@@ -49,32 +47,32 @@ fn setup(
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut my_material_assets: ResMut<Assets<DopeMaterial>>,
     _assets: Res<AssetServer>,
-){
+) {
+    commands
+        .spawn_bundle(MaterialMesh2dBundle {
+            mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
+            material: my_material_assets.add(DopeMaterial {
+                color: Color::rgb(0.0, 1.0, 0.3),
+                time: 0.0,
+                image: _assets.load("awesome.png"),
+            }),
+            transform: Transform::from_xyz(-0.6, 0., 0.),
+            ..default()
+        })
+        .insert(Health { value: 0.2 });
 
-
-    commands.spawn_bundle(MaterialMesh2dBundle{
-        mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
-        material: my_material_assets.add(DopeMaterial{
-            color: Color::rgb(0.0, 1.0, 0.3),
-            time: 0.0,
-            image: _assets.load("awesome.png"),
-        }),
-        transform: Transform::from_xyz(-0.6,0.,0.),
-        ..default()
-    })
-    .insert(Health{value:0.2});
-
-    commands.spawn_bundle(MaterialMesh2dBundle{
-        mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
-        material: my_material_assets.add(DopeMaterial{
-            color: Color::rgb(0.0, 1.0, 0.3),
-            time: 0.0,
-            image: _assets.load("awesome.png"),
-        }),
-        transform: Transform::from_xyz(0.6,0.,0.),
-        ..default()
-    })
-    .insert(Health{value:0.8});
+    commands
+        .spawn_bundle(MaterialMesh2dBundle {
+            mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
+            material: my_material_assets.add(DopeMaterial {
+                color: Color::rgb(0.0, 1.0, 0.3),
+                time: 0.0,
+                image: _assets.load("awesome.png"),
+            }),
+            transform: Transform::from_xyz(0.6, 0., 0.),
+            ..default()
+        })
+        .insert(Health { value: 0.8 });
 }
 
 fn spawn_camera(mut commands: Commands) {
@@ -93,7 +91,7 @@ fn spawn_camera(mut commands: Commands) {
 
 #[derive(AsBindGroup, TypeUuid, Clone)]
 #[uuid = "e078ff4b-08e3-49d7-912f-93fe1b247cbb"]
-pub struct DopeMaterial{
+pub struct DopeMaterial {
     #[uniform(0)]
     color: Color,
     #[uniform(0)]
@@ -103,15 +101,15 @@ pub struct DopeMaterial{
     image: Handle<Image>,
 }
 
-impl Material2d for DopeMaterial{
-    fn fragment_shader() -> ShaderRef{
+impl Material2d for DopeMaterial {
+    fn fragment_shader() -> ShaderRef {
         "shaders/my_material.wgsl".into()
     }
 }
 
 #[derive(Component, Clone, Copy)]
-struct Health{
-    value:f32,
+struct Health {
+    value: f32,
 }
 
 fn prepare_my_material(
@@ -121,14 +119,14 @@ fn prepare_my_material(
     time: Res<ExtractedTime>,
 ) {
     for (health, handle) in &health_query {
-        if let Some(material) = materials.get(handle){
-            for binding in material.bindings.iter(){
-                if let OwnedBindingResource::Buffer(cur_buffer) = binding{
-                    let mut buffer =  encase::UniformBuffer::new(Vec::new());
+        if let Some(material) = materials.get(handle) {
+            for binding in material.bindings.iter() {
+                if let OwnedBindingResource::Buffer(cur_buffer) = binding {
+                    let mut buffer = encase::UniformBuffer::new(Vec::new());
                     buffer
-                        .write(&DopeMaterialUniformData{
+                        .write(&DopeMaterialUniformData {
                             color: Color::rgb(health.value, 0., 0.),
-                            time:  time.seconds_since_startup % 1.0,
+                            time: time.seconds_since_startup % 1.0,
                         })
                         .unwrap();
                     render_queue.write_buffer(cur_buffer, 0, buffer.as_ref());
@@ -139,19 +137,19 @@ fn prepare_my_material(
 }
 
 #[derive(Clone, ShaderType)]
-struct DopeMaterialUniformData{
+struct DopeMaterialUniformData {
     color: Color,
     time: f32,
 }
 
-struct ExtractedTime{
-    seconds_since_startup:f32,
+struct ExtractedTime {
+    seconds_since_startup: f32,
 }
 
-impl ExtractResource for ExtractedTime{
+impl ExtractResource for ExtractedTime {
     type Source = Time;
 
-    fn extract_resource(time: &Self::Source) -> Self{
+    fn extract_resource(time: &Self::Source) -> Self {
         ExtractedTime {
             seconds_since_startup: time.seconds_since_startup() as f32,
         }
@@ -161,8 +159,8 @@ impl ExtractResource for ExtractedTime{
 fn extract_health(
     mut commands: Commands,
     health_query: Extract<Query<(Entity, &Health, &Handle<DopeMaterial>)>>,
-){
-    for (entity, health, handle) in health_query.iter(){
+) {
+    for (entity, health, handle) in health_query.iter() {
         commands
             .get_or_spawn(entity)
             .insert(*health)

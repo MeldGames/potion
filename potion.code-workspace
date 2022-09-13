@@ -17,6 +17,12 @@
 		},
 		{
 			"path": "../bevy_mod_wanderlust"
+		},
+		{
+			"path": "../bevy-mesh-stl"
+		},
+		{
+			"path": "../vhacd-rs"
 		}
 	],
 	"settings": {}
