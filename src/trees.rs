@@ -45,9 +45,6 @@ pub fn spawn_trees(
     
     let tree_positions = vec![
         Vec3::new(12.5, 0., -0.075),
-        Vec3::new(16.5, 0., 3.),
-        Vec3::new(20.5, 0., -4.),
-        Vec3::new(26.5, 0., 2.),
     ];
     for i in tree_positions {
         let tree = commands
@@ -90,9 +87,6 @@ impl Material for CustomMaterial {
         "shaders/custom_material.wgsl".into()
     }
 
-    fn vertex_shader() -> ShaderRef {
-        "shaders/vertex_shader.wgsl".into()
-    }
 
     fn alpha_mode(&self) -> AlphaMode {
         self.alpha_mode

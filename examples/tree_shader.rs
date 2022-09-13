@@ -106,9 +106,6 @@ impl Material for CustomMaterial {
         "shaders/custom_material.wgsl".into()
     }
 
-    fn vertex_shader() -> ShaderRef {
-        "shaders/vertex_shader.wgsl".into()
-    }
 
     fn alpha_mode(&self) -> AlphaMode {
         self.alpha_mode
@@ -153,7 +150,7 @@ fn mod_scene(
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
-        if name.as_str().contains("Plane"){
+        if name.as_str().contains("testplane"){
             let mesh = meshes.get_mut(hand).unwrap();
             if let Some(VertexAttributeValues::Float32x3(
                 positions,

@@ -295,7 +295,29 @@ fn setup_map(
         ))
         .id();
 
-    let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
+    
+    let level_collision_mesh3: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
+
+    let _stirrer = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(5., 3., -0.075),
+                scale: Vec3::splat(1.),
+                ..default()
+            },
+            ..default()
+        })
+        .insert_bundle((
+            Collider::cuboid(1.0, 1.0, 1.0),
+            RigidBody::Dynamic,
+            Name::new("Paddle"),
+            Velocity::default(),
+            DEFAULT_FRICTION,
+        ))
+        .insert(ColliderLoad)
+        .insert(level_collision_mesh3)
+        .id();
 
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
@@ -350,6 +372,8 @@ fn setup_map(
         .build();
 
     hinge_joint.set_contacts_enabled(false);
+
+    let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
     let _door = commands
         .spawn_bundle(SceneBundle {
