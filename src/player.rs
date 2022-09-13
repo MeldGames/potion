@@ -627,8 +627,8 @@ pub fn setup_player(
                             float_cast_length: 0.55,
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 0.55,
-                            float_strength: 10.0,
-                            float_dampen: 0.5,
+                            float_strength: 2.0,
+                            float_dampen: 0.2,
                             upright_spring_strength: 10.0,
                             upright_spring_damping: 1.0,
                             ..default()
