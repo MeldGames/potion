@@ -296,13 +296,13 @@ fn setup_map(
         .id();
 
     
-    let level_collision_mesh3: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
+    let level_collision_mesh3: Handle<Mesh> = asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
 
     let _stirrer = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(5., 3., -0.075),
+                translation: Vec3::new(5., 5., -0.075),
                 scale: Vec3::splat(1.),
                 ..default()
             },
