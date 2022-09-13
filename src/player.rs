@@ -325,6 +325,12 @@ impl Plugin for PlayerPlugin {
         );
         app.add_network_system(joint_children.label("joint_children"));
         app.add_network_system(
+            connected_entities
+                .label("connected_entities")
+                .after("joint_children")
+                .before("related_entities"),
+        );
+        app.add_network_system(
             related_entities
                 .label("related_entities")
                 .after("joint_children"),
@@ -654,6 +660,7 @@ pub fn setup_player(
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
+                    .insert(ConnectedEntities::default())
                     .insert(RelatedEntities::default())
                     //.insert(Owned)
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
@@ -812,6 +819,8 @@ pub fn attach_arm(
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(RelatedEntities::default())
+        .insert(ConnectedEntities::default())
+        .insert(GrabbedEntities::default())
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
@@ -1066,7 +1075,7 @@ pub fn pull_up(
                 player_input,
             )) = controllers.get_mut(child_entity)
             {
-                controller_input.no_downward_float = should_pull_up;
+                //controller_input.no_downward_float = should_pull_up;
                 /*
                                if should_pull_up && player_input.pitch <= 0.0 {
                                    let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
@@ -1090,12 +1099,6 @@ pub fn pull_up(
         }
     }
 }
-
-/*
-#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
-#[reflect(Component)]
-pub struct RelatedEntities(HashSet<Entity>);
- */
 
 #[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
 #[reflect(Component)]
@@ -1122,11 +1125,33 @@ pub fn joint_children(
     }
 }
 
-/// Traverse the transform hierarchy and joint hierarchy to find all related entities.
 pub fn related_entities(
     names: Query<&Name>,
+    mut related: Query<(
+        Entity,
+        Option<&GrabbedEntities>,
+        Option<&ConnectedEntities>,
+        &mut RelatedEntities,
+    )>,
+) {
+    for (entity, grabbed, connected, mut related) in &mut related {
+        let mut new_related = HashSet::new();
+        if let Some(grabbed) = grabbed {
+            new_related.extend(grabbed.iter());
+        }
+
+        if let Some(connected) = connected {
+            new_related.extend(connected.iter());
+        }
+
+        **related = new_related;
+    }
+}
+/// Traverse the transform hierarchy and joint hierarchy to find all related entities.
+pub fn connected_entities(
+    names: Query<&Name>,
     mut related: Query<
-        (Entity, &mut RelatedEntities),
+        (Entity, &mut ConnectedEntities),
         /*
                Or<(
                    Changed<Children>,
@@ -1139,7 +1164,7 @@ pub fn related_entities(
     childrens: Query<&Children>,
     parents: Query<&Parent>,
     joint_childrens: Query<&JointChildren>,
-    joints: Query<&ImpulseJoint>,
+    joints: Query<&ImpulseJoint, Without<GrabJoint>>,
 ) {
     for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
@@ -1192,8 +1217,23 @@ pub fn related_entities(
                 _ => format!("{:?}", entity),
             });
         }
-        related.related = related_entities;
+
+        **related = related_entities;
     }
+}
+
+/// Entities currently grabbed onto.
+#[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
+#[reflect(Component)]
+pub struct GrabbedEntities {
+    pub grabbed: HashSet<Entity>,
+}
+
+/// Entities that should be considered as part of the controlled character, not including grabbed.
+#[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
+#[reflect(Component)]
+pub struct ConnectedEntities {
+    pub grabbed: HashSet<Entity>,
 }
 
 pub fn grab_collider(
@@ -1201,19 +1241,20 @@ pub fn grab_collider(
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    hands: Query<
+    mut hands: Query<
         (
             Entity,
             &Grabbing,
             &GlobalTransform,
             Option<&Children>,
             &RelatedEntities,
+            &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<&GrabJoint>,
 ) {
-    for (hand, grabbing, global, children, related) in &hands {
+    for (hand, grabbing, global, children, related, mut grabbed) in &mut hands {
         if grabbing.0 {
             let mut already_grabbing = false;
 
@@ -1307,6 +1348,8 @@ pub fn grab_collider(
                             .insert(ImpulseJoint::new(other_collider, grab_joint))
                             .insert(GrabJoint);
                     });
+
+                    grabbed.insert(other_collider);
                 }
             }
         } else {
@@ -1315,6 +1358,7 @@ pub fn grab_collider(
                 for child in children.iter() {
                     if grab_joints.get(*child).is_ok() {
                         commands.entity(*child).despawn_recursive();
+                        grabbed.remove(&*child);
                     }
                 }
             }
