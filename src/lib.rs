@@ -329,7 +329,7 @@ fn setup_map(
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
-    let scale = Vec3::new(2.0, 2.5, 2.0);
+    let scale = Vec3::new(3.0, 3.5, 3.0);
     let walls = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/walls_shop1.glb#Scene0"),
