@@ -23,7 +23,20 @@
 		},
 		{
 			"path": "../vhacd-rs"
+		},
+		{
+			"path": "../fuck-vhacd-rs"
+		},
+		{
+			"path": "../coacd"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"__split_buffer": "cpp",
+			"deque": "cpp",
+			"list": "cpp",
+			"vector": "cpp"
+		}
+	}
 }

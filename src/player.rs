@@ -8,8 +8,8 @@ use std::f32::consts::PI;
 
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
-    CharacterControllerBundle, ControllerInput, ControllerPhysicsBundle, ControllerSettings,
-    ControllerState, RelatedEntities,
+    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
+    ControllerSettings, ControllerState, RelatedEntities,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -562,10 +562,10 @@ pub fn setup_player(
                         buffer: 0.075,
                     })
                     .insert(ZoomScroll {
-                        current: 4.0,
+                        current: 8.0,
                         scroll_sensitivity: -0.5,
-                        min: 2.0,
-                        max: 12.0,
+                        min: 4.0,
+                        max: 24.0,
                     })
                     .insert(ZoomScrollForToi)
                     .insert(Name::new("Player Camera"))
@@ -602,8 +602,8 @@ pub fn setup_player(
                 info!("spawning player {}", id);
                 let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 5.0, 0.0));
 
-                let player_height = 0.5;
-                let player_radius = 0.35;
+                let player_height = 1.0;
+                let player_radius = 0.5;
                 // Spawn player cube
                 let player_entity = commands
                     .spawn_bundle(CharacterControllerBundle {
@@ -624,19 +624,20 @@ pub fn setup_player(
                             coyote_time_duration: 0.16,
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
-                            float_cast_length: 0.55,
-                            float_cast_collider: Collider::ball(player_radius),
-                            float_distance: 0.55,
-                            float_strength: 2.0,
-                            float_dampen: 0.2,
-                            upright_spring_strength: 10.0,
-                            upright_spring_damping: 1.0,
+                            float_cast_length: 1.0,
+                            //float_cast_length: 1.,
+                            float_cast_collider: Collider::ball(player_radius - 0.05),
+                            float_distance: 1.0,
+                            float_strength: 8.0,
+                            float_dampen: 0.8,
+                            upright_spring_strength: 25.0,
+                            upright_spring_damping: 3.5,
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
                             collider: Collider::capsule(
                                 Vec3::new(0.0, 0.0, 0.0),
-                                Vec3::new(0.0, 0.5, 0.0),
+                                Vec3::new(0.0, player_height, 0.0),
                                 player_radius,
                             ),
                             ..default()
@@ -667,7 +668,7 @@ pub fn setup_player(
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
 
-                let distance_from_body = player_radius + 0.2;
+                let distance_from_body = player_radius + 0.3;
                 attach_arm(
                     &mut commands,
                     player_entity,
@@ -682,6 +683,7 @@ pub fn setup_player(
                     Vec3::new(-distance_from_body, player_height, 0.0),
                     1,
                 );
+
                 // for some body horror
                 /*
                                attach_arm(
@@ -752,15 +754,15 @@ pub fn attach_arm(
     index: usize,
 ) {
     let max_force = 1000.0;
-    let twist_stiffness = 20.0;
+    let twist_stiffness = 100.0;
     let twist_damping = twist_stiffness / 10.0;
-    let resting_stiffness = 2.0;
+    let resting_stiffness = 5.0;
     let resting_damping = resting_stiffness / 10.0;
-    let arm_radius = 0.15;
-    let hand_radius = 0.175;
+    let arm_radius = 0.25;
+    let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
 
-    let arm_height = Vec3::new(0.0, (1.0 / 1.25) - (hand_radius * 2.0), 0.0);
+    let arm_height = Vec3::new(0.0, 1.0 - (hand_radius * 2.0), 0.0);
 
     let mut arm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -936,7 +938,7 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
-            const STRENGTH: f32 = 0.01;
+            const STRENGTH: f32 = 0.05;
             const MAX_IMPULSE: f32 = 0.1;
             const MAX_TORQUE: f32 = 0.1;
 
@@ -1020,7 +1022,7 @@ pub fn avoid_intersecting(
 
 pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
     let crouch_height = 0.25;
-    let full_height = 0.55;
+    let full_height = 1.0;
     let threshold = -PI / 4.0;
     for (input, mut controller) in &mut controllers {
         // Are we looking sufficiently down?
@@ -1247,14 +1249,14 @@ pub fn grab_collider(
             &Grabbing,
             &GlobalTransform,
             Option<&Children>,
-            &RelatedEntities,
+            &ConnectedEntities,
             &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<&GrabJoint>,
 ) {
-    for (hand, grabbing, global, children, related, mut grabbed) in &mut hands {
+    for (hand, grabbing, global, children, connected, mut grabbed) in &mut hands {
         if grabbing.0 {
             let mut already_grabbing = false;
 
@@ -1279,8 +1281,8 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                if related.contains(&other_collider) {
-                    //continue;
+                if connected.contains(&other_collider) {
+                    continue;
                 }
 
                 let contact_points = contact_pair
@@ -1426,7 +1428,7 @@ pub fn player_movement(
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            controller.custom_torque.y = y * 0.1; // avoid overshooting
+            controller.custom_torque.y = y * 0.2; // avoid overshooting
         }
     }
 }
