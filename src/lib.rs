@@ -152,7 +152,8 @@ fn setup_map(
         &mut commands,
         &*asset_server,
         Transform {
-            translation: Vec3::new(5.0, 3.0, 0.0),
+            translation: Vec3::new(5.0, 4.0, 0.0),
+            scale: Vec3::splat(2.),
             ..default()
         },
     );
@@ -161,7 +162,11 @@ fn setup_map(
         &mut commands,
         &*asset_server,
         &mut meshes,
-        Transform::from_xyz(4.0, 3.0, -2.0),
+        Transform {
+            translation: Vec3::new(-2.0, 3.0, -2.0),
+            scale: Vec3::splat(2.5),
+            ..default()
+        },
     );
 
     crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
@@ -304,8 +309,8 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(5., 5., -0.075),
-                scale: Vec3::splat(1.),
+                translation: Vec3::new(5., 10., -0.075),
+                scale: Vec3::splat(2.),
                 ..default()
             },
             ..default()
