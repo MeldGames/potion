@@ -19,7 +19,8 @@ pub const PLAYER_GROUPING: CollisionGroups =
 pub const TERRAIN_GROUPING: CollisionGroups =
     CollisionGroups::new(Group::TERRAIN.bits(), Group::TERRAIN_FILTER.bits());
 
-pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(Group::PLAYER.bits(), 0);
+pub const REST_GROUPING: CollisionGroups =
+    CollisionGroups::new(Group::PLAYER.bits(), Group::PLAYER.bits());
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
