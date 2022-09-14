@@ -762,7 +762,8 @@ pub fn attach_arm(
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
 
-    let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
+    //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
+    let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let mut arm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -793,7 +794,7 @@ pub fn attach_arm(
         .id();
 
     let hand_joint = SphericalJointBuilder::new()
-        .local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
+        //.local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
         .motor_model(JointAxis::AngZ, motor_model)
@@ -814,7 +815,7 @@ pub fn attach_arm(
         )
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
     let mut hand_joint = hand_joint.build();
-    //hand_joint.set_contacts_enabled(false);
+    hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
         .spawn_bundle(TransformBundle::from_transform(to_transform))
@@ -938,9 +939,9 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
-            const STRENGTH: f32 = 0.05;
+            const STRENGTH: f32 = 0.5;
             const MAX_IMPULSE: f32 = 0.1;
-            const MAX_TORQUE: f32 = 0.1;
+            const MAX_TORQUE: f32 = 5.0;
 
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
@@ -1327,8 +1328,8 @@ pub fn grab_collider(
 
                     let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
-                    let stiffness = 10.0;
-                    let damping = 1.0;
+                    let stiffness = 0.0;
+                    let damping = 0.0;
                     let mut grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
                         .local_anchor2(anchor2)
