@@ -451,6 +451,7 @@ pub struct DecompLoad(String);
 
 fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &DecompLoad, Entity)>) {
     for (collider, decomp, entity) in &mut replace {
+        info!("running decomp load");
         let decomp = Obj::load("assets/models/walls_shop1_decomp.obj").unwrap();
         let mut colliders = Vec::new();
         for object in decomp.data.objects {
@@ -473,7 +474,10 @@ fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &Decom
         }
 
         let collider = Collider::compound(colliders);
-        commands.entity(entity).insert(collider);
+        commands
+            .entity(entity)
+            .insert(collider)
+            .remove::<DecompLoad>();
     }
 }
 
