@@ -93,7 +93,9 @@ pub fn spawn_cauldron(
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(ColliderLoad)
+        .insert(crate::DecompLoad(
+            "assets/models/cauldron_decomp.obj".to_owned(),
+        ))
         .insert(level_collision_mesh)
         .id();
 

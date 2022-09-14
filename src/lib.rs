@@ -341,7 +341,9 @@ fn setup_map(
             Name::new("Walls Shop"),
             Velocity::default(),
         ))
-        .insert(DecompLoad("models/walls_shop1_decomp.obj".to_owned()))
+        .insert(DecompLoad(
+            "assets/models/walls_shop1_decomp.obj".to_owned(),
+        ))
         .insert(level_collision_mesh)
         .id();
 
@@ -450,9 +452,9 @@ fn setup_map(
 pub struct DecompLoad(String);
 
 fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &DecompLoad, Entity)>) {
-    for (collider, decomp, entity) in &mut replace {
+    for (mut collider, decomp, entity) in &mut replace {
         info!("running decomp load");
-        let decomp = Obj::load("assets/models/walls_shop1_decomp.obj").unwrap();
+        let decomp = Obj::load(&decomp.0).unwrap();
         let mut colliders = Vec::new();
         for object in decomp.data.objects {
             let vertices = object
@@ -473,11 +475,8 @@ fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &Decom
             colliders.push((Vec3::ZERO, Quat::IDENTITY, collider));
         }
 
-        let collider = Collider::compound(colliders);
-        commands
-            .entity(entity)
-            .insert(collider)
-            .remove::<DecompLoad>();
+        *collider = Collider::compound(colliders);
+        commands.entity(entity).remove::<DecompLoad>();
     }
 }
 
@@ -512,8 +511,9 @@ fn update_level_collision(
 #[derive(Debug, Component, Clone, Copy)]
 pub struct SkyLoad;
 
-pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape = ComputedColliderShape::TriMesh;
 /*
+pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape = ComputedColliderShape::TriMesh;
+*/
 pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
     ComputedColliderShape::ConvexDecomposition(VHACDParameters {
         /// Maximum concavity.
@@ -564,5 +564,3 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
         /// Default: 1024
         max_convex_hulls: 1024,
     });
-
- */

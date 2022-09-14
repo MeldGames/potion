@@ -137,6 +137,9 @@ pub fn spawn_deposit_box(
             Name::new("Deposit Box"),
             crate::physics::TERRAIN_GROUPING,
         ))
+        .insert(crate::DecompLoad(
+            "assets/models/crate_decomp.obj".to_owned(),
+        ))
         .insert_bundle(VisibilityBundle::default())
         .add_child(model)
         .id();
