@@ -955,7 +955,7 @@ pub fn player_grabby_hands(
 
                 let hand_strength = STRENGTH;
                 let hand_damping = hand_strength / 10.0;
-                let wrist_strength = STRENGTH;
+                let wrist_strength = STRENGTH * 1.2;
                 let wrist_damping = 0.04;
 
                 let hand_spring = ((camera_dir - arm_dir).normalize_or_zero() * hand_strength)

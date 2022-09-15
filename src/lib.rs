@@ -3,6 +3,7 @@ pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
 pub mod follow;
+pub mod joint_break;
 pub mod network;
 pub mod physics;
 pub mod player;
@@ -18,6 +19,7 @@ use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
+use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
 use trees::TreesPlugin;
 
@@ -68,6 +70,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(CauldronPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
+        .add_plugin(BreakJointPlugin)
         .add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
@@ -329,7 +332,7 @@ fn setup_map(
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/walls_shop1.glb#Mesh0/Primitive0");
 
-    let scale = Vec3::new(3.0, 3.5, 3.0);
+    let scale = Vec3::splat(3.0);
     let walls = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/walls_shop1.glb#Scene0"),
@@ -373,14 +376,14 @@ fn setup_map(
         .id();
 
     let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
-        .local_anchor1(Vec3::new(0.7, 0.02, 0.15) * scale)
-        .local_anchor2(Vec3::new(0.7, 0.0, 0.13) * scale)
+        .local_anchor1(Vec3::new(0.85, 0.02, 0.15) * scale)
+        .local_anchor2(Vec3::new(0.7, 0.0, 0.15) * scale)
         //.limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
         //.limits([-PI / 2.0 - PI / 8.0, 0.0])
         .limits([0.0, PI / 2.0 + PI / 8.0])
         .build();
 
-    hinge_joint.set_contacts_enabled(false);
+    //hinge_joint.set_contacts_enabled(false);
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
@@ -388,7 +391,7 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
-                scale: scale,
+                scale: scale * 0.9,
                 ..default()
             },
             ..default()
@@ -403,6 +406,10 @@ fn setup_map(
         .insert(ColliderLoad)
         .insert(level_collision_mesh2)
         .insert(ImpulseJoint::new(walls, hinge_joint))
+        .insert(BreakableJoint {
+            impulse: Vec3::splat(15.0),
+            torque: Vec3::splat(15.0),
+        })
         .id();
 
     // Bounds
