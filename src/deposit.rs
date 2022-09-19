@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::follow::Follow;
+use crate::attach::Attach;
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -146,7 +146,7 @@ pub fn spawn_deposit_box(
 
     commands
         .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle(Follow::all(deposit))
+        .insert_bundle(Attach::all(deposit))
         .insert_bundle((Name::new("Deposit Area"), crate::physics::TERRAIN_GROUPING))
         .with_children(|children| {
             children

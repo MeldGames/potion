@@ -1,8 +1,8 @@
+pub mod attach;
 pub mod cauldron;
 pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
-pub mod follow;
 pub mod joint_break;
 pub mod network;
 pub mod physics;
@@ -23,7 +23,7 @@ use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
 use trees::TreesPlugin;
 
-use follow::Follow;
+use attach::{Attach, AttachTranslation};
 use player::PlayerInput;
 use sabi::stage::NetworkSimulationAppExt;
 use store::{SecurityCheck, StoreItem, StorePlugin};
@@ -151,7 +151,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    crate::cauldron::spawn_cauldron(
+    let cauldron = crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
         Transform {
@@ -308,7 +308,15 @@ fn setup_map(
     let level_collision_mesh3: Handle<Mesh> =
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
 
-    let _stirrer = commands
+    let mock = commands
+        .spawn()
+        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            0.0, 5.0, 0.0,
+        )))
+        .insert(Name::new("Mock spring location"))
+        .id();
+
+    let stirrer = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
@@ -317,6 +325,11 @@ fn setup_map(
                 ..default()
             },
             ..default()
+        })
+        .insert_bundle(Attach::translation(mock))
+        .insert(AttachTranslation::Spring {
+            strength: 1.0,
+            dampening: 0.3,
         })
         .insert_bundle((
             Collider::cuboid(1.0, 1.0, 1.0),
@@ -370,7 +383,7 @@ fn setup_map(
 
     let shop_follower = commands
         .spawn_bundle(TransformBundle::default())
-        .insert_bundle(Follow::all(walls))
+        .insert_bundle(Attach::all(walls))
         .insert(Name::new("Shop Followers"))
         .add_child(security_check)
         .id();
@@ -383,7 +396,7 @@ fn setup_map(
         .limits([0.0, PI / 2.0 + PI / 8.0])
         .build();
 
-    //hinge_joint.set_contacts_enabled(false);
+    hinge_joint.set_contacts_enabled(false);
 
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
@@ -407,8 +420,8 @@ fn setup_map(
         .insert(level_collision_mesh2)
         .insert(ImpulseJoint::new(walls, hinge_joint))
         .insert(BreakableJoint {
-            impulse: Vec3::splat(15.0),
-            torque: Vec3::splat(15.0),
+            impulse: Vec3::splat(100.0),
+            torque: Vec3::splat(100.0),
         })
         .id();
 

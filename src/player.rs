@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
 
-use crate::follow::{Follow, FollowPlugin};
+use crate::attach::{Attach, AttachPlugin};
 use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 pub struct CustomWanderlustPlugin;
@@ -286,7 +286,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(FollowPlugin);
+        app.add_plugin(AttachPlugin);
         app.register_type::<Player>();
 
         app.insert_resource(Events::<PlayerEvent>::default());
@@ -581,7 +581,7 @@ pub fn setup_player(
                         Neck,
                         Name::new("Neck"),
                     ))
-                    .insert_bundle(Follow::translation(player_entity))
+                    .insert_bundle(Attach::translation(player_entity))
                     .id();
 
                 commands.entity(neck).push_children(&[camera]);
@@ -839,7 +839,7 @@ pub fn attach_arm(
 
 pub fn player_swivel_and_tilt(
     mut inputs: Query<(&mut LookTransform, &PlayerInput)>,
-    mut necks: Query<(&mut Transform, &Follow), (With<Neck>, Without<Player>)>,
+    mut necks: Query<(&mut Transform, &Attach), (With<Neck>, Without<Player>)>,
 ) {
     for (mut neck_transform, follow) in &mut necks {
         if let Ok((mut look_transform, input)) = inputs.get_mut(follow.get()) {

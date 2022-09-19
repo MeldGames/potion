@@ -2,7 +2,7 @@ use bevy::{ecs::query::WorldQuery, prelude::*};
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::{follow::Follow, ColliderLoad};
+use crate::{attach::Attach, ColliderLoad};
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -103,7 +103,7 @@ pub fn spawn_cauldron(
 
     commands
         .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle(Follow::all(cauldron))
+        .insert_bundle(Attach::all(cauldron))
         .insert_bundle((
             Name::new("Cauldron Deposit"),
             crate::physics::TERRAIN_GROUPING,
