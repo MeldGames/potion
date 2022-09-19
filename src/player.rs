@@ -608,17 +608,17 @@ pub fn setup_player(
                 let player_entity = commands
                     .spawn_bundle(CharacterControllerBundle {
                         settings: ControllerSettings {
-                            acceleration: 4.0,
-                            max_speed: 5.0,
-                            max_acceleration_force: 1.0,
+                            acceleration: 5.0,
+                            max_speed: 7.0,
+                            max_acceleration_force: 2.0,
                             up_vector: Vec3::Y,
-                            gravity: 9.8,
+                            gravity: 9.8 * 4.0,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 3.0,
-                            jump_stop_force: 0.3,
+                            jump_initial_force: 12.0,
+                            jump_stop_force: 0.01,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
                             coyote_time_duration: 0.16,
@@ -630,8 +630,8 @@ pub fn setup_player(
                             float_distance: 1.0,
                             float_strength: 8.0,
                             float_dampen: 0.8,
-                            upright_spring_strength: 25.0,
-                            upright_spring_damping: 3.5,
+                            upright_spring_strength: 100.0,
+                            upright_spring_damping: 10.0,
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
@@ -796,7 +796,7 @@ pub fn attach_arm(
 
     let hand_joint = SphericalJointBuilder::new()
         //.local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
-        .local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
+        //.local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
         .motor_model(JointAxis::AngZ, motor_model)
@@ -941,9 +941,9 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
-            const STRENGTH: f32 = 0.2;
+            const STRENGTH: f32 = 0.4;
             const MAX_IMPULSE: f32 = 0.1;
-            const MAX_TORQUE: f32 = 5.0;
+            const MAX_TORQUE: f32 = 10.0;
 
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
@@ -1431,7 +1431,7 @@ pub fn player_movement(
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            controller.custom_torque.y = y * 0.2; // avoid overshooting
+            controller.custom_torque.y = y * 0.5; // avoid overshooting
         }
     }
 }
