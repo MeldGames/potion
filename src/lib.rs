@@ -151,6 +151,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
+    /*
     let cauldron = crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
@@ -161,18 +162,19 @@ fn setup_map(
         },
     );
 
-    crate::deposit::spawn_deposit_box(
-        &mut commands,
-        &*asset_server,
-        &mut meshes,
-        Transform {
-            translation: Vec3::new(-2.0, 3.0, -2.0),
-            scale: Vec3::splat(2.5),
-            ..default()
-        },
-    );
+       crate::deposit::spawn_deposit_box(
+           &mut commands,
+           &*asset_server,
+           &mut meshes,
+           Transform {
+               translation: Vec3::new(-2.0, 3.0, -2.0),
+               scale: Vec3::splat(2.5),
+               ..default()
+           },
+       );
 
-    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+       crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    */
 
     let _stone = commands
         .spawn_bundle(SceneBundle {
@@ -310,8 +312,15 @@ fn setup_map(
 
     let mock = commands
         .spawn()
+        .insert_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.05,
+                ..default()
+            })),
+            ..default()
+        })
         .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            0.0, 5.0, 0.0,
+            0.0, 2.0, -3.0,
         )))
         .insert(Name::new("Mock spring location"))
         .id();
@@ -321,7 +330,6 @@ fn setup_map(
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(5., 10., -0.075),
-                scale: Vec3::splat(2.),
                 ..default()
             },
             ..default()
@@ -329,12 +337,14 @@ fn setup_map(
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
             strength: 1.0,
-            dampening: 0.3,
+            damp_ratio: 0.2,
         })
         .insert_bundle((
             Collider::cuboid(1.0, 1.0, 1.0),
+            //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
             Name::new("Paddle"),
+            ExternalImpulse::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
         ))

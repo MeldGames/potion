@@ -88,7 +88,7 @@ impl Plugin for PhysicsPlugin {
             ),
         );
 
-        app.add_network_system(cap_velocity);
+        //app.add_network_system(cap_velocity);
         app.add_startup_system(modify_rapier_context);
     }
 }

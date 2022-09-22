@@ -69,7 +69,7 @@ impl Plugin for DepositPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Value>();
 
-        app.add_system(display_money);
+        //app.add_system(display_money);
 
         app.add_network_system(deposit);
     }
