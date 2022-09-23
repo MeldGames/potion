@@ -337,7 +337,7 @@ fn setup_map(
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
             strength: 1.0,
-            damp_ratio: 0.2,
+            damp_ratio: 1.0,
         })
         .insert_bundle((
             Collider::cuboid(1.0, 1.0, 1.0),
@@ -345,6 +345,8 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Paddle"),
             ExternalImpulse::default(),
+            ExternalForce::default(),
+            ReadMassProperties::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
         ))

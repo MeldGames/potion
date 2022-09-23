@@ -29,6 +29,9 @@
 		},
 		{
 			"path": "../coacd"
+		},
+		{
+			"path": "../rapier"
 		}
 	],
 	"settings": {
