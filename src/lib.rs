@@ -329,22 +329,23 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(5., 10., -0.075),
+                // translation: Vec3::new(5., 10., -0.075),
+                translation: Vec3::new(0.0, 2.0, -3.0),
                 ..default()
             },
             ..default()
         })
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
-            strength: 100.0,
+            strength: 10.0,
             damp_ratio: 1.0,
         })
         .insert_bundle((
             //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),
             Damping {
-                linear_damping: 0.1,
-                angular_damping: 0.1,
+                linear_damping: 0.4,
+                angular_damping: 0.4,
             },
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,

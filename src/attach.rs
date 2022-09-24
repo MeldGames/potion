@@ -236,7 +236,7 @@ pub fn update_attach(
 
                     let offset = transform.translation - global_transform.translation;
                     let offset_force = -strength * offset;
-                    let damp_force = -damp_coefficient * (velocity.linvel + offset_force);
+                    let damp_force = -damp_coefficient * velocity.linvel;
                     //let new_velocity = velocity.linvel + offset_force;
 
                     let spring_force = offset_force + damp_force;
@@ -250,11 +250,12 @@ pub fn update_attach(
                         damp_force
                     );
 
-                    velocity.linvel += spring_force;
+                    external_force.force = spring_force;
+                    //velocity.linvel += spring_force;
 
                     lines.line_colored(
                         transform.translation,
-                        transform.translation + velocity.linvel,
+                        transform.translation + external_force.force,
                         crate::TICK_RATE.as_secs_f32(),
                         Color::YELLOW,
                     );
