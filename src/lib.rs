@@ -151,7 +151,6 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    /*
     let cauldron = crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
@@ -162,19 +161,18 @@ fn setup_map(
         },
     );
 
-       crate::deposit::spawn_deposit_box(
-           &mut commands,
-           &*asset_server,
-           &mut meshes,
-           Transform {
-               translation: Vec3::new(-2.0, 3.0, -2.0),
-               scale: Vec3::splat(2.5),
-               ..default()
-           },
-       );
+    crate::deposit::spawn_deposit_box(
+        &mut commands,
+        &*asset_server,
+        &mut meshes,
+        Transform {
+            translation: Vec3::new(-2.0, 3.0, -2.0),
+            scale: Vec3::splat(2.5),
+            ..default()
+        },
+    );
 
-       crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
-    */
+    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
         .spawn_bundle(SceneBundle {
