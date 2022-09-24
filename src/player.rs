@@ -582,6 +582,7 @@ pub fn setup_player(
                         Name::new("Neck"),
                     ))
                     .insert_bundle(Attach::translation(player_entity))
+                    .insert(Velocity::default())
                     .id();
 
                 commands.entity(neck).push_children(&[camera]);

@@ -167,18 +167,16 @@ pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Wi
     }
 }
 
-pub fn damped_spring(position: Vec3, desired: Vec3) {}
-
 pub fn update_attach(
-    invalid_attachers: Query<Entity, (With<Attach>, With<Parent>)>,
+    mut commands: Commands,
+    parented: Query<Entity, (With<Attach>, With<Parent>)>,
+    no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
     mut attachers: Query<
         (
             Entity,
             &mut Transform,
             &mut Velocity,
-            &mut ExternalImpulse,
-            &mut ExternalForce,
-            &ReadMassProperties,
+            Option<&ReadMassProperties>,
             &Attach,
             Option<&AttachTranslation>,
             Option<&AttachRotation>,
@@ -191,21 +189,38 @@ pub fn update_attach(
         )>,
     >,
     global: Query<&GlobalTransform>,
+    names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
-    for invalid_attacher in &invalid_attachers {
+    let named = |entity: Entity| -> String {
+        match names.get(entity) {
+            Ok(name) => name.as_str().to_owned(),
+            _ => format!("{:?}", entity),
+        }
+    };
+
+    for invalid_attacher in &parented {
         info!(
             "attacher is invalid, cannot use the transform hierarchy: {:?}",
-            invalid_attacher
+            named(invalid_attacher)
         );
+    }
+
+    for invalid_attacher in &no_velocity {
+        info!(
+            "attacher needs Velocity, adding default: {:?}",
+            named(invalid_attacher)
+        );
+
+        commands
+            .entity(invalid_attacher)
+            .insert(Velocity::default());
     }
 
     for (
         entity,
         mut transform,
         mut velocity,
-        mut external_impulse,
-        mut external_force,
         mass_properties,
         attach,
         translation,
@@ -213,7 +228,9 @@ pub fn update_attach(
         scale,
     ) in &mut attachers
     {
+        //info!("attaching {:?}", named(entity));
         if let Ok(global) = global.get(attach.get()) {
+            //info!("to {:?}", named(attach.get()));
             let global_transform = global.compute_transform();
             match translation {
                 Some(AttachTranslation::Instant) => {
@@ -225,7 +242,13 @@ pub fn update_attach(
                 }) => {
                     let strength = strength.max(0.0);
                     let damp_ratio = damp_ratio.max(0.0);
-                    let mass = mass_properties.0.mass;
+                    let (mass, center) = match mass_properties {
+                        Some(mass_properties) => (
+                            mass_properties.0.mass,
+                            mass_properties.0.local_center_of_mass,
+                        ),
+                        None => (1.0, Vec3::ZERO),
+                    };
 
                     if mass <= 0.0 || strength <= 0.0 {
                         continue;
@@ -252,10 +275,7 @@ pub fn update_attach(
                     */
 
                     velocity.linvel += offset_force;
-                    let vel = velocity.linvel
-                        + velocity
-                            .angvel
-                            .cross(Vec3::ZERO - mass_properties.0.local_center_of_mass);
+                    let vel = velocity.linvel + velocity.angvel.cross(Vec3::ZERO - center);
 
                     let damp_force = -damp_coefficient * vel;
                     velocity.linvel += damp_force;
@@ -263,7 +283,7 @@ pub fn update_attach(
 
                     lines.line_colored(
                         transform.translation,
-                        transform.translation + external_force.force,
+                        transform.translation + offset_force + damp_force,
                         crate::TICK_RATE.as_secs_f32(),
                         Color::YELLOW,
                     );
