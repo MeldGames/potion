@@ -236,22 +236,30 @@ pub fn update_attach(
 
                     let offset = transform.translation - global_transform.translation;
                     let offset_force = -strength * offset;
-                    let damp_force = -damp_coefficient * velocity.linvel;
                     //let new_velocity = velocity.linvel + offset_force;
 
-                    let spring_force = offset_force + damp_force;
+                    //let spring_force = offset_force + damp_force;
 
-                    dbg!(
-                        damp_ratio,
-                        critical_damping,
-                        damp_coefficient,
-                        velocity.linvel,
-                        offset_force,
-                        damp_force
-                    );
+                    /*
+                                       dbg!(
+                                           damp_ratio,
+                                           critical_damping,
+                                           damp_coefficient,
+                                           velocity.linvel,
+                                           offset_force,
+                                           damp_force
+                                       );
+                    */
 
-                    external_force.force = spring_force;
-                    //velocity.linvel += spring_force;
+                    velocity.linvel += offset_force;
+                    let vel = velocity.linvel
+                        + velocity
+                            .angvel
+                            .cross(Vec3::ZERO - mass_properties.0.local_center_of_mass);
+
+                    let damp_force = -damp_coefficient * vel;
+                    velocity.linvel += damp_force;
+                    //external_force.force = spring_force;
 
                     lines.line_colored(
                         transform.translation,

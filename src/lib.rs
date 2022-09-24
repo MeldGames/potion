@@ -337,8 +337,8 @@ fn setup_map(
         })
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
-            strength: 10.0,
-            damp_ratio: 1.0,
+            strength: 200.0,
+            damp_ratio: 0.1,
         })
         .insert_bundle((
             //Collider::cuboid(0.1, 0.2, 0.1),
