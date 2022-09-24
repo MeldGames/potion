@@ -227,13 +227,30 @@ pub fn update_attach(
                     let damp_ratio = damp_ratio.max(0.0);
                     let mass = mass_properties.0.mass;
 
+                    if mass <= 0.0 || strength <= 0.0 {
+                        continue;
+                    }
+
                     let critical_damping = 2.0 * (mass * strength).sqrt();
                     let damp_coefficient = damp_ratio * critical_damping;
-                    dbg!(damp_ratio, critical_damping, damp_coefficient, mass);
 
                     let offset = transform.translation - global_transform.translation;
-                    let force = -(strength * offset) - (damp_coefficient * velocity.linvel);
-                    external_force.force = force;
+                    let offset_force = -strength * offset;
+                    let damp_force = -damp_coefficient * (velocity.linvel + offset_force);
+                    //let new_velocity = velocity.linvel + offset_force;
+
+                    let spring_force = offset_force + damp_force;
+
+                    dbg!(
+                        damp_ratio,
+                        critical_damping,
+                        damp_coefficient,
+                        velocity.linvel,
+                        offset_force,
+                        damp_force
+                    );
+
+                    velocity.linvel += spring_force;
 
                     lines.line_colored(
                         transform.translation,

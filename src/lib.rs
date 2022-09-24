@@ -336,11 +336,16 @@ fn setup_map(
         })
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
-            strength: 1.0,
+            strength: 100.0,
             damp_ratio: 1.0,
         })
         .insert_bundle((
-            Collider::cuboid(1.0, 1.0, 1.0),
+            //Collider::cuboid(0.1, 0.2, 0.1),
+            //GravityScale(0.0),
+            Damping {
+                linear_damping: 0.1,
+                angular_damping: 0.1,
+            },
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
             Name::new("Paddle"),
@@ -524,7 +529,7 @@ fn update_level_collision(
     mut commands: Commands,
     mut ev_asset: EventReader<AssetEvent<Mesh>>,
     mut assets: ResMut<Assets<Mesh>>,
-    mut replace: Query<(&mut Collider, &Handle<Mesh>, Entity), With<ColliderLoad>>,
+    mut replace: Query<(Option<&mut Collider>, &Handle<Mesh>, Entity), With<ColliderLoad>>,
 ) {
     for ev in ev_asset.iter() {
         match ev {
@@ -532,8 +537,17 @@ fn update_level_collision(
                 if let Some(loaded_mesh) = assets.get_mut(handle) {
                     for (mut col, inner_handle, e) in replace.iter_mut() {
                         if *inner_handle == *handle {
-                            *col = Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS)
-                                .unwrap();
+                            let new_collider =
+                                Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS)
+                                    .unwrap();
+                            match col {
+                                Some(mut col) => {
+                                    *col = new_collider;
+                                }
+                                None => {
+                                    commands.entity(e).insert(new_collider);
+                                }
+                            }
                             commands.entity(e).remove::<ColliderLoad>();
                         }
                     }
