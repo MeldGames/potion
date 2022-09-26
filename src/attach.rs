@@ -70,100 +70,14 @@ pub enum AttachScale {
     },
 }
 
-pub fn simple_harmonic_motion(strength: f32, damping: f32) -> (f32, f32) {
-    /*
-    w = sqrt(strength / mass)
-    x = offset*cos(w*delta) + velocity/w*sin(w*delta)
-    v = -w*offset*sin(w*delta) + velocity*cos(w*delta)
-    */
-    const EPSILON: f32 = 0.0001;
-    let frequency = strength.max(0.0);
-    let damping = damping.max(0.0);
-    //let delta_time = crate::TICK_RATE.as_secs_f32();
-    let delta_time = 1.0;
-
-    if damping > 1.0 + EPSILON {
-        // over damped
-        let za = -frequency * damping;
-        let zb = frequency * (damping * damping - 1.0).sqrt();
-        let z1 = za - zb;
-        let z2 = za + zb;
-
-        let e1 = (z1 * delta_time).exp();
-        let e2 = (z2 * delta_time).exp();
-
-        let inv_two_zb = 1.0 / (2.0 * zb);
-        let e1_over_two_zb = e1 * inv_two_zb;
-        let e2_over_two_zb = e2 * inv_two_zb;
-
-        let z1e1_over_two_zb = z1 * e1_over_two_zb;
-        let z2e2_over_two_zb = z2 * e2_over_two_zb;
-
-        let velpos = (z1e1_over_two_zb - z2e2_over_two_zb + e2) * z2;
-        let velvel = -z1e1_over_two_zb + z2e2_over_two_zb;
-        (velpos, velvel)
-    } else if damping < 1.0 - EPSILON {
-        let omega_zeta = frequency * damping; // f * d
-        let alpha = frequency * (1.0 - damping * damping).sqrt(); // f * sqrt(1 - d^2)
-
-        let exp_term = (-omega_zeta * delta_time).exp(); // e^(-(f * d))
-        let cos_term = (alpha * delta_time).cos(); // e^()
-        let sin_term = (alpha * delta_time).sin();
-
-        let inv_alpha = 1.0 / alpha;
-
-        let exp_sin = exp_term * sin_term;
-        let exp_cos = exp_term * cos_term;
-        let exp_omega_zeta_sin_over_alpha = exp_term * omega_zeta * sin_term * inv_alpha;
-
-        let velpos = -exp_sin * alpha - omega_zeta * exp_omega_zeta_sin_over_alpha;
-        let velvel = exp_cos - exp_omega_zeta_sin_over_alpha;
-        (velpos, velvel)
-
-        /*
-                        // under-damped
-                        float omegaZeta = angularFrequency * dampingRatio;
-                        float alpha     = angularFrequency * sqrtf(1.0f - dampingRatio*dampingRatio);
-
-                        float expTerm = expf( -omegaZeta * deltaTime );
-                        float cosTerm = cosf( alpha * deltaTime );
-                        float sinTerm = sinf( alpha * deltaTime );
-
-        (e^{-dtw}t(qtcos(qt)(dtw+v(0))-sin(qt)(dtw+v(0)+q^2tx(0)))dq)/q^2+(e^(-dtw)(qcos(qt)(tv(0)+dtw(t-x(0))+x(0))-sin(qt)(d^2t^2w^2+dtw(-2+v(0))-v(0)+q^2tx(0)))dt)/q-(de^(-dtw)t^2(sin(qt)(-1+dtw+v(0))+qcos(qt)x(0))dw)/q
-
-                d(-e^(-dtw)(sin(qt)((dw(dtw+v(0)))/q+qx(0))+cos(qt)(-dtw-v(0)+dwx(0))))=-e^(-dtw)(tsin(qt)(v(0)+dw(t-x(0)))+sin(qt)(-(dw(dtw+v(0)))/q^2+x(0))+tcos(qt)((dw(dtw+v(0)))/q+qx(0)))dq+(e^(-dtw)(sin(qt)(d^3tw^3+d^2w^2(-1+v(0))-q^2v(0)-dq^2w(t-2x(0)))+qcos(qt)(d(w-2wv(0))-q^2x(0)+d^2w^2(-2t+x(0))))dt)/q+(de^(-dtw)(sin(qt)(d^2t^2w^2+dtw(-2+v(0))-v(0)+q^2tx(0))-qcos(qt)(dt^2w+x(0)+t(-1+v(0)-dwx(0))))dw)/q
-                        float invAlpha = 1.0f / alpha;
-
-                        float expSin = expTerm*sinTerm;
-                        float expCos = expTerm*cosTerm;
-                        float expOmegaZetaSin_Over_Alpha = expTerm*omegaZeta*sinTerm*invAlpha;
-
-                        pOutParams->m_posPosCoef = expCos + expOmegaZetaSin_Over_Alpha;
-                        pOutParams->m_posVelCoef = expSin*invAlpha;
-
-                        pOutParams->m_velPosCoef = -expSin*alpha - omegaZeta*expOmegaZetaSin_Over_Alpha;
-                        pOutParams->m_velVelCoef =  expCos - expOmegaZetaSin_Over_Alpha;
-                        */
-    } else {
-        let exp_term = (-frequency * delta_time).exp(); // e^(-f)
-        let time_exp = (exp_term * delta_time); // e^(-f) * d
-        let time_exp_freq = time_exp * frequency; // e^(-f) * f
-
-        // -f * (e^(-f) * f)
-        // -(e^(-f) * f) + e^(-f)
-
-        let velpos = -frequency * time_exp_freq;
-        let velvel = -time_exp_freq + exp_term;
-        (velpos, velvel)
-    }
-}
-
 #[derive(Debug, Clone, Component)]
 pub struct PreviousTransform(pub Transform);
 
-pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Without<RigidBody>>) {
-    for (mut transform, velocity) in &mut velocities {
-        transform.translation += velocity.linvel * crate::TICK_RATE.as_secs_f32();
+pub fn velocity_nonphysics(
+    mut velocities: Query<(&mut Transform, &Velocity, &ExternalForce), Without<RigidBody>>,
+) {
+    for (mut position, velocity, accel) in &mut velocities {
+        position.translation += velocity.linvel * crate::TICK_RATE.as_secs_f32();
     }
 }
 
@@ -176,6 +90,7 @@ pub fn update_attach(
             Entity,
             &mut Transform,
             &mut Velocity,
+            Option<&mut ExternalForce>,
             Option<&ReadMassProperties>,
             &Attach,
             Option<&AttachTranslation>,
@@ -221,6 +136,7 @@ pub fn update_attach(
         entity,
         mut transform,
         mut velocity,
+        mut external_force,
         mass_properties,
         attach,
         translation,
@@ -261,15 +177,23 @@ pub fn update_attach(
                     let offset_force = -strength * offset;
                     let vel =
                         velocity.linvel + velocity.angvel.cross(Vec3::ZERO - center) + offset_force;
-                    let damp_force = -damp_coefficient * vel;
 
-                    // don't let the dampening force gain energy
-                    let mut spring_force = offset_force + damp_force;
-                    spring_force = spring_force.clamp_length_max(1000.0);
+                    let mut damp_force = -damp_coefficient * vel;
 
-                    let total = velocity.linvel.x + offset.x;
+                    // don't let the damping force accelerate it
+                    damp_force = damp_force.clamp_length_max(vel.length());
 
-                    velocity.linvel += spring_force;
+                    let spring_force = offset_force + damp_force;
+                    //spring_force = spring_force.clamp_length_max(vel.length());
+
+                    match external_force {
+                        Some(mut external_force) => {
+                            external_force.force = spring_force;
+                        }
+                        None => {
+                            velocity.linvel += spring_force;
+                        }
+                    }
 
                     lines.line_colored(
                         transform.translation,
