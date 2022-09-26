@@ -259,43 +259,24 @@ pub fn update_attach(
 
                     let offset = transform.translation - global_transform.translation;
                     let offset_force = -strength * offset;
-                    //let new_velocity = velocity.linvel + offset_force;
-
-                    //let spring_force = offset_force + damp_force;
-
-                    /*
-                                       dbg!(
-                                           damp_ratio,
-                                           critical_damping,
-                                           damp_coefficient,
-                                           velocity.linvel,
-                                           offset_force,
-                                           damp_force
-                                       );
-                    */
-
-                    velocity.linvel += offset_force;
-                    let vel = velocity.linvel + velocity.angvel.cross(Vec3::ZERO - center);
-
+                    let vel =
+                        velocity.linvel + velocity.angvel.cross(Vec3::ZERO - center) + offset_force;
                     let damp_force = -damp_coefficient * vel;
-                    velocity.linvel += damp_force;
-                    //external_force.force = spring_force;
+
+                    // don't let the dampening force gain energy
+                    let mut spring_force = offset_force + damp_force;
+                    spring_force = spring_force.clamp_length_max(1000.0);
+
+                    let total = velocity.linvel.x + offset.x;
+
+                    velocity.linvel += spring_force;
 
                     lines.line_colored(
                         transform.translation,
-                        transform.translation + offset_force + damp_force,
+                        transform.translation + spring_force,
                         crate::TICK_RATE.as_secs_f32(),
                         Color::YELLOW,
                     );
-
-                    /*
-                                       lines.line_colored(
-                                           transform.translation,
-                                           transform.translation + impulse,
-                                           crate::TICK_RATE.as_secs_f32(),
-                                           Color::BLUE,
-                                       );
-                    */
                 }
                 _ => {}
             }
