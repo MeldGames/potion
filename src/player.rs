@@ -611,7 +611,7 @@ pub fn setup_player(
                         settings: ControllerSettings {
                             acceleration: 5.0,
                             max_speed: 7.0,
-                            max_acceleration_force: 2.0,
+                            max_acceleration_force: 10.0,
                             up_vector: Vec3::Y,
                             gravity: 9.8 * 4.0,
                             max_ground_angle: 45.0 * (PI / 180.0),
@@ -647,16 +647,14 @@ pub fn setup_player(
                         global_transform: global_transform,
                         ..default()
                     })
-                    /*
-                            .insert_bundle(SceneBundle {
-                                scene: asset_server.load("models/character.glb#Scene0"),
-                                transform: Transform {
-                                    translation: Vec3::new(0., 0., 0.),
-                                    ..default()
-                                },
-                                ..default()
-                            })
-                    */
+                    .insert_bundle(SceneBundle {
+                        scene: asset_server.load("models/character.glb#Scene0"),
+                        transform: Transform {
+                            translation: Vec3::new(0., 0., 0.),
+                            ..default()
+                        },
+                        ..default()
+                    })
                     //.insert(crate::deposit::Value::new(500))
                     //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())

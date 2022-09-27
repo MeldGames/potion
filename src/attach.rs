@@ -195,11 +195,22 @@ pub fn update_attach(
                         }
                     }
 
+                    // 0..10.0
+                    info!("length: {:?}", spring_force.length() / strength);
+                    let lightness = (spring_force.length() / strength).clamp(0.0, 1.0);
+                    let color = Color::Hsla {
+                        hue: 0.0,
+                        saturation: 1.0,
+                        lightness: lightness,
+                        alpha: 0.7,
+                    };
+
                     lines.line_colored(
                         transform.translation,
                         transform.translation + spring_force,
                         crate::TICK_RATE.as_secs_f32(),
-                        Color::YELLOW,
+                        //Color::YELLOW,
+                        color,
                     );
                 }
                 _ => {}

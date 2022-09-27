@@ -73,16 +73,17 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(BreakJointPlugin)
         .add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
+        /*
         .add_plugin(RapierDebugRenderPlugin {
             depth_test: true,
             style: Default::default(),
             mode: DebugRenderMode::COLLIDER_SHAPES,
-        })
+        }) */
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
-    //app.add_system(outline_meshes);
+    app.add_system(outline_meshes);
 
     app.add_event::<AssetEvent<Mesh>>();
 
