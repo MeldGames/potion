@@ -345,14 +345,14 @@ fn setup_map(
             },
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
-            Name::new("Paddle"),
+            Name::new("Stirrer"),
             ExternalImpulse::default(),
             ExternalForce::default(),
             ReadMassProperties::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
         ))
-        .insert(ColliderLoad)
+        .insert(DecompLoad("assets/models/stirrer_decomp.obj".to_owned()))
         .insert(level_collision_mesh3)
         .id();
 
@@ -490,7 +490,10 @@ fn setup_map(
 #[derive(Debug, Component, Clone)]
 pub struct DecompLoad(String);
 
-fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &DecompLoad, Entity)>) {
+fn decomp_load(
+    mut commands: Commands,
+    mut replace: Query<(Option<&mut Collider>, &DecompLoad, Entity)>,
+) {
     for (mut collider, decomp, entity) in &mut replace {
         info!("running decomp load");
         let decomp = Obj::load(&decomp.0).unwrap();
@@ -514,7 +517,16 @@ fn decomp_load(mut commands: Commands, mut replace: Query<(&mut Collider, &Decom
             colliders.push((Vec3::ZERO, Quat::IDENTITY, collider));
         }
 
-        *collider = Collider::compound(colliders);
+        let new_collider = Collider::compound(colliders);
+        match collider {
+            Some(mut collider) => {
+                *collider = new_collider;
+            }
+            None => {
+                commands.entity(entity).insert(new_collider);
+            }
+        }
+
         commands.entity(entity).remove::<DecompLoad>();
     }
 }

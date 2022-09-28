@@ -6,6 +6,10 @@
 *.stl filter=lfs diff=lfs merge=lfs -text
 *.dae filter=lfs diff=lfs merge=lfs -text
 *.glb filter=lfs diff=lfs merge=lfs -text
+*.gltf filter=lfs diff=lfs merge=lfs -text
+*.mtl filter=lfs diff=lfs merge=lfs -text
+*.wrl filter=lfs diff=lfs merge=lfs -text
+*.stl filter=lfs diff=lfs merge=lfs -text
 # Images
 *.psd filter=lfs diff=lfs merge=lfs -text
 *.pdn filter=lfs diff=lfs merge=lfs -text
