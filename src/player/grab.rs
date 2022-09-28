@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use bevy::ecs::entity::Entities;
 use bevy::input::mouse::MouseWheel;
 use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
@@ -45,6 +46,7 @@ pub struct JointChildren(pub Vec<Entity>);
 
 pub fn joint_children(
     mut commands: Commands,
+    entities: &Entities,
     mut children: Query<&mut JointChildren>,
     joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
 ) {
@@ -56,9 +58,11 @@ pub fn joint_children(
                 }
             }
             _ => {
-                commands
-                    .entity(joint.parent)
-                    .insert(JointChildren(vec![entity]));
+                if entities.contains(joint.parent) {
+                    commands
+                        .entity(joint.parent)
+                        .insert(JointChildren(vec![entity]));
+                }
             }
         }
     }
