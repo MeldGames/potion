@@ -9,7 +9,7 @@ use std::f32::consts::PI;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
     CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, RelatedEntities,
+    ControllerSettings, ControllerState, RelatedEntities, Spring,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -514,12 +514,11 @@ pub fn player_mouse_inputs(
         cumulative_delta += ev.delta;
     }
 
-    player_input.pitch -= sensitivity.0 * cumulative_delta.y * 1.0 / 89.759789 / 2.0;
+    player_input.pitch -= sensitivity.0 * cumulative_delta.y / 180.0;
 
     player_input.pitch = player_input.pitch.clamp(-PI / 2.0, PI / 2.0);
 
-    // We want approximately 5142.8571 dots per 360 I think? At least according to mouse-sensitivity.com's 1 sensitivity 600 DPI valorant measurements.
-    player_input.yaw -= sensitivity.0 * cumulative_delta.x * 1.0 / 89.759789 / 2.0;
+    player_input.yaw -= sensitivity.0 * cumulative_delta.x / 180.0;
     player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
 }
 
@@ -613,7 +612,7 @@ pub fn setup_player(
                             max_speed: 7.0,
                             max_acceleration_force: 10.0,
                             up_vector: Vec3::Y,
-                            gravity: 9.8 * 4.0,
+                            gravity: 9.8,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
@@ -629,10 +628,14 @@ pub fn setup_player(
                             //float_cast_length: 1.,
                             float_cast_collider: Collider::ball(player_radius - 0.05),
                             float_distance: 1.0,
-                            float_strength: 8.0,
-                            float_dampen: 0.8,
-                            upright_spring_strength: 100.0,
-                            upright_spring_damping: 10.0,
+                            float_spring: Spring {
+                                strength: 40.0,
+                                damping: 1.0,
+                            },
+                            upright_spring: Spring {
+                                strength: 40.0,
+                                damping: 1.0,
+                            },
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
@@ -647,14 +650,16 @@ pub fn setup_player(
                         global_transform: global_transform,
                         ..default()
                     })
-                    .insert_bundle(SceneBundle {
-                        scene: asset_server.load("models/character.glb#Scene0"),
-                        transform: Transform {
-                            translation: Vec3::new(0., 0., 0.),
-                            ..default()
-                        },
-                        ..default()
-                    })
+                    /*
+                                       .insert_bundle(SceneBundle {
+                                           scene: asset_server.load("models/character.glb#Scene0"),
+                                           transform: Transform {
+                                               translation: Vec3::new(0., 0., 0.),
+                                               ..default()
+                                           },
+                                           ..default()
+                                       })
+                    */
                     //.insert(crate::deposit::Value::new(500))
                     //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())

@@ -195,8 +195,7 @@ pub fn update_attach(
                         }
                     }
 
-                    // 0..10.0
-                    info!("length: {:?}", spring_force.length() / strength);
+                    //info!("length: {:?}", spring_force.length() / strength);
                     let lightness = (spring_force.length() / strength).clamp(0.0, 1.0);
                     let color = Color::Hsla {
                         hue: 0.0,
