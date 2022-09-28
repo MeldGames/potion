@@ -184,7 +184,7 @@ pub fn setup_player(
                                            ..default()
                                        })
                     */
-                    //.insert(crate::deposit::Value::new(500))
+                    .insert(crate::deposit::Value::new(500))
                     //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
@@ -280,7 +280,7 @@ pub fn attach_arm(
     at: Vec3,
     index: usize,
 ) {
-    let max_force = 1000.0;
+    let max_force = 100.0;
     let twist_stiffness = 20.0;
     let twist_damping = twist_stiffness / 10.0;
     let resting_stiffness = 5.0;
@@ -290,7 +290,7 @@ pub fn attach_arm(
     let motor_model = MotorModel::ForceBased;
 
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
-    let arm_height = Vec3::new(0.0, 1.25, 0.0);
+    let arm_height = Vec3::new(0.0, 1.25 - arm_radius, 0.0);
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let mut arm_joint = SphericalJointBuilder::new()
@@ -324,7 +324,7 @@ pub fn attach_arm(
 
     let hand_joint = SphericalJointBuilder::new()
         //.local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
-        //.local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
+        .local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
         .motor_model(JointAxis::AngZ, motor_model)
