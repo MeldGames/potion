@@ -281,7 +281,7 @@ pub fn attach_arm(
     index: usize,
 ) {
     let max_force = 1000.0;
-    let twist_stiffness = 100.0;
+    let twist_stiffness = 20.0;
     let twist_damping = twist_stiffness / 10.0;
     let resting_stiffness = 5.0;
     let resting_damping = resting_stiffness / 10.0;
@@ -290,7 +290,7 @@ pub fn attach_arm(
     let motor_model = MotorModel::ForceBased;
 
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
-    let arm_height = Vec3::new(0.0, 1.25 - arm_radius, 0.0);
+    let arm_height = Vec3::new(0.0, 1.25, 0.0);
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let mut arm_joint = SphericalJointBuilder::new()

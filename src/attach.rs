@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use crate::physics::Spring;
+
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_prototype_debug_lines::DebugLines;
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
@@ -181,6 +183,10 @@ pub fn update_attach(
 
                     let critical_damping = 2.0 * (mass * strength).sqrt();
                     let damp_coefficient = damp_ratio * critical_damping;
+                    let attach_spring = Spring {
+                        strength: strength,
+                        damping: damp_ratio,
+                    };
 
                     let offset = transform.translation - global_transform.translation;
                     let offset_force = -strength * offset;

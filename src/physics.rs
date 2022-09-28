@@ -5,6 +5,8 @@ use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 pub mod spring;
 
+pub use spring::Spring;
+
 bitflags::bitflags! {
     pub struct Group: u32 {
         const PLAYER = 1 << 0;

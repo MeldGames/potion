@@ -164,7 +164,7 @@ pub fn spawn_deposit_box(
     let lid = commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle((
-            ColliderMassProperties::Density(20.0),
+            ColliderMassProperties::Density(10.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Lid"),
