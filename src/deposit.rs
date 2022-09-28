@@ -156,8 +156,10 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
-        .local_anchor1(Vec3::new(0.0, 1.7, -0.75))
-        .limits([0.0, PI]);
+        .local_anchor1(Vec3::new(0.0, 1.6, -0.73))
+        .limits([0.0, PI / 1.04]);
+    let mut lid_hinge = lid_hinge.build();
+    lid_hinge.set_contacts_enabled(false);
 
     let lid = commands
         .spawn_bundle(TransformBundle::from_transform(position))
