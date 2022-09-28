@@ -403,8 +403,8 @@ fn setup_map(
         .id();
 
     let mut hinge_joint = RevoluteJointBuilder::new(Vec3::Y)
-        .local_anchor1(Vec3::new(0.85, 0.02, 0.15) * scale)
-        .local_anchor2(Vec3::new(0.7, 0.0, 0.15) * scale)
+        .local_anchor1(Vec3::new(0.75, 0.02, 0.15) * scale)
+        .local_anchor2(Vec3::new(0.75, 0.0, 0.15) * scale)
         //.limits([-PI / 2.0 - PI / 8.0, PI / 2.0 + PI / 8.0])
         //.limits([-PI / 2.0 - PI / 8.0, 0.0])
         .limits([0.0, PI / 2.0 + PI / 8.0])
@@ -418,7 +418,7 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
-                scale: scale * 0.9,
+                scale: scale,
                 ..default()
             },
             ..default()

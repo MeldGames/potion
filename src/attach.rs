@@ -75,10 +75,8 @@ pub enum AttachScale {
 #[derive(Debug, Clone, Component)]
 pub struct PreviousTransform(pub Transform);
 
-pub fn velocity_nonphysics(
-    mut velocities: Query<(&mut Transform, &Velocity, &ExternalForce), Without<RigidBody>>,
-) {
-    for (mut position, velocity, accel) in &mut velocities {
+pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Without<RigidBody>>) {
+    for (mut position, velocity) in &mut velocities {
         position.translation += velocity.linvel * crate::TICK_RATE.as_secs_f32();
     }
 }

@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
 
 use super::prelude::*;
-use crate::attach::{Attach, AttachPlugin};
+use crate::attach::{Attach, AttachPlugin, AttachTranslation};
 use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 #[derive(Default, Debug, Component, Reflect)]
@@ -104,6 +104,10 @@ pub fn setup_player(
                         Name::new("Neck"),
                     ))
                     .insert_bundle(Attach::translation(player_entity))
+                    /* .insert(AttachTranslation::Spring {
+                        strength: 50.0,
+                        damp_ratio: 0.9,
+                    }) */
                     .insert(Velocity::default())
                     .id();
 
@@ -283,7 +287,7 @@ pub fn attach_arm(
     let max_force = 100.0;
     let twist_stiffness = 20.0;
     let twist_damping = twist_stiffness / 10.0;
-    let resting_stiffness = 5.0;
+    let resting_stiffness = 8.0;
     let resting_damping = resting_stiffness / 10.0;
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;

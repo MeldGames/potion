@@ -311,8 +311,8 @@ pub fn player_grabby_hands(
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
                 let local_velocity = hand_velocity.linvel - arm_velocity.linvel;
-                //let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
-                let local_angular_velocity = hand_velocity.angvel;
+                let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
+                //let local_angular_velocity = hand_velocity.angvel;
 
                 let hand_mass = hand_mass_properties.0.mass;
                 let hand_spring = Spring {
