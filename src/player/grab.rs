@@ -212,25 +212,32 @@ pub fn player_grabby_hands(
     )>,
     mut impulses: Query<&mut ExternalImpulse>,
     globals: Query<&GlobalTransform>,
-    joints: Query<(&GlobalTransform, &Velocity, &ImpulseJoint)>,
+    joints: Query<(
+        &GlobalTransform,
+        &Velocity,
+        &ImpulseJoint,
+        &ReadMassProperties,
+    )>,
     mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
     mut lines: ResMut<DebugLines>,
 ) {
     for (hand_entity, mut grabbing, mut collision_groups, arm_id) in &mut hands {
-        let (hand_global, hand_velocity, hand_joint) = if let Ok(joint) = joints.get(hand_entity) {
-            joint
-        } else {
-            warn!("hand does not have a joint/velocity/global");
-            continue;
-        };
+        let (hand_global, hand_velocity, hand_joint, hand_mass_properties) =
+            if let Ok(joint) = joints.get(hand_entity) {
+                joint
+            } else {
+                warn!("hand does not have a joint/velocity/global");
+                continue;
+            };
 
         let arm_entity = hand_joint.parent;
-        let (arm_global, arm_velocity, arm_joint) = if let Ok(joint) = joints.get(arm_entity) {
-            joint
-        } else {
-            warn!("arm does not have a joint/velocity/global");
-            continue;
-        };
+        let (arm_global, arm_velocity, arm_joint, arm_mass_properties) =
+            if let Ok(joint) = joints.get(arm_entity) {
+                joint
+            } else {
+                warn!("arm does not have a joint/velocity/global");
+                continue;
+            };
 
         let player_entity = arm_joint.parent;
         let (player_global, direction, input, camera_entity) =
@@ -294,16 +301,23 @@ pub fn player_grabby_hands(
                 let local_velocity = hand_velocity.linvel - arm_velocity.linvel;
                 let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
 
-                let hand_strength = STRENGTH;
-                let hand_damping = hand_strength / 10.0;
-                let wrist_strength = STRENGTH * 1.2;
-                let wrist_damping = 0.04;
+                let hand_mass = hand_mass_properties.0.mass;
+                let hand_spring = Spring {
+                    strength: STRENGTH,
+                    damping: 0.5,
+                };
 
-                let hand_spring = ((camera_dir - arm_dir).normalize_or_zero() * hand_strength)
-                    - (local_velocity * hand_damping);
-                let wrist_spring = desired_axis.normalize_or_zero() * wrist_strength;
-                hand_impulse.impulse = hand_spring.clamp_length_max(MAX_IMPULSE);
-                hand_impulse.torque_impulse = wrist_spring.clamp_length_max(MAX_TORQUE);
+                let wrist_spring = Spring {
+                    strength: STRENGTH,
+                    damping: 0.5,
+                };
+
+                let hand_force = ((camera_dir - arm_dir).normalize_or_zero()
+                    * hand_spring.strength)
+                    - (local_velocity * hand_spring.damp_coefficient(hand_mass));
+                let wrist_force = desired_axis.normalize_or_zero() * wrist_spring.strength;
+                hand_impulse.impulse = hand_force.clamp_length_max(MAX_IMPULSE);
+                hand_impulse.torque_impulse = wrist_force.clamp_length_max(MAX_TORQUE);
             }
 
             if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
@@ -311,10 +325,19 @@ pub fn player_grabby_hands(
                 let desired_dir = camera_dir;
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let arm_strength = STRENGTH;
-                let back_strength = STRENGTH;
-                let arm_spring = ((camera_dir - arm_dir).normalize_or_zero() * arm_strength);
-                let back_spring = desired_axis.normalize_or_zero() * back_strength;
+                let arm_mass = arm_mass_properties.0.mass;
+                let arm_spring = Spring {
+                    strength: STRENGTH,
+                    damping: 0.5,
+                };
+
+                let back_spring = Spring {
+                    strength: STRENGTH,
+                    damping: 0.5,
+                };
+
+                let arm_spring = ((camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength);
+                let back_spring = desired_axis.normalize_or_zero() * back_spring.strength;
                 arm_impulse.impulse = arm_spring.clamp_length_max(MAX_IMPULSE);
                 arm_impulse.torque_impulse = back_spring.clamp_length_max(MAX_TORQUE);
             }

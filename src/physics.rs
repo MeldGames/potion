@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
+pub mod spring;
+
 bitflags::bitflags! {
     pub struct Group: u32 {
         const PLAYER = 1 << 0;

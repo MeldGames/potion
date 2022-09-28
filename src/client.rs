@@ -1,4 +1,4 @@
-use potion::player::PlayerInputPlugin;
+use potion::player::prelude::PlayerInputPlugin;
 
 use bevy::prelude::*;
 
