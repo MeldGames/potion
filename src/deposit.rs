@@ -185,9 +185,9 @@ pub fn spawn_deposit_box(
         .with_children(|children| {
             children
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, 0.25, 0.0,
+                    0.0, 0.175, 0.0,
                 )))
-                .insert(Collider::cuboid(0.4, 0.4, 0.2))
+                .insert(Collider::cuboid(0.475, 0.05, 0.25))
                 .insert(DepositBox)
                 .insert(Sensor);
         });
