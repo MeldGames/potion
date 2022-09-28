@@ -24,20 +24,22 @@ pub const REST_GROUPING: CollisionGroups =
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
+    let integration = &mut context.integration_parameters;
+    integration.damping_ratio = 0.5;
+    integration.joint_erp = 0.8;
+    integration.joint_damping_ratio = 0.5;
     // Try to avoid launching players in weird situations
-    //context.integration_parameters.max_penetration_correction = 1000.0;
-    //context.integration_parameters.dt = crate::network::TICK_RATE.as_secs_f32();
-    //info!("integration: {:?}", context.integration_parameters);
+    integration.max_penetration_correction = 1000.0;
+    integration.dt = crate::TICK_RATE.as_secs_f32();
 }
 
-pub const VELOCITY_CAP: f32 = 300.0;
-pub const MAX_VELOCITY: Vec3 = Vec3::splat(VELOCITY_CAP);
-pub const MIN_VELOCITY: Vec3 = Vec3::splat(-VELOCITY_CAP);
+pub const VELOCITY_CAP: f32 = 1000.0;
+pub const ANG_VELOCITY_CAP: f32 = 50.0;
 
 pub fn cap_velocity(mut velocities: Query<&mut Velocity, Changed<Velocity>>) {
     for mut velocity in &mut velocities {
-        velocity.linvel = velocity.linvel.clamp(MIN_VELOCITY, MAX_VELOCITY);
-        velocity.angvel = velocity.angvel.clamp(MIN_VELOCITY, MAX_VELOCITY);
+        velocity.linvel = velocity.linvel.clamp_length_max(VELOCITY_CAP);
+        velocity.angvel = velocity.angvel.clamp_length_max(ANG_VELOCITY_CAP);
     }
 }
 
@@ -88,7 +90,7 @@ impl Plugin for PhysicsPlugin {
             ),
         );
 
-        //app.add_network_system(cap_velocity);
+        app.add_network_system(cap_velocity);
         app.add_startup_system(modify_rapier_context);
     }
 }

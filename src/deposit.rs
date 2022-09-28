@@ -1,4 +1,7 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::{
+    f32::consts::{PI, TAU},
+    ops::{Add, AddAssign, Sub, SubAssign},
+};
 
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -120,28 +123,59 @@ pub fn spawn_deposit_box(
     _meshes: &mut Assets<Mesh>,
     position: Transform,
 ) -> Entity {
-    let model = commands
+    let crate_model = commands
         .spawn_bundle(SceneBundle {
-            scene: asset_server.load("models/crate.glb#Scene0"),
+            scene: asset_server.load("models/crate.gltf#Scene0"),
             ..default()
         })
         .insert(Name::new("Deposit Box Model"))
         .id();
 
+    let lid_model = commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("models/crate_lid.gltf#Scene0"),
+            ..default()
+        })
+        .insert(Name::new("Lid"))
+        .id();
+
     let deposit = commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle((
-            ColliderMassProperties::Density(25.0),
+            ColliderMassProperties::Density(50.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
-            Name::new("Deposit Box"),
+            Name::new("Crate"),
             crate::physics::TERRAIN_GROUPING,
         ))
         .insert(crate::DecompLoad(
             "assets/models/crate_decomp.obj".to_owned(),
         ))
         .insert_bundle(VisibilityBundle::default())
-        .add_child(model)
+        .add_child(crate_model)
+        .id();
+
+    let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
+        .local_anchor1(Vec3::new(0.0, 1.7, -0.8))
+        .limits([0.0, PI]);
+    //let mut lid_hinge = lid_hinge.build();
+    //lid_hinge.set_contacts_enabled(false);
+
+    let lid = commands
+        .spawn_bundle(TransformBundle::from_transform(position))
+        .insert_bundle((
+            ColliderMassProperties::Density(10.0),
+            RigidBody::Dynamic,
+            Collider::cuboid(0.7, 0.55, 0.55),
+            Name::new("Lid"),
+            crate::physics::TERRAIN_GROUPING,
+        ))
+        .insert(crate::DecompLoad(
+            "assets/models/crate_lid_decomp.obj".to_owned(),
+        ))
+        .insert_bundle(VisibilityBundle::default())
+        .insert(ImpulseJoint::new(deposit, lid_hinge))
+        .add_child(lid_model)
         .id();
 
     commands

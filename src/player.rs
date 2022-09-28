@@ -9,7 +9,7 @@ use std::f32::consts::PI;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
     CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, RelatedEntities, Spring,
+    ControllerSettings, ControllerState, Spring,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -331,8 +331,8 @@ impl Plugin for PlayerPlugin {
                 .before("related_entities"),
         );
         app.add_network_system(
-            related_entities
-                .label("related_entities")
+            controller_exclude
+                .label("controller_exclude")
                 .after("joint_children"),
         );
         app.add_network_system(
@@ -612,7 +612,7 @@ pub fn setup_player(
                             max_speed: 7.0,
                             max_acceleration_force: 10.0,
                             up_vector: Vec3::Y,
-                            gravity: 9.8,
+                            gravity: -9.8,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
@@ -666,7 +666,6 @@ pub fn setup_player(
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
-                    .insert(RelatedEntities::default())
                     //.insert(Owned)
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
@@ -827,7 +826,6 @@ pub fn attach_arm(
         .spawn_bundle(TransformBundle::from_transform(to_transform))
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
-        .insert(RelatedEntities::default())
         .insert(ConnectedEntities::default())
         .insert(GrabbedEntities::default())
         .insert(Grabbing(false))
@@ -1134,26 +1132,29 @@ pub fn joint_children(
     }
 }
 
-pub fn related_entities(
+pub fn controller_exclude(
     names: Query<&Name>,
-    mut related: Query<(
+    mut controllers: Query<(
         Entity,
-        Option<&GrabbedEntities>,
+        //Option<&GrabbedEntities>,
         Option<&ConnectedEntities>,
-        &mut RelatedEntities,
+        &mut ControllerSettings,
     )>,
 ) {
-    for (entity, grabbed, connected, mut related) in &mut related {
-        let mut new_related = HashSet::new();
+    for (entity, connected, mut settings) in &mut controllers {
+        let mut new_exclude = HashSet::new();
+
+        /*
         if let Some(grabbed) = grabbed {
             new_related.extend(grabbed.iter());
         }
+        */
 
         if let Some(connected) = connected {
-            new_related.extend(connected.iter());
+            new_exclude.extend(connected.iter());
         }
 
-        **related = new_related;
+        settings.exclude_from_ground = new_exclude;
     }
 }
 /// Traverse the transform hierarchy and joint hierarchy to find all related entities.
