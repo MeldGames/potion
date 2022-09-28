@@ -136,7 +136,7 @@ pub fn spawn_deposit_box(
             scene: asset_server.load("models/crate_lid.gltf#Scene0"),
             ..default()
         })
-        .insert(Name::new("Lid"))
+        .insert(Name::new("Lid Model"))
         .id();
 
     let deposit = commands

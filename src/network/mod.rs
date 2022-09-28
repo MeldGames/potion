@@ -12,9 +12,7 @@ use sabi::{
 
 use bevy_rapier3d::prelude::*;
 
-use crate::player::{Neck, PlayerBundle, PlayerCamera, PlayerEvent};
-
-use crate::player::{Player, PlayerInput};
+use crate::player::prelude::{Neck, Player, PlayerBundle, PlayerCamera, PlayerEvent, PlayerInput};
 
 pub mod ui;
 

@@ -1,11 +1,11 @@
 use bevy_fly_camera::FlyCamera;
 use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::*;
-use potion::player::{LockToggle, MouseState};
 
 use bevy::prelude::*;
 
-use potion::player::{mouse_lock, toggle_mouse_lock, window_focused};
+use potion::player::prelude::{mouse_lock, toggle_mouse_lock, LockToggle, MouseState};
+use potion::player::window_focused;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();

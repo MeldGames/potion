@@ -1,4 +1,4 @@
-use potion::player::{PlayerEvent, PlayerInputPlugin};
+use potion::player::prelude::{PlayerEvent, PlayerInputPlugin};
 
 use bevy::{asset::AssetServerSettings, prelude::*};
 

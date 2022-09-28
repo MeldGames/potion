@@ -24,7 +24,6 @@ use obj::Obj;
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
-use player::PlayerInput;
 use sabi::stage::NetworkSimulationAppExt;
 use store::{SecurityCheck, StoreItem, StorePlugin};
 
@@ -89,7 +88,6 @@ pub fn setup_app(app: &mut App) {
     app.add_startup_system(setup_map);
     app.add_system(update_level_collision);
     app.add_system(decomp_load);
-    app.add_network_system(crate::player::teleport_player_back);
 
     app.add_plugin(InspectableRapierPlugin);
     app.add_plugin(crate::player::CustomWanderlustPlugin);
