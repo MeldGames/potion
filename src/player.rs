@@ -626,15 +626,16 @@ pub fn setup_player(
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 1.0,
                             //float_cast_length: 1.,
-                            float_cast_collider: Collider::ball(player_radius - 0.05),
+                            //float_cast_collider: Collider::ball(player_radius - 0.05),
+                            float_cast_collider: Collider::ball(player_radius),
                             float_distance: 1.0,
                             float_spring: Spring {
                                 strength: 40.0,
-                                damping: 1.0,
+                                damping: 0.7,
                             },
                             upright_spring: Spring {
                                 strength: 40.0,
-                                damping: 1.0,
+                                damping: 0.7,
                             },
                             ..default()
                         },

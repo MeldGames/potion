@@ -82,6 +82,7 @@ pub fn velocity_nonphysics(
 }
 
 pub fn update_attach(
+    time: Res<Time>,
     mut commands: Commands,
     parented: Query<Entity, (With<Attach>, With<Parent>)>,
     no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
@@ -91,6 +92,7 @@ pub fn update_attach(
             &mut Transform,
             &mut Velocity,
             Option<&mut ExternalForce>,
+            Option<&mut ExternalImpulse>,
             Option<&ReadMassProperties>,
             &Attach,
             Option<&AttachTranslation>,
@@ -107,6 +109,12 @@ pub fn update_attach(
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
+    let dt = time.delta_seconds();
+
+    if dt == 0.0 {
+        return;
+    }
+
     let named = |entity: Entity| -> String {
         match names.get(entity) {
             Ok(name) => name.as_str().to_owned(),
@@ -136,7 +144,8 @@ pub fn update_attach(
         entity,
         mut transform,
         mut velocity,
-        mut external_force,
+        mut force,
+        mut impulse,
         mass_properties,
         attach,
         translation,
@@ -186,12 +195,13 @@ pub fn update_attach(
                     let spring_force = offset_force + damp_force;
                     //spring_force = spring_force.clamp_length_max(vel.length());
 
-                    match external_force {
-                        Some(mut external_force) => {
-                            external_force.force = spring_force;
+                    match impulse {
+                        Some(mut impulse) => {
+                            //external_force.force = spring_force;
+                            impulse.impulse = spring_force * dt;
                         }
                         None => {
-                            velocity.linvel += spring_force;
+                            velocity.linvel += spring_force * dt;
                         }
                     }
 

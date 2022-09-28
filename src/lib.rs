@@ -335,7 +335,7 @@ fn setup_map(
         })
         .insert_bundle(Attach::translation(mock))
         .insert(AttachTranslation::Spring {
-            strength: 50.0,
+            strength: 20.0,
             damp_ratio: 0.3,
         })
         .insert_bundle((
@@ -343,7 +343,7 @@ fn setup_map(
             //GravityScale(0.0),
             Damping {
                 linear_damping: 0.2,
-                angular_damping: 0.5,
+                angular_damping: 0.2,
             },
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
