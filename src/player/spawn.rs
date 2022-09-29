@@ -172,6 +172,7 @@ pub fn setup_player(
                                 Vec3::new(0.0, player_height, 0.0),
                                 player_radius,
                             ),
+                            //rigidbody: RigidBody::KinematicPositionBased,
                             ..default()
                         },
                         transform: global_transform.compute_transform(),
@@ -286,9 +287,9 @@ pub fn attach_arm(
 ) {
     let max_force = 100.0;
     let twist_stiffness = 20.0;
-    let twist_damping = twist_stiffness / 10.0;
-    let resting_stiffness = 8.0;
-    let resting_damping = resting_stiffness / 10.0;
+    let twist_damping = 9.0;
+    let resting_stiffness = 15.0;
+    let resting_damping = 8.0;
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;

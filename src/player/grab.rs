@@ -301,10 +301,6 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
-            const STRENGTH: f32 = 40.0;
-            const MAX_IMPULSE: f32 = 0.5;
-            const MAX_TORQUE: f32 = 20.0;
-
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
@@ -316,13 +312,13 @@ pub fn player_grabby_hands(
 
                 let hand_mass = hand_mass_properties.0.mass;
                 let hand_spring = Spring {
-                    strength: STRENGTH,
+                    strength: 40.0,
                     damping: 1.0,
                 };
 
                 let wrist_spring = Spring {
-                    strength: STRENGTH,
-                    damping: 0.4,
+                    strength: 25.0,
+                    damping: 2.0,
                 };
 
                 let hand_force = ((camera_dir - arm_dir).normalize_or_zero()
@@ -331,7 +327,8 @@ pub fn player_grabby_hands(
                 let wrist_force = (desired_axis.normalize_or_zero() * wrist_spring.strength)
                     - (local_angular_velocity * wrist_spring.damp_coefficient(hand_mass));
                 //hand_impulse.impulse = hand_force.clamp_length_max(MAX_IMPULSE);
-                hand_impulse.torque_impulse = wrist_force.clamp_length_max(MAX_TORQUE) * dt;
+                let torque = wrist_force.clamp_length_max(30.0) * dt;
+                hand_impulse.torque_impulse = torque;
             }
 
             if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
@@ -340,18 +337,18 @@ pub fn player_grabby_hands(
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
                 let local_velocity = arm_velocity.linvel - player_velocity.linvel;
-                //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
-                let local_angular_velocity = arm_velocity.angvel;
+                let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
+                //let local_angular_velocity = arm_velocity.angvel;
 
                 let arm_mass = arm_mass_properties.0.mass;
                 let arm_spring = Spring {
-                    strength: STRENGTH,
+                    strength: 60.0,
                     damping: 0.7,
                 };
 
                 let back_spring = Spring {
-                    strength: STRENGTH,
-                    damping: 0.4,
+                    strength: 50.0,
+                    damping: 1.0,
                 };
 
                 let arm_spring = ((camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength);
@@ -359,7 +356,8 @@ pub fn player_grabby_hands(
                 let back_spring = (desired_axis.normalize_or_zero() * back_spring.strength)
                     - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
                 //arm_impulse.impulse = arm_spring.clamp_length_max(MAX_IMPULSE);
-                arm_impulse.torque_impulse = back_spring.clamp_length_max(MAX_TORQUE) * dt;
+                let torque = back_spring.clamp_length_max(30.0) * dt;
+                arm_impulse.torque_impulse = torque;
             }
 
             *collision_groups = GRAB_GROUPING;
