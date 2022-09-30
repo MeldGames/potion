@@ -23,7 +23,7 @@ pub fn break_grace_period(
     breakable: Query<(Entity, &BreakableJoint)>,
     mut grace: Query<&mut BreakGracePeriod>,
 ) {
-    for (entity, break_at) in &breakable {
+    for (entity, _break_at) in &breakable {
         match grace.get_mut(entity) {
             Ok(mut grace) => {
                 grace.0 -= time.delta_seconds();

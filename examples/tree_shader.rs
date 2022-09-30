@@ -5,10 +5,9 @@ use bevy::{
     render::{
         mesh::{MeshVertexBufferLayout, VertexAttributeValues},
         render_resource::{
-            AsBindGroup, Face, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
+            AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
         },
     },
-    scene::SceneInstance,
 };
 use bevy_shader_utils::ShaderUtilsPlugin;
 
@@ -96,7 +95,7 @@ impl Material for CustomMaterial {
         _pipeline: &MaterialPipeline<Self>,
         descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayout,
-        key: MaterialPipelineKey<Self>,
+        _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         descriptor.primitive.cull_mode = None;
         if let Some(label) = &mut descriptor.label {

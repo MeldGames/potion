@@ -11,7 +11,7 @@ pub mod player;
 pub mod store;
 pub mod trees;
 
-use std::{f32::consts::PI, fs::File, io::BufReader};
+use std::f32::consts::PI;
 
 use bevy_egui::EguiPlugin;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
@@ -25,14 +25,14 @@ use obj::Obj;
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
-use sabi::stage::NetworkSimulationAppExt;
+
 use store::{SecurityCheck, StoreItem, StorePlugin};
 
 //use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 
 use bevy::prelude::*;
-use bevy_inspector_egui::InspectableRegistry;
+
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
@@ -149,7 +149,7 @@ fn setup_map(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    let cauldron = crate::cauldron::spawn_cauldron(
+    let _cauldron = crate::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
         Transform {
@@ -205,7 +205,7 @@ fn setup_map(
         })
         .id();
 
-    let sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
+    let _sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
 
     let _sky_clouds = commands
         .spawn_bundle(SceneBundle {
@@ -321,7 +321,7 @@ fn setup_map(
         .insert(Name::new("Mock spring location"))
         .id();
 
-    let stirrer = commands
+    let _stirrer = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
@@ -395,7 +395,7 @@ fn setup_map(
         ))
         .id();
 
-    let shop_follower = commands
+    let _shop_follower = commands
         .spawn_bundle(TransformBundle::default())
         .insert_bundle(Attach::all(walls))
         .insert(Name::new("Shop Followers"))
@@ -494,7 +494,7 @@ fn decomp_load(
     mut commands: Commands,
     mut replace: Query<(Option<&mut Collider>, &DecompLoad, Entity)>,
 ) {
-    for (mut collider, decomp, entity) in &mut replace {
+    for (collider, decomp, entity) in &mut replace {
         info!("running decomp load");
         let decomp = Obj::load(&decomp.0).unwrap();
         let mut colliders = Vec::new();
@@ -544,7 +544,7 @@ fn update_level_collision(
         match ev {
             AssetEvent::Created { handle } => {
                 if let Some(loaded_mesh) = assets.get_mut(handle) {
-                    for (mut col, inner_handle, e) in replace.iter_mut() {
+                    for (col, inner_handle, e) in replace.iter_mut() {
                         if *inner_handle == *handle {
                             let new_collider =
                                 Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS)

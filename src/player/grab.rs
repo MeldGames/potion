@@ -1,29 +1,15 @@
 use std::fmt::Debug;
 
 use bevy::ecs::entity::Entities;
-use bevy::input::mouse::MouseWheel;
-use bevy::utils::HashSet;
-use bevy::{input::mouse::MouseMotion, prelude::*};
-use bevy_prototype_debug_lines::DebugLines;
-use std::f32::consts::PI;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_mod_wanderlust::{
-    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, Spring,
-};
+use bevy::prelude::*;
+use bevy::utils::HashSet;
+use bevy_prototype_debug_lines::DebugLines;
+
+use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_renet::renet::RenetServer;
-use sabi::prelude::*;
 
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
-
-use serde::{Deserialize, Serialize};
-
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-
-use crate::attach::{Attach, AttachPlugin};
 use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 use super::controller::{ConnectedEntities, LookTransform};
@@ -252,7 +238,7 @@ pub fn player_grabby_hands(
             };
 
         let player_entity = arm_joint.parent;
-        let (player_global, direction, input, camera_entity, player_velocity) =
+        let (_player_global, _direction, input, camera_entity, player_velocity) =
             if let Ok(input) = inputs.get(player_entity) {
                 input
             } else {
@@ -321,7 +307,7 @@ pub fn player_grabby_hands(
                     damping: 2.0,
                 };
 
-                let hand_force = ((camera_dir - arm_dir).normalize_or_zero()
+                let _hand_force = ((camera_dir - arm_dir).normalize_or_zero()
                     * hand_spring.strength)
                     - (local_velocity * hand_spring.damp_coefficient(hand_mass));
                 let wrist_force = (desired_axis.normalize_or_zero() * wrist_spring.strength)
@@ -336,7 +322,7 @@ pub fn player_grabby_hands(
                 let desired_dir = camera_dir;
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let local_velocity = arm_velocity.linvel - player_velocity.linvel;
+                let _local_velocity = arm_velocity.linvel - player_velocity.linvel;
                 let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
                 //let local_angular_velocity = arm_velocity.angvel;
 
@@ -351,7 +337,7 @@ pub fn player_grabby_hands(
                     damping: 1.0,
                 };
 
-                let arm_spring = ((camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength);
+                let _arm_spring = (camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength;
                 //- (local_velocity * arm_spring.damp_coefficient(arm_mass));
                 let back_spring = (desired_axis.normalize_or_zero() * back_spring.strength)
                     - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));

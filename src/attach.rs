@@ -5,7 +5,7 @@ use crate::physics::Spring;
 
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_prototype_debug_lines::DebugLines;
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
+use sabi::stage::NetworkSimulationAppExt;
 
 #[derive(Debug, Clone, Component)]
 pub struct Attach(Entity);
@@ -141,11 +141,11 @@ pub fn update_attach(
     }
 
     for (
-        entity,
+        _entity,
         mut transform,
         mut velocity,
-        mut force,
-        mut impulse,
+        _force,
+        impulse,
         mass_properties,
         attach,
         translation,
@@ -181,7 +181,7 @@ pub fn update_attach(
 
                     let critical_damping = 2.0 * (mass * strength).sqrt();
                     let damp_coefficient = damp_ratio * critical_damping;
-                    let attach_spring = Spring {
+                    let _attach_spring = Spring {
                         strength: strength,
                         damping: damp_ratio,
                     };

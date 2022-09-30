@@ -1,30 +1,20 @@
 use std::fmt::Debug;
 
-use bevy::input::mouse::MouseWheel;
+use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy::{input::mouse::MouseMotion, prelude::*};
-use bevy_prototype_debug_lines::DebugLines;
+
 use std::f32::consts::PI;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_mod_wanderlust::{
-    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, Spring,
+    CharacterControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 use sabi::prelude::*;
 
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
-
-use serde::{Deserialize, Serialize};
-
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-
 use super::prelude::*;
-use crate::attach::{Attach, AttachPlugin, AttachTranslation};
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
+use crate::attach::Attach;
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -53,9 +43,9 @@ pub enum PlayerEvent {
 
 pub fn setup_player(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
+    _meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: ResMut<AssetServer>,
+    _asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
     mut lobby: ResMut<Lobby>,
@@ -117,7 +107,7 @@ pub fn setup_player(
                 material.base_color = Color::hex("800000").unwrap().into();
                 material.perceptual_roughness = 0.97;
                 material.reflectance = 0.0;
-                let red = materials.add(material);
+                let _red = materials.add(material);
 
                 commands
                     .entity(player_entity)
@@ -295,7 +285,7 @@ pub fn attach_arm(
     let arm_height = Vec3::new(0.0, 1.25 - arm_radius, 0.0);
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
-    let mut arm_joint = SphericalJointBuilder::new()
+    let arm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
         .local_anchor2(arm_height)
         .motor_model(JointAxis::AngX, motor_model)

@@ -41,7 +41,7 @@ impl CaughtItem {
 
 pub fn push_item_back(
     mut commands: Commands,
-    time: Res<Time>,
+    _time: Res<Time>,
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     security_checks: Query<(Entity, &GlobalTransform, &SecurityCheck, Option<&Children>)>,

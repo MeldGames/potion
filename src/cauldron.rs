@@ -1,10 +1,9 @@
-use ::egui::Ui;
 use bevy::{ecs::query::WorldQuery, prelude::*, utils::HashSet};
-use bevy_inspector_egui::{Inspectable, InspectableRegistry, RegisterInspectable};
+use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::{attach::Attach, ColliderLoad};
+use crate::attach::Attach;
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -72,9 +71,9 @@ pub fn insert_ingredient(
     ingredients: Query<(Entity, &Ingredient)>,
 ) {
     for collision_event in collision_events.iter() {
-        let ((soup_entity, mut soup), (ingredient_entity, ingredient), colliding) =
+        let ((soup_entity, mut soup), (ingredient_entity, _ingredient), colliding) =
             match collision_event {
-                &CollisionEvent::Started(collider1, collider2, flags) => {
+                &CollisionEvent::Started(collider1, collider2, _flags) => {
                     let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
                         (soup, collider2)
                     } else if let Ok(soup) = soups.get_mut(collider2) {
@@ -89,7 +88,7 @@ pub fn insert_ingredient(
                         continue;
                     }
                 }
-                &CollisionEvent::Stopped(collider1, collider2, flags) => {
+                &CollisionEvent::Stopped(collider1, collider2, _flags) => {
                     let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
                         (soup, collider2)
                     } else if let Ok(soup) = soups.get_mut(collider2) {

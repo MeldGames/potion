@@ -1,29 +1,14 @@
 use std::fmt::Debug;
 
-use bevy::input::mouse::MouseWheel;
+use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
 use std::f32::consts::PI;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_mod_wanderlust::{
-    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, Spring,
-};
+use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_renet::renet::RenetServer;
-use sabi::prelude::*;
 
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
-
-use serde::{Deserialize, Serialize};
-
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-
-use crate::attach::{Attach, AttachPlugin};
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
+use crate::attach::Attach;
 
 use super::grab::GrabJoint;
 use super::input::PlayerInput;
@@ -46,7 +31,7 @@ pub fn player_movement(
         ),
         //With<Owned>,
     >,
-    mut lines: ResMut<DebugLines>,
+    _lines: ResMut<DebugLines>,
 ) {
     for (global, mut controller, _look_transform, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
@@ -143,7 +128,7 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSet
 }
 
 pub fn controller_exclude(
-    names: Query<&Name>,
+    _names: Query<&Name>,
     mut controllers: Query<(
         Entity,
         //Option<&GrabbedEntities>,
@@ -151,7 +136,7 @@ pub fn controller_exclude(
         &mut ControllerSettings,
     )>,
 ) {
-    for (entity, connected, mut settings) in &mut controllers {
+    for (_entity, connected, mut settings) in &mut controllers {
         let mut new_exclude = HashSet::new();
 
         /*
@@ -187,10 +172,10 @@ pub fn pull_up(
         &LookTransform,
         &PlayerInput,
     )>,
-    mut lines: ResMut<DebugLines>,
+    _lines: ResMut<DebugLines>,
 ) {
-    for (hand, hand_position, mut hand_impulse, children) in &mut hands {
-        let should_pull_up = children
+    for (hand, _hand_position, _hand_impulse, children) in &mut hands {
+        let _should_pull_up = children
             .map(|children| children.iter().any(|child| grab_joints.contains(*child)))
             .unwrap_or_default();
         // Get the direction from the body to the hand
@@ -198,13 +183,8 @@ pub fn pull_up(
         let mut child_entity = hand;
         while let Ok(joint) = impulse_joints.get(child_entity) {
             child_entity = joint.parent;
-            if let Ok((
-                mut controller_input,
-                mut settings,
-                body_transform,
-                direction,
-                player_input,
-            )) = controllers.get_mut(child_entity)
+            if let Ok((_controller_input, _settings, _body_transform, _direction, _player_input)) =
+                controllers.get_mut(child_entity)
             {
                 //controller_input.no_downward_float = should_pull_up;
                 /*

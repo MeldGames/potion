@@ -1,30 +1,12 @@
-use std::fmt::Debug;
-
-use bevy::input::mouse::MouseWheel;
 use bevy::render::mesh::skinning::SkinnedMesh;
-use bevy::utils::HashSet;
-use bevy::{input::mouse::MouseMotion, prelude::*};
-use bevy_prototype_debug_lines::DebugLines;
-use std::f32::consts::PI;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_mod_wanderlust::{
-    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, Spring,
-};
-use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_renet::renet::RenetServer;
-use sabi::prelude::*;
+use bevy::prelude::*;
+
+use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
-use serde::{Deserialize, Serialize};
-
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-
-use crate::attach::{Attach, AttachPlugin};
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
+use crate::attach::AttachPlugin;
 
 pub mod controller;
 pub mod grab;
@@ -140,12 +122,12 @@ impl Plugin for PlayerPlugin {
 }
 
 fn joint_animation(
-    time: Res<Time>,
+    _time: Res<Time>,
     parent_query: Query<&Parent, With<SkinnedMesh>>,
-    children_query: Query<&Children>,
-    mut transform_query: Query<&mut Transform>,
+    _children_query: Query<&Children>,
+    _transform_query: Query<&mut Transform>,
 ) {
-    for asdf in &parent_query {
+    for _asdf in &parent_query {
         dbg!();
     }
 }

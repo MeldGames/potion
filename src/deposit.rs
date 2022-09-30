@@ -1,5 +1,5 @@
 use std::{
-    f32::consts::{PI, TAU},
+    f32::consts::PI,
     ops::{Add, AddAssign, Sub, SubAssign},
 };
 
@@ -161,7 +161,7 @@ pub fn spawn_deposit_box(
     let mut lid_hinge = lid_hinge.build();
     lid_hinge.set_contacts_enabled(false);
 
-    let lid = commands
+    let _lid = commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle((
             ColliderMassProperties::Density(10.0),

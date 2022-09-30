@@ -1,30 +1,18 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::utils::HashSet;
+
 use bevy::{input::mouse::MouseMotion, prelude::*};
-use bevy_prototype_debug_lines::DebugLines;
+
 use std::f32::consts::PI;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_mod_wanderlust::{
-    CharacterControllerBundle, CharacterControllerPreset, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings, ControllerState, Spring,
-};
-use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_renet::renet::RenetServer;
-use sabi::prelude::*;
-
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
+use sabi::stage::NetworkSimulationAppExt;
 
 use serde::{Deserialize, Serialize};
 
 use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
 
 use super::prelude::*;
-use crate::attach::{Attach, AttachPlugin};
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 use super::window_focused;
 
