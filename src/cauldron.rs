@@ -74,11 +74,11 @@ pub fn insert_ingredient(
     for collision_event in collision_events.iter() {
         let ((soup_entity, mut soup), (ingredient_entity, ingredient), colliding) =
             match collision_event {
-                CollisionEvent::Started(collider1, collider2, flags) => {
-                    let (soup, potential) = if let Ok(soup) = soups.get_mut(*collider1) {
-                        (soup, *collider2)
-                    } else if let Ok(soup) = soups.get_mut(*collider2) {
-                        (soup, *collider1)
+                &CollisionEvent::Started(collider1, collider2, flags) => {
+                    let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
+                        (soup, collider2)
+                    } else if let Ok(soup) = soups.get_mut(collider2) {
+                        (soup, collider1)
                     } else {
                         continue;
                     };
@@ -89,11 +89,11 @@ pub fn insert_ingredient(
                         continue;
                     }
                 }
-                CollisionEvent::Stopped(collider1, collider2, flags) => {
-                    let (soup, potential) = if let Ok(soup) = soups.get_mut(*collider1) {
-                        (soup, *collider2)
-                    } else if let Ok(soup) = soups.get_mut(*collider2) {
-                        (soup, *collider1)
+                &CollisionEvent::Stopped(collider1, collider2, flags) => {
+                    let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
+                        (soup, collider2)
+                    } else if let Ok(soup) = soups.get_mut(collider2) {
+                        (soup, collider1)
                     } else {
                         continue;
                     };
