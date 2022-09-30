@@ -1,4 +1,5 @@
 pub mod attach;
+//pub mod brew;
 pub mod cauldron;
 pub mod deposit;
 pub mod diagnostics;
@@ -46,7 +47,6 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
-    app.insert_resource(InspectableRegistry::default());
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
         warn_on_frame_drop: false,

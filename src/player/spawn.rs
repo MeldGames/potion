@@ -181,11 +181,8 @@ pub fn setup_player(
                     })
                     /*
                                        .insert_bundle(SceneBundle {
-                                           scene: asset_server.load("models/character.glb#Scene0"),
-                                           transform: Transform {
-                                               translation: Vec3::new(0., 0., 0.),
-                                               ..default()
-                                           },
+                                           //scene: asset_server.load("models/character.glb#Scene0"),
+                                           //scene: asset_server.load("models/SimpleSkin.gltf#Scene0"),
                                            ..default()
                                        })
                     */

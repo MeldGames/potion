@@ -1,4 +1,6 @@
-use bevy::{ecs::query::WorldQuery, prelude::*};
+use ::egui::Ui;
+use bevy::{ecs::query::WorldQuery, prelude::*, utils::HashSet};
+use bevy_inspector_egui::{Inspectable, InspectableRegistry, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
@@ -28,36 +30,97 @@ impl<'w, 's, F: WorldQuery> NamedEntity for Query<'w, 's, &Name, F> {
 pub struct CauldronPlugin;
 impl Plugin for CauldronPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Soup>();
+        app.register_type::<HashSet<Entity>>();
+        info!("registering soup");
+        app.register_inspectable_raw::<Soup, _>(|soup, ui, context| -> bool {
+            let mut vec = soup.ingredients.iter().cloned().collect::<Vec<_>>();
+            vec.as_mut_slice().ui(ui, Default::default(), context)
+        });
+        app.register_inspectable_raw::<HashSet<Entity>, _>(|soup, ui, context| -> bool {
+            let mut vec = soup.iter().cloned().collect::<Vec<_>>();
+            vec.as_mut_slice().ui(ui, Default::default(), context)
+        });
         app.add_network_system(insert_ingredient);
     }
 }
 
-pub fn insert_ingredient(
-    mut commands: Commands,
-    name: Query<&Name>,
-    rapier_context: Res<RapierContext>,
-    cauldrons: Query<(Entity, Option<&Children>), With<Cauldron>>,
-    ingredients: Query<&Ingredient>,
-) {
-    for (cauldron, children) in &cauldrons {
-        for (collider1, collider2, intersecting) in rapier_context.intersections_with(cauldron) {
-            let potential_ingredient = if collider1 == cauldron {
-                collider2
-            } else {
-                collider1
-            };
+#[derive(Default, Debug, Clone, Component, Reflect)]
+#[reflect(Component)]
+pub struct Soup {
+    pub ingredients: HashSet<Entity>,
+}
 
-            if intersecting {
-                if ingredients.contains(potential_ingredient) {
-                    let already_added = children
-                        .map(|children| children.iter().any(|child| *child == potential_ingredient))
-                        .unwrap_or(false);
-                    if !already_added {
-                        let ingredient = potential_ingredient;
-                        info!("adding {} to the cauldron", name.named(ingredient));
-                        commands.entity(cauldron).add_child(ingredient);
+impl Soup {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, ingredient: Entity) -> bool {
+        self.ingredients.insert(ingredient)
+    }
+
+    pub fn remove(&mut self, ingredient: Entity) -> bool {
+        self.ingredients.remove(&ingredient)
+    }
+}
+
+pub fn insert_ingredient(
+    name: Query<&Name>,
+    mut soups: Query<(Entity, &mut Soup)>,
+    mut collision_events: EventReader<CollisionEvent>,
+    ingredients: Query<(Entity, &Ingredient)>,
+) {
+    for collision_event in collision_events.iter() {
+        let ((soup_entity, mut soup), (ingredient_entity, ingredient), colliding) =
+            match collision_event {
+                CollisionEvent::Started(collider1, collider2, flags) => {
+                    let (soup, potential) = if let Ok(soup) = soups.get_mut(*collider1) {
+                        (soup, *collider2)
+                    } else if let Ok(soup) = soups.get_mut(*collider2) {
+                        (soup, *collider1)
+                    } else {
+                        continue;
+                    };
+
+                    if let Ok(ingredient) = ingredients.get(potential) {
+                        (soup, ingredient, true)
+                    } else {
+                        continue;
                     }
                 }
+                CollisionEvent::Stopped(collider1, collider2, flags) => {
+                    let (soup, potential) = if let Ok(soup) = soups.get_mut(*collider1) {
+                        (soup, *collider2)
+                    } else if let Ok(soup) = soups.get_mut(*collider2) {
+                        (soup, *collider1)
+                    } else {
+                        continue;
+                    };
+
+                    if let Ok(ingredient) = ingredients.get(potential) {
+                        (soup, ingredient, false)
+                    } else {
+                        continue;
+                    }
+                }
+            };
+
+        if colliding {
+            if soup.insert(ingredient_entity) {
+                info!(
+                    "inserted {:?} into soup {:?}",
+                    name.named(ingredient_entity),
+                    name.named(soup_entity),
+                );
+            }
+        } else {
+            if soup.remove(ingredient_entity) {
+                info!(
+                    "removed {:?} from soup {:?}",
+                    name.named(ingredient_entity),
+                    name.named(soup_entity),
+                );
             }
         }
     }
@@ -113,8 +176,10 @@ pub fn spawn_cauldron(
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, 0.25, 0.0,
                 )))
+                .insert(ActiveEvents::COLLISION_EVENTS)
                 .insert(Collider::cylinder(0.4, 0.55))
                 .insert(Cauldron)
+                .insert(Soup::default())
                 .insert(Sensor);
         });
 

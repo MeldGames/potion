@@ -32,6 +32,9 @@
 		},
 		{
 			"path": "../rapier"
+		},
+		{
+			"path": "../bevy-inspector-egui"
 		}
 	],
 	"settings": {

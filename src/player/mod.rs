@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
+use bevy::render::mesh::skinning::SkinnedMesh;
 use bevy::utils::HashSet;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
@@ -134,5 +135,17 @@ impl Plugin for PlayerPlugin {
         app.add_meta_network_system(Events::<spawn::PlayerEvent>::update_system);
 
         app.add_network_system(controller::teleport_player_back);
+        app.add_network_system(joint_animation);
+    }
+}
+
+fn joint_animation(
+    time: Res<Time>,
+    parent_query: Query<&Parent, With<SkinnedMesh>>,
+    children_query: Query<&Children>,
+    mut transform_query: Query<&mut Transform>,
+) {
+    for asdf in &parent_query {
+        dbg!();
     }
 }

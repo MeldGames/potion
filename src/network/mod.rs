@@ -14,7 +14,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::player::prelude::{Neck, Player, PlayerBundle, PlayerCamera, PlayerEvent, PlayerInput};
 
-pub mod ui;
+//pub mod ui;
 
 pub const PORT: u16 = 42069;
 
@@ -36,14 +36,16 @@ impl Plugin for NetworkPlugin {
         });
 
         app.insert_resource(QueuedInputs::<PlayerInput>::new());
-        app.insert_resource(ui::NetworkUiState::default());
-        app.add_meta_network_system(ui::update_network_stats);
-        //app.add_system(ui::display_network_stats);
-        app.add_system(
-            ui::update_connected_clients
-                .run_if_resource_exists::<RenetServer>()
-                .run_if_resource_exists::<RenetServerVisualizer<{ ui::DATA_POINTS }>>(),
-        );
+        /*
+               app.insert_resource(ui::NetworkUiState::default());
+               app.add_meta_network_system(ui::update_network_stats);
+               app.add_system(ui::display_network_stats);
+               app.add_system(
+                   ui::update_connected_clients
+                       .run_if_resource_exists::<RenetServer>()
+                       .run_if_resource_exists::<RenetServerVisualizer<{ ui::DATA_POINTS }>>(),
+               );
+        */
         app.add_meta_network_system(
             client_sync_players
                 .run_if_resource_exists::<RenetClient>()
