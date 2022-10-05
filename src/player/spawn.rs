@@ -512,7 +512,7 @@ pub fn setup_ik(
 
         let pole_target = commands
             .spawn_bundle(PbrBundle {
-                transform: Transform::from_xyz(-1.0, 0.4, -0.2),
+                transform: Transform::from_xyz(-1.0, 0.4, -0.4),
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: 0.05,
                     subdivisions: 1,
@@ -534,6 +534,20 @@ pub fn setup_ik(
             pole_angle: -std::f32::consts::FRAC_PI_2,
         });
 
+        let pole_target = commands
+            .spawn_bundle(PbrBundle {
+                transform: Transform::from_xyz(1.0, 0.4, -0.4),
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 0.05,
+                    subdivisions: 1,
+                })),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::GREEN,
+                    ..default()
+                }),
+                ..default()
+            })
+            .id();
         commands.entity(mesh_left_hand).insert(IkConstraint {
             chain_length: 2,
             iterations: 20,

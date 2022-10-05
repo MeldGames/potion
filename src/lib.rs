@@ -124,7 +124,7 @@ fn setup_map(
     commands
         .spawn()
         .insert_bundle(SceneBundle {
-            scene: asset_server.load("models/ground.glb#Scene0"),
+            scene: asset_server.load("models/ground.gltf#Scene0"),
             ..default()
         })
         .add_children(|children| {
