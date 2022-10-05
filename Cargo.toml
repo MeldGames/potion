@@ -27,6 +27,7 @@ bevy-inspector-egui-rapier = {version = "0.6", features = ["rapier3d"]}
 #bevy_editor_pls = "0.1"
 bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
 bevy_framepace = "0.6"
+bevy_mod_inverse_kinematics = "0.1"
 bevy_prototype_debug_lines = {version = "0.8", features = ["3d"]}
 bevy_rapier3d = {version = "0.16", features = ["serde-serialize"]}
 bincode = "1.3"

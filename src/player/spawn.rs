@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use bevy_mod_inverse_kinematics::IkConstraint;
 
 use std::f32::consts::PI;
 
@@ -15,6 +16,7 @@ use sabi::prelude::*;
 
 use super::prelude::*;
 use crate::attach::Attach;
+use crate::cauldron::NamedEntity;
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -45,7 +47,7 @@ pub fn setup_player(
     mut commands: Commands,
     _meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    _asset_server: ResMut<AssetServer>,
+    asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
     mut lobby: ResMut<Lobby>,
@@ -169,13 +171,10 @@ pub fn setup_player(
                         global_transform: global_transform,
                         ..default()
                     })
-                    /*
-                                       .insert_bundle(SceneBundle {
-                                           //scene: asset_server.load("models/character.glb#Scene0"),
-                                           //scene: asset_server.load("models/SimpleSkin.gltf#Scene0"),
-                                           ..default()
-                                       })
-                    */
+                    .insert_bundle(SceneBundle {
+                        scene: asset_server.load("models/skin.gltf#Scene0"),
+                        ..default()
+                    })
                     .insert(crate::deposit::Value::new(500))
                     //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
@@ -434,4 +433,203 @@ pub fn connected_entities(
 
 pub fn ease_sine(x: f32) -> f32 {
     -((PI * x).cos() - 1.0) / 2.0
+}
+
+pub fn setup_ik(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    added_query: Query<(Entity, &Parent), (Added<AnimationPlayer>)>,
+    children: Query<(Option<&JointChildren>, Option<&Children>)>,
+    names: Query<&Name>,
+    parents: Query<&Parent>,
+) {
+    for (entity, parent) in added_query.iter() {
+        let player = parents.get(parent.get()).unwrap().get();
+
+        info!(
+            "added animation player to {:?}, {:?}",
+            names.named(entity),
+            names.named(player),
+        );
+        let mesh_right_hand = find_entity(
+            &EntityPath {
+                parts: vec![
+                    "Pelvis".into(),
+                    "Spine1".into(),
+                    "Spine2".into(),
+                    "Collar.R".into(),
+                    "UpperArm.R".into(),
+                    "ForeArm.R".into(),
+                    "Hand.R".into(),
+                ],
+            },
+            entity,
+            &children,
+            &names,
+        )
+        .unwrap();
+
+        let physics_right_hand = find_entity(
+            &EntityPath {
+                parts: vec!["Arm 0".into(), "Hand 0".into()],
+            },
+            player,
+            &children,
+            &names,
+        )
+        .unwrap();
+
+        let mesh_left_hand = find_entity(
+            &EntityPath {
+                parts: vec![
+                    "Pelvis".into(),
+                    "Spine1".into(),
+                    "Spine2".into(),
+                    "Collar.L".into(),
+                    "UpperArm.L".into(),
+                    "ForeArm.L".into(),
+                    "Hand.L".into(),
+                ],
+            },
+            entity,
+            &children,
+            &names,
+        )
+        .unwrap();
+
+        let physics_left_hand = find_entity(
+            &EntityPath {
+                parts: vec!["Arm 1".into(), "Hand 1".into()],
+            },
+            player,
+            &children,
+            &names,
+        )
+        .unwrap();
+
+        info!("entities: {:?}, {:?}", mesh_right_hand, physics_right_hand);
+
+        let pole_target = commands
+            .spawn_bundle(PbrBundle {
+                transform: Transform::from_xyz(-1.0, 0.4, -0.2),
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 0.05,
+                    subdivisions: 1,
+                })),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::GREEN,
+                    ..default()
+                }),
+                ..default()
+            })
+            .id();
+
+        // Add an IK constraint to the right hand, using the targets that were created earlier.
+        commands.entity(mesh_right_hand).insert(IkConstraint {
+            chain_length: 2,
+            iterations: 20,
+            target: physics_right_hand,
+            pole_target: Some(pole_target),
+            pole_angle: -std::f32::consts::FRAC_PI_2,
+        });
+
+        commands.entity(mesh_left_hand).insert(IkConstraint {
+            chain_length: 2,
+            iterations: 20,
+            target: physics_left_hand,
+            pole_target: Some(pole_target),
+            pole_angle: -std::f32::consts::FRAC_PI_2,
+        });
+
+        commands.entity(entity).insert(Transform {
+            rotation: Quat::from_axis_angle(Vec3::Y, PI),
+            scale: Vec3::splat(1.5),
+            translation: Vec3::new(0.0, -1.0, 0.0),
+        });
+    }
+}
+
+fn find_entity(
+    path: &EntityPath,
+    root: Entity,
+    children: &Query<(Option<&JointChildren>, Option<&Children>)>,
+    names: &Query<&Name>,
+) -> Result<Entity, ()> {
+    let mut current_entity = root;
+
+    for part in path.parts.iter() {
+        let mut found = false;
+        if let Ok((joint_children, children)) = children.get(current_entity) {
+            if let Some(children) = children {
+                for child in children.iter() {
+                    if let Ok(name) = names.get(*child) {
+                        if name == part {
+                            current_entity = *child;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if let Some(children) = joint_children {
+                for child in children.iter() {
+                    if let Ok(name) = names.get(*child) {
+                        if name == part {
+                            current_entity = *child;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if !found {
+            warn!("Entity not found for path {:?} on part {:?}", path, part);
+            return Err(());
+        }
+    }
+
+    Ok(current_entity)
+}
+
+#[derive(Component)]
+pub struct ManuallyTarget(Vec4);
+
+fn manually_target(
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    mut target_query: Query<(&ManuallyTarget, &mut Transform)>,
+    mut cursor: EventReader<CursorMoved>,
+) {
+    let (camera, transform) = camera_query.single();
+
+    if let Some(event) = cursor.iter().last() {
+        let view = transform.compute_matrix();
+        let (viewport_min, viewport_max) = camera.logical_viewport_rect().unwrap();
+        let screen_size = camera.logical_target_size().unwrap();
+        let viewport_size = viewport_max - viewport_min;
+        let adj_cursor_pos =
+            event.position - Vec2::new(viewport_min.x, screen_size.y - viewport_max.y);
+
+        let projection = camera.projection_matrix();
+        let far_ndc = projection.project_point3(Vec3::NEG_Z).z;
+        let near_ndc = projection.project_point3(Vec3::Z).z;
+        let cursor_ndc = (adj_cursor_pos / viewport_size) * 2.0 - Vec2::ONE;
+        let ndc_to_world: Mat4 = view * projection.inverse();
+        let near = ndc_to_world.project_point3(cursor_ndc.extend(near_ndc));
+        let far = ndc_to_world.project_point3(cursor_ndc.extend(far_ndc));
+        let ray_direction = far - near;
+
+        for (&ManuallyTarget(plane), mut transform) in target_query.iter_mut() {
+            let normal = plane.truncate();
+            let d = plane.w;
+            let denom = normal.dot(ray_direction);
+            if denom.abs() > 0.0001 {
+                let t = (normal * d - near).dot(normal) / denom;
+                transform.translation = near + ray_direction * t;
+            }
+        }
+    }
 }

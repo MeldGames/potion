@@ -35,6 +35,9 @@
 		},
 		{
 			"path": "../bevy-inspector-egui"
+		},
+		{
+			"path": "../bevy_mod_inverse_kinematics"
 		}
 	],
 	"settings": {
