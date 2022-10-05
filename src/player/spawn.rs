@@ -544,7 +544,7 @@ pub fn setup_ik(
 
         commands.entity(entity).insert(Transform {
             rotation: Quat::from_axis_angle(Vec3::Y, PI),
-            scale: Vec3::splat(1.5),
+            scale: Vec3::new(2.0, 1.5, 1.0),
             translation: Vec3::new(0.0, -1.0, 0.0),
         });
     }
