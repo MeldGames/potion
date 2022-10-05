@@ -114,6 +114,7 @@ impl Plugin for PlayerPlugin {
                 .after("update_player_inputs"),
         );
         app.add_meta_network_system(spawn::setup_player);
+        app.add_meta_network_system(spawn::setup_ik);
         app.add_meta_network_system(Events::<spawn::PlayerEvent>::update_system);
 
         app.add_network_system(controller::teleport_player_back);
@@ -127,7 +128,5 @@ fn joint_animation(
     _children_query: Query<&Children>,
     _transform_query: Query<&mut Transform>,
 ) {
-    for _asdf in &parent_query {
-        dbg!();
-    }
+    for _asdf in &parent_query {}
 }

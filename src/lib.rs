@@ -43,6 +43,7 @@ pub fn setup_app(app: &mut App) {
     app.add_plugins_with(DefaultPlugins, |group| {
         group.add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
     });
+    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 14 });
     app.add_plugin(EguiPlugin);
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
@@ -80,8 +81,8 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    app.add_plugin(OutlinePlugin);
-    app.add_system(outline_meshes);
+    //app.add_plugin(OutlinePlugin);
+    //app.add_system(outline_meshes);
 
     app.add_event::<AssetEvent<Mesh>>();
 
@@ -624,3 +625,92 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
         /// Default: 1024
         max_convex_hulls: 1024,
     });
+
+fn setup_ik(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    added_query: Query<(Entity, &Parent), Added<AnimationPlayer>>,
+    children: Query<&Children>,
+    names: Query<&Name>,
+) {
+    // Use the presence of `AnimationPlayer` to determine the root entity of the skeleton.
+    for (entity, _parent) in added_query.iter() {
+        // Try to get the entity for the right hand joint.
+        let right_hand = find_entity(
+            &EntityPath {
+                parts: vec![
+                    "Pelvis".into(),
+                    "Spine1".into(),
+                    "Spine2".into(),
+                    "Collar.R".into(),
+                    "UpperArm.R".into(),
+                    "ForeArm.R".into(),
+                    "Hand.R".into(),
+                ],
+            },
+            entity,
+            &children,
+            &names,
+        )
+        .unwrap();
+
+        let target = commands
+            .spawn_bundle(PbrBundle {
+                transform: Transform::from_xyz(0.3, 0.8, 0.2),
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 0.05,
+                    subdivisions: 1,
+                })),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::RED,
+                    ..default()
+                }),
+                ..default()
+            })
+            //.insert(ManuallyTarget(Vec4::new(0.0, 0.0, 1.0, 0.3)))
+            .id();
+
+        // Add an IK constraint to the right hand, using the targets that were created earlier.
+        /*
+               commands.entity(right_hand).insert(IkConstraint {
+                   chain_length: 2,
+                   iterations: 20,
+                   target,
+                   pole_target: Some(pole_target),
+                   pole_angle: -std::f32::consts::FRAC_PI_2,
+               });
+        */
+    }
+}
+
+fn find_entity(
+    path: &EntityPath,
+    root: Entity,
+    children: &Query<&Children>,
+    names: &Query<&Name>,
+) -> Result<Entity, ()> {
+    let mut current_entity = root;
+
+    for part in path.parts.iter() {
+        let mut found = false;
+        if let Ok(children) = children.get(current_entity) {
+            for child in children.iter() {
+                if let Ok(name) = names.get(*child) {
+                    if name == part {
+                        // Found a children with the right name, continue to the next part
+                        current_entity = *child;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if !found {
+            warn!("Entity not found for path {:?} on part {:?}", path, part);
+            return Err(());
+        }
+    }
+
+    Ok(current_entity)
+}

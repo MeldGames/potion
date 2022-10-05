@@ -30,7 +30,7 @@ fn spawn_local_player(
         brightness: 0.72,
     });
 
-    const HALF_SIZE: f32 = 10.0;
+    const HALF_SIZE: f32 = 100.0;
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
@@ -39,8 +39,8 @@ fn spawn_local_player(
                 right: HALF_SIZE,
                 bottom: -HALF_SIZE,
                 top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
+                near: -10.0,
+                far: 1000.0,
                 ..default()
             },
             shadows_enabled: true,
