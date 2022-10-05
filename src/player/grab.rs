@@ -304,7 +304,7 @@ pub fn player_grabby_hands(
 
                 let wrist_spring = Spring {
                     strength: 25.0,
-                    damping: 2.0,
+                    damping: 3.0,
                 };
 
                 let _hand_force = ((camera_dir - arm_dir).normalize_or_zero()
@@ -334,7 +334,7 @@ pub fn player_grabby_hands(
 
                 let back_spring = Spring {
                     strength: 50.0,
-                    damping: 1.0,
+                    damping: 3.0,
                 };
 
                 let _arm_spring = (camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength;

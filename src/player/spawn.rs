@@ -548,6 +548,7 @@ pub fn setup_ik(
                 ..default()
             })
             .id();
+
         commands.entity(mesh_left_hand).insert(IkConstraint {
             chain_length: 2,
             iterations: 20,
@@ -560,7 +561,8 @@ pub fn setup_ik(
             rotation: Quat::from_axis_angle(Vec3::Y, PI),
             //scale: Vec3::new(2.0, 1.5, 1.0),
             scale: Vec3::splat(1.0),
-            translation: Vec3::new(0.0, -1.0, 0.0),
+            //translation: Vec3::new(0.0, -1.0, 0.0),
+            translation: Vec3::new(0.0, 0.0, 0.0),
         });
     }
 }
