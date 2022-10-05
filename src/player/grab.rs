@@ -290,29 +290,22 @@ pub fn player_grabby_hands(
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
+
+                // Not normalizing this doubles as a strength of the difference
+                // if we normalize we tend to get jitters so uh... don't do that
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let local_velocity = hand_velocity.linvel - arm_velocity.linvel;
-                let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
-                //let local_angular_velocity = hand_velocity.angvel;
+                //let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
+                let local_angular_velocity = hand_velocity.angvel;
 
                 let hand_mass = hand_mass_properties.0.mass;
-                let hand_spring = Spring {
-                    strength: 40.0,
-                    damping: 1.0,
-                };
-
                 let wrist_spring = Spring {
-                    strength: 25.0,
-                    damping: 3.0,
+                    strength: 100.0,
+                    damping: 0.3,
                 };
 
-                let _hand_force = ((camera_dir - arm_dir).normalize_or_zero()
-                    * hand_spring.strength)
-                    - (local_velocity * hand_spring.damp_coefficient(hand_mass));
-                let wrist_force = (desired_axis.normalize_or_zero() * wrist_spring.strength)
+                let wrist_force = (desired_axis * wrist_spring.strength)
                     - (local_angular_velocity * wrist_spring.damp_coefficient(hand_mass));
-                //hand_impulse.impulse = hand_force.clamp_length_max(MAX_IMPULSE);
                 let torque = wrist_force.clamp_length_max(30.0) * dt;
                 hand_impulse.torque_impulse = torque;
             }
@@ -320,28 +313,22 @@ pub fn player_grabby_hands(
             if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
                 let current_dir = arm_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
+                // Not normalizing this doubles as a strength of the difference
+                // if we normalize we tend to get jitters so uh... don't do that
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
-                let _local_velocity = arm_velocity.linvel - player_velocity.linvel;
-                let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
-                //let local_angular_velocity = arm_velocity.angvel;
+                //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
+                let local_angular_velocity = arm_velocity.angvel;
 
                 let arm_mass = arm_mass_properties.0.mass;
-                let arm_spring = Spring {
-                    strength: 60.0,
-                    damping: 0.7,
-                };
-
                 let back_spring = Spring {
-                    strength: 50.0,
-                    damping: 3.0,
+                    strength: 100.0,
+                    damping: 0.3,
                 };
 
-                let _arm_spring = (camera_dir - arm_dir).normalize_or_zero() * arm_spring.strength;
-                //- (local_velocity * arm_spring.damp_coefficient(arm_mass));
-                let back_spring = (desired_axis.normalize_or_zero() * back_spring.strength)
+                let back_spring = (desired_axis * back_spring.strength)
                     - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
-                //arm_impulse.impulse = arm_spring.clamp_length_max(MAX_IMPULSE);
+
                 let torque = back_spring.clamp_length_max(30.0) * dt;
                 arm_impulse.torque_impulse = torque;
             }
