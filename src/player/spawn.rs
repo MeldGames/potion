@@ -472,7 +472,7 @@ pub fn setup_ik(
 
         let physics_right_hand = find_entity(
             &EntityPath {
-                parts: vec!["Arm 1".into(), "Hand 1".into()],
+                parts: vec!["Arm 0".into(), "Hand 0".into()],
             },
             player,
             &children,
@@ -498,22 +498,17 @@ pub fn setup_ik(
         )
         .unwrap();
 
-        info!("entities: {:?}, {:?}", mesh_right_hand, physics_right_hand);
+        let physics_left_hand = find_entity(
+            &EntityPath {
+                parts: vec!["Arm 1".into(), "Hand 1".into()],
+            },
+            player,
+            &children,
+            &names,
+        )
+        .unwrap();
 
-        let target = commands
-            .spawn_bundle(PbrBundle {
-                transform: Transform::from_xyz(-1.0, 0.4, -0.2),
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.05,
-                    subdivisions: 1,
-                })),
-                material: materials.add(StandardMaterial {
-                    base_color: Color::GREEN,
-                    ..default()
-                }),
-                ..default()
-            })
-            .id();
+        info!("entities: {:?}, {:?}", mesh_right_hand, physics_right_hand);
 
         let pole_target = commands
             .spawn_bundle(PbrBundle {
@@ -535,8 +530,22 @@ pub fn setup_ik(
             chain_length: 2,
             iterations: 20,
             target: physics_right_hand,
-            pole_target: None,
+            pole_target: Some(pole_target),
             pole_angle: -std::f32::consts::FRAC_PI_2,
+        });
+
+        commands.entity(mesh_left_hand).insert(IkConstraint {
+            chain_length: 2,
+            iterations: 20,
+            target: physics_left_hand,
+            pole_target: Some(pole_target),
+            pole_angle: -std::f32::consts::FRAC_PI_2,
+        });
+
+        commands.entity(entity).insert(Transform {
+            rotation: Quat::from_axis_angle(Vec3::Y, PI),
+            scale: Vec3::splat(1.5),
+            translation: Vec3::new(0.0, -1.0, 0.0),
         });
     }
 }

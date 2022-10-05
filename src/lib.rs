@@ -16,6 +16,7 @@ use std::f32::consts::PI;
 use bevy_egui::EguiPlugin;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
+use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
@@ -71,6 +72,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
         .add_plugin(BreakJointPlugin)
+        .add_plugin(InverseKinematicsPlugin)
         .add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
