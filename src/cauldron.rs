@@ -30,16 +30,6 @@ pub struct CauldronPlugin;
 impl Plugin for CauldronPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Soup>();
-        app.register_type::<HashSet<Entity>>();
-        info!("registering soup");
-        app.register_inspectable_raw::<Soup, _>(|soup, ui, context| -> bool {
-            let mut vec = soup.ingredients.iter().cloned().collect::<Vec<_>>();
-            vec.as_mut_slice().ui(ui, Default::default(), context)
-        });
-        app.register_inspectable_raw::<HashSet<Entity>, _>(|soup, ui, context| -> bool {
-            let mut vec = soup.iter().cloned().collect::<Vec<_>>();
-            vec.as_mut_slice().ui(ui, Default::default(), context)
-        });
         app.add_network_system(insert_ingredient);
     }
 }

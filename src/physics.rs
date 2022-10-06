@@ -8,23 +8,30 @@ pub mod spring;
 pub use spring::Spring;
 
 bitflags::bitflags! {
-    pub struct Group: u32 {
+    pub struct Groups: u32 {
         const PLAYER = 1 << 0;
         const TERRAIN = 1 << 1;
         const FLUFF = 1 << 3;
 
-        const PLAYER_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits();
-        const TERRAIN_FILTER = Group::PLAYER.bits() | Group::TERRAIN.bits() | Group::FLUFF.bits();
+        const PLAYER_FILTER = Groups::PLAYER.bits() | Groups::TERRAIN.bits();
+        const TERRAIN_FILTER = Groups::PLAYER.bits() | Groups::TERRAIN.bits() | Groups::FLUFF.bits();
     }
 }
 
-pub const PLAYER_GROUPING: CollisionGroups =
-    CollisionGroups::new(Group::PLAYER.bits(), Group::PLAYER_FILTER.bits());
-pub const TERRAIN_GROUPING: CollisionGroups =
-    CollisionGroups::new(Group::TERRAIN.bits(), Group::TERRAIN_FILTER.bits());
+pub const PLAYER_GROUPING: CollisionGroups = CollisionGroups::new(
+    Group::from_bits_truncate(Groups::PLAYER.bits()),
+    Group::from_bits_truncate(Groups::PLAYER_FILTER.bits()),
+);
 
-pub const REST_GROUPING: CollisionGroups =
-    CollisionGroups::new(Group::PLAYER.bits(), Group::PLAYER.bits());
+pub const TERRAIN_GROUPING: CollisionGroups = CollisionGroups::new(
+    Group::from_bits_truncate(Groups::TERRAIN.bits()),
+    Group::from_bits_truncate(Groups::TERRAIN_FILTER.bits()),
+);
+
+pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(
+    Group::from_bits_truncate(Groups::PLAYER.bits()),
+    Group::from_bits_truncate(Groups::PLAYER.bits()),
+);
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {

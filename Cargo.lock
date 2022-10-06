@@ -271,6 +271,7 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui"
 version = "0.13.0"
+source = "git+https://github.com/jakobhellermann/bevy-inspector-egui#eab09a64263be6f05884623b14685f301ee50c83"
 dependencies = [
  "bevy",
  "bevy-inspector-egui-derive 0.13.0",
@@ -294,6 +295,7 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui-derive"
 version = "0.13.0"
+source = "git+https://github.com/jakobhellermann/bevy-inspector-egui#eab09a64263be6f05884623b14685f301ee50c83"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -303,12 +305,11 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui-rapier"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53f1c2a525d27d3281890e9a4d39200a3f6b055c1f66b2be2305bcccd887239f"
+source = "git+https://github.com/jakobhellermann/bevy-inspector-egui#eab09a64263be6f05884623b14685f301ee50c83"
 dependencies = [
  "bevy",
  "bevy-inspector-egui 0.13.0",
- "bevy_rapier3d",
+ "bevy_rapier3d 0.16.2",
 ]
 
 [[package]]
@@ -768,9 +769,10 @@ dependencies = [
 [[package]]
 name = "bevy_mod_wanderlust"
 version = "0.2.3"
+source = "git+https://github.com/PROMETHIA-27/bevy_mod_wanderlust#5b6e109c3a3b1aa0487474dd6ae3c618a0f463b6"
 dependencies = [
  "bevy",
- "bevy_rapier3d",
+ "bevy_rapier3d 0.17.0",
 ]
 
 [[package]]
@@ -812,13 +814,28 @@ checksum = "9960c19e582b43cebe1894b6679520a4f50802d1cc5b6fa432f8d685ed232f09"
 [[package]]
 name = "bevy_rapier3d"
 version = "0.16.2"
-source = "git+https://github.com/dimforge/bevy_rapier?rev=4013d7d#4013d7da372164db256ef61522e8842b4e0524d6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9fd7a0ffc55bf7c127f9e1877481c57d42ff0f04530550cdf209dd136485ecb"
 dependencies = [
  "bevy",
  "bitflags",
  "log",
  "nalgebra",
- "rapier3d",
+ "rapier3d 0.14.0",
+ "serde",
+]
+
+[[package]]
+name = "bevy_rapier3d"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e34cffd065dbb111fad1cdeac471690d1f4e17418973fd6be5a0c743497f5f72"
+dependencies = [
+ "bevy",
+ "bitflags",
+ "log",
+ "nalgebra",
+ "rapier3d 0.15.0",
  "serde",
 ]
 
@@ -943,7 +960,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_shader_utils"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bevy",
 ]
@@ -3293,7 +3310,30 @@ dependencies = [
 [[package]]
 name = "parry3d"
 version = "0.9.0"
-source = "git+https://github.com/aceeri/parry#b4cc38fb8303073635d4cc08bd36db0b746aa603"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89cd07f0e1e9e207662f430a4e758c357fdf89450a548ef1ce59113822fd5fa7"
+dependencies = [
+ "approx",
+ "arrayvec",
+ "bitflags",
+ "downcast-rs",
+ "either",
+ "nalgebra",
+ "num-derive",
+ "num-traits",
+ "rustc-hash",
+ "serde",
+ "simba",
+ "slab",
+ "smallvec",
+ "spade",
+]
+
+[[package]]
+name = "parry3d"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2420ecc938f3acf004ca7f5059aca5145324a88525879745e18ba6ea785d793"
 dependencies = [
  "approx",
  "arrayvec",
@@ -3411,7 +3451,7 @@ dependencies = [
  "bevy_mod_outline",
  "bevy_mod_wanderlust",
  "bevy_prototype_debug_lines",
- "bevy_rapier3d",
+ "bevy_rapier3d 0.17.0",
  "bevy_renet",
  "bevy_shader_utils",
  "bincode",
@@ -3547,7 +3587,28 @@ dependencies = [
  "nalgebra",
  "num-derive",
  "num-traits",
- "parry3d",
+ "parry3d 0.9.0",
+ "rustc-hash",
+ "serde",
+ "simba",
+]
+
+[[package]]
+name = "rapier3d"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3393d49fd2b9a66cba62e45a778a59f73cbed56afff461a5dda32d3b630fd029"
+dependencies = [
+ "approx",
+ "arrayvec",
+ "bit-vec",
+ "bitflags",
+ "crossbeam",
+ "downcast-rs",
+ "nalgebra",
+ "num-derive",
+ "num-traits",
+ "parry3d 0.10.0",
  "rustc-hash",
  "serde",
  "simba",
@@ -3736,7 +3797,7 @@ version = "0.3.0"
 source = "git+https://github.com/aceeri/sabi?rev=6871dea#6871dea2e6d62451c33ad2899f8ca59f7acbc77e"
 dependencies = [
  "bevy",
- "bevy_rapier3d",
+ "bevy_rapier3d 0.16.2",
  "bevy_renet",
  "bincode",
  "derive_more",
@@ -3890,9 +3951,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
+checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 dependencies = [
  "serde",
 ]

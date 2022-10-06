@@ -252,7 +252,7 @@ pub fn avoid_intersecting(
     global: Query<&GlobalTransform>,
     mut avoid: Query<(&mut Transform, &Parent, &AvoidIntersecting)>,
 ) {
-    let filter = QueryFilter::default().exclude_dynamic().exclude_sensors();
+    let filter = QueryFilter::exclude_dynamic().exclude_sensors();
 
     for (mut transform, parent, avoid) in &mut avoid {
         let global_transform = if let Ok(global) = global.get(parent.get()) {
