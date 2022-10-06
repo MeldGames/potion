@@ -11,6 +11,10 @@ use sabi::stage::NetworkSimulationAppExt;
 pub struct Attach(Entity);
 
 impl Attach {
+    pub fn new(entity: Entity) -> Attach {
+        Attach(entity)
+    }
+
     pub fn scale(entity: Entity) -> (Attach, AttachScale) {
         (Attach(entity), AttachScale::Instant)
     }
@@ -37,31 +41,34 @@ impl Attach {
     }
 }
 
-#[derive(Default, Debug, Clone, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub enum AttachTranslation {
     #[default]
     Instant,
+    Relative(Entity),
     Spring {
-        #[inspectable(min = 0.0, max = 10000.0)]
+        //#[inspectable(min = 0.0, max = 10000.0)]
         strength: f32,
-        #[inspectable(min = 0.0, max = 1.0)]
+        //#[inspectable(min = 0.0, max = 1.0)]
         damp_ratio: f32,
     },
 }
 
-#[derive(Default, Debug, Clone, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub enum AttachRotation {
     #[default]
     Instant,
+    Inverse,
+    Relative(Entity),
     Spring {
         strength: f32,
         damp_ratio: f32,
     },
 }
 
-#[derive(Default, Debug, Clone, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub enum AttachScale {
     #[default]
@@ -84,7 +91,7 @@ pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Wi
 pub fn update_attach(
     time: Res<Time>,
     mut commands: Commands,
-    parented: Query<Entity, (With<Attach>, With<Parent>)>,
+    //parented: Query<Entity, (With<Attach>, With<Parent>)>,
     no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
     mut attachers: Query<
         (
@@ -105,7 +112,7 @@ pub fn update_attach(
             With<AttachScale>,
         )>,
     >,
-    global: Query<&GlobalTransform>,
+    globals: Query<&GlobalTransform>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -122,13 +129,14 @@ pub fn update_attach(
         }
     };
 
-    for invalid_attacher in &parented {
-        info!(
-            "attacher is invalid, cannot use the transform hierarchy: {:?}",
-            named(invalid_attacher)
-        );
-    }
-
+    /*
+       for invalid_attacher in &parented {
+           info!(
+               "attacher is invalid, cannot use the transform hierarchy: {:?}",
+               named(invalid_attacher)
+           );
+       }
+    */
     for invalid_attacher in &no_velocity {
         info!(
             "attacher needs Velocity, adding default: {:?}",
@@ -154,12 +162,18 @@ pub fn update_attach(
     ) in &mut attachers
     {
         //info!("attaching {:?}", named(entity));
-        if let Ok(global) = global.get(attach.get()) {
+        if let Ok(global) = globals.get(attach.get()) {
             //info!("to {:?}", named(attach.get()));
             let global_transform = global.compute_transform();
             match translation {
                 Some(AttachTranslation::Instant) => {
                     transform.translation = global_transform.translation;
+                }
+                Some(AttachTranslation::Relative(relative_entity)) => {
+                    if let Ok(relative_global) = globals.get(*relative_entity) {
+                        transform.translation =
+                            global_transform.translation - relative_global.translation();
+                    }
                 }
                 Some(&AttachTranslation::Spring {
                     strength,
@@ -229,9 +243,22 @@ pub fn update_attach(
                 _ => {}
             }
 
-            if rotation.is_some() {
-                transform.rotation = global_transform.rotation;
-                velocity.angvel = Vec3::ZERO;
+            match rotation {
+                Some(AttachRotation::Instant) => {
+                    transform.rotation = global_transform.rotation;
+                    velocity.angvel = Vec3::ZERO;
+                }
+                Some(AttachRotation::Inverse) => {
+                    transform.rotation = global_transform.rotation.inverse();
+                }
+                Some(AttachRotation::Relative(relative_entity)) => {
+                    if let Ok(relative_global) = globals.get(*relative_entity) {
+                        transform.rotation = (global_transform.rotation
+                            * relative_global.compute_transform().rotation.inverse())
+                        .normalize();
+                    }
+                }
+                _ => {}
             }
 
             if scale.is_some() {
@@ -249,11 +276,14 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachRotation>()
             .register_type::<AttachScale>();
 
-        app.register_inspectable::<AttachTranslation>()
-            .register_inspectable::<AttachRotation>()
-            .register_inspectable::<AttachScale>();
+        /*
+               app.register_inspectable::<AttachTranslation>()
+                   .register_inspectable::<AttachRotation>()
+                   .register_inspectable::<AttachScale>();
+        */
 
         app.add_network_system(velocity_nonphysics.label("velocity_nonphysics"));
-        app.add_network_system(update_attach.label("update_attach"));
+        //app.add_network_system(update_attach.label("update_attach"));
+        app.add_system(update_attach.label("update_attach"));
     }
 }
