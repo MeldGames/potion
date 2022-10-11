@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::physics::Spring;
+use crate::{cauldron::NamedEntity, physics::Spring};
 
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_prototype_debug_lines::DebugLines;
@@ -122,13 +122,6 @@ pub fn update_attach(
         return;
     }
 
-    let named = |entity: Entity| -> String {
-        match names.get(entity) {
-            Ok(name) => name.as_str().to_owned(),
-            _ => format!("{:?}", entity),
-        }
-    };
-
     /*
        for invalid_attacher in &parented {
            info!(
@@ -140,7 +133,7 @@ pub fn update_attach(
     for invalid_attacher in &no_velocity {
         info!(
             "attacher needs Velocity, adding default: {:?}",
-            named(invalid_attacher)
+            names.named(invalid_attacher)
         );
 
         commands
@@ -161,9 +154,7 @@ pub fn update_attach(
         scale,
     ) in &mut attachers
     {
-        //info!("attaching {:?}", named(entity));
         if let Ok(global) = globals.get(attach.get()) {
-            //info!("to {:?}", named(attach.get()));
             let global_transform = global.compute_transform();
             match translation {
                 Some(AttachTranslation::Instant) => {

@@ -3,7 +3,10 @@ use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::attach::Attach;
+use crate::{
+    attach::Attach,
+    slot::{Slot, SlotDeposit},
+};
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -29,89 +32,7 @@ impl<'w, 's, F: WorldQuery> NamedEntity for Query<'w, 's, &Name, F> {
 pub struct CauldronPlugin;
 impl Plugin for CauldronPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Soup>();
-        app.add_network_system(insert_ingredient);
-    }
-}
-
-#[derive(Default, Debug, Clone, Component, Reflect)]
-#[reflect(Component)]
-pub struct Soup {
-    pub ingredients: HashSet<Entity>,
-}
-
-impl Soup {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn insert(&mut self, ingredient: Entity) -> bool {
-        self.ingredients.insert(ingredient)
-    }
-
-    pub fn remove(&mut self, ingredient: Entity) -> bool {
-        self.ingredients.remove(&ingredient)
-    }
-}
-
-pub fn insert_ingredient(
-    name: Query<&Name>,
-    mut soups: Query<(Entity, &mut Soup)>,
-    mut collision_events: EventReader<CollisionEvent>,
-    ingredients: Query<(Entity, &Ingredient)>,
-) {
-    for collision_event in collision_events.iter() {
-        let ((soup_entity, mut soup), (ingredient_entity, _ingredient), colliding) =
-            match collision_event {
-                &CollisionEvent::Started(collider1, collider2, _flags) => {
-                    let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
-                        (soup, collider2)
-                    } else if let Ok(soup) = soups.get_mut(collider2) {
-                        (soup, collider1)
-                    } else {
-                        continue;
-                    };
-
-                    if let Ok(ingredient) = ingredients.get(potential) {
-                        (soup, ingredient, true)
-                    } else {
-                        continue;
-                    }
-                }
-                &CollisionEvent::Stopped(collider1, collider2, _flags) => {
-                    let (soup, potential) = if let Ok(soup) = soups.get_mut(collider1) {
-                        (soup, collider2)
-                    } else if let Ok(soup) = soups.get_mut(collider2) {
-                        (soup, collider1)
-                    } else {
-                        continue;
-                    };
-
-                    if let Ok(ingredient) = ingredients.get(potential) {
-                        (soup, ingredient, false)
-                    } else {
-                        continue;
-                    }
-                }
-            };
-
-        if colliding {
-            if soup.insert(ingredient_entity) {
-                info!(
-                    "inserted {:?} into soup {:?}",
-                    name.named(ingredient_entity),
-                    name.named(soup_entity),
-                );
-            }
-        } else {
-            if soup.remove(ingredient_entity) {
-                info!(
-                    "removed {:?} from soup {:?}",
-                    name.named(ingredient_entity),
-                    name.named(soup_entity),
-                );
-            }
-        }
+        //app.add_network_system(slot_ingredient);
     }
 }
 
@@ -130,14 +51,6 @@ pub fn spawn_cauldron(
         })
         .insert_bundle((
             ColliderMassProperties::Density(100.0),
-            /*
-                       ColliderMassProperties::MassProperties(MassProperties {
-                           local_center_of_mass: Vec3::new(0.0, -0.2, 0.0),
-                           mass: 15.0,
-                           principal_inertia: Vec3::ONE,
-                           principal_inertia_local_frame: Quat::IDENTITY,
-                       }),
-            */
             ReadMassProperties::default(),
             RigidBody::Dynamic,
             Velocity::default(),
@@ -152,6 +65,11 @@ pub fn spawn_cauldron(
         ))
         .insert(level_collision_mesh)
         .id();
+
+    let mut slots = Vec::new();
+    slots.push(commands.spawn().insert(Slot::default()).id());
+    slots.push(commands.spawn().insert(Slot::default()).id());
+    slots.push(commands.spawn().insert(Slot::default()).id());
 
     commands
         .spawn_bundle(TransformBundle::from_transform(position))
@@ -168,7 +86,7 @@ pub fn spawn_cauldron(
                 .insert(ActiveEvents::COLLISION_EVENTS)
                 .insert(Collider::cylinder(0.4, 0.55))
                 .insert(Cauldron)
-                .insert(Soup::default())
+                .insert(SlotDeposit::new(slots))
                 .insert(Sensor);
         });
 

@@ -8,6 +8,7 @@ pub mod joint_break;
 pub mod network;
 pub mod physics;
 pub mod player;
+pub mod slot;
 pub mod store;
 pub mod trees;
 
@@ -23,6 +24,7 @@ use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
+use slot::{Slot, SlotPlugin, Slottable};
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
@@ -69,6 +71,7 @@ pub fn setup_app(app: &mut App) {
         })
         .add_plugin(PlayerPlugin)
         .add_plugin(CauldronPlugin)
+        .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
         .add_plugin(BreakJointPlugin)
@@ -257,7 +260,7 @@ fn setup_map(
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
         .insert_bundle((
-            Collider::ball(0.3),
+            Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             Name::new("Prallet"),
             Velocity::default(),
@@ -278,7 +281,7 @@ fn setup_map(
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
         .insert_bundle((
-            Collider::ball(0.3),
+            Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             Name::new("Thorns"),
             Velocity::default(),
@@ -286,26 +289,40 @@ fn setup_map(
         ))
         .id();
 
-    let _welt = commands
+    let welt = commands
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/weltberry.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-2.5, 2.3, -0.075),
-                scale: Vec3::splat(1.),
                 ..default()
             },
             ..default()
         })
         .insert(Ingredient)
+        .insert(Slottable)
         .insert(crate::deposit::Value::new(1))
         .insert_bundle((
-            Collider::ball(0.3),
+            Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             Name::new("Weltberry"),
             Velocity::default(),
+            ExternalImpulse::default(),
+            ExternalForce::default(),
+            ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
         .id();
+
+    let welt_slot = commands
+        .spawn()
+        .insert_bundle(TransformBundle::from_transform(Transform {
+            translation: Vec3::new(-2.5, 2.3, -0.075),
+            ..default()
+        }))
+        .insert(Name::new("Welt slot"))
+        .insert(Slot {
+            containing: Some(welt),
+        });
 
     let level_collision_mesh3: Handle<Mesh> =
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
