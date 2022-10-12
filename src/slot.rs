@@ -19,19 +19,9 @@ pub struct Slot {
     pub containing: Option<Entity>,
 }
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
-pub struct SlotSettings {
-    /// Strength of the spring-like force of the slot. Ranged between 0..1
-    #[inspectable(min = 0.0, max = 1.0)]
-    pub strength: f32,
-    /// Damping of the spring-like force of the slot. Ranged between 0..1
-    #[inspectable(min = 0.0, max = 1.0)]
-    pub damping: f32,
-
-    pub rest_distance: f32,
-    pub limp_distance: f32,
-}
+pub struct SlotSettings(pub springy::Spring);
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -152,52 +142,13 @@ pub fn insert_slot(mut slots: Query<&mut Slot>, mut deposits: Query<&mut SlotDep
     }
 }
 
-#[derive(WorldQuery)]
-#[world_query(mutable)]
-pub struct ParticleQuery<'a> {
-    pub mass: Option<&'a ReadMassProperties>,
-    pub rigid_body: Option<&'a RigidBody>,
-    pub global_transform: &'a GlobalTransform,
-    pub velocity: &'a Velocity,
-    pub impulse: Option<&'a mut ExternalImpulse>,
-}
-
-impl<'w, 's> ParticleQueryItem<'w, 's> {
-    pub fn mass(&self) -> f32 {
-        match self.mass {
-            Some(mass_properties) => mass_properties.0.mass,
-            None => {
-                if let Some(RigidBody::Dynamic) = self.rigid_body {
-                    1.0
-                } else {
-                    f32::INFINITY
-                }
-            }
-        }
-    }
-
-    pub fn inverse_mass(&self) -> f32 {
-        let mass = self.mass();
-        if mass.is_infinite() {
-            0.0
-        } else {
-            1.0 / mass
-        }
-    }
-
-    pub fn apply_impulse(&mut self, impulse: Vec3) {
-        if let Some(physics_impulse) = self.impulse.as_mut() {
-            physics_impulse.impulse = impulse;
-        }
-    }
-}
-
 /// Keep the item in the slot with spring forces.
 ///
 /// This adds/removes the spring force to the item.
 pub fn spring_slot(
     time: Res<Time>,
-    mut particle: Query<ParticleQuery>,
+    particles: Query<springy::RapierParticleQuery>,
+    mut impulses: Query<Option<&mut ExternalImpulse>>,
     slots: Query<(Entity, &Slot, &SlotSettings)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
@@ -215,42 +166,31 @@ pub fn spring_slot(
                 continue;
             }
 
-            let [mut particle_a, mut particle_b] =
-                if let Ok(particles) = particle.get_many_mut([slot_entity, particle_entity]) {
+            let [particle_a, particle_b] =
+                if let Ok(particles) = particles.get_many([slot_entity, particle_entity]) {
                     particles
                 } else {
                     warn!("Particle does not contain all necessary components");
                     continue;
                 };
 
-            let strength = slot_settings.strength;
-            let damping = slot_settings.damping;
+            let impulse = slot_settings.0.impulse(timestep, particle_a, particle_b);
 
-            let distance = particle_b.global_transform.translation()
-                - particle_a.global_transform.translation();
-            let velocity = particle_b.velocity.linvel - particle_a.velocity.linvel;
-
-            let unit_vector = distance.normalize_or_zero();
-
-            let distance_error = unit_vector
-                * if slot_settings.limp_distance > distance.length() {
-                    0.0
+            let [slot_impulse, particle_impulse] =
+                if let Ok(impulses) = impulses.get_many_mut([slot_entity, particle_entity]) {
+                    impulses
                 } else {
-                    distance.length() - slot_settings.rest_distance
+                    warn!("Particle does not contain all necessary components");
+                    continue;
                 };
-            let velocity_error = velocity;
 
-            let reduced_mass = 1.0 / (particle_a.inverse_mass() + particle_b.inverse_mass());
-            let strength_max = reduced_mass / timestep;
-            let damping_max = reduced_mass;
+            if let Some(mut slot_impulse) = slot_impulse {
+                slot_impulse.impulse = -impulse;
+            }
 
-            let distance_impulse = strength * distance_error * inverse_timestep * reduced_mass;
-            let velocity_impulse = damping * velocity_error * reduced_mass;
-
-            let impulse = -(distance_impulse + velocity_impulse);
-
-            particle_a.apply_impulse(-impulse);
-            particle_b.apply_impulse(impulse);
+            if let Some(mut particle_impulse) = particle_impulse {
+                particle_impulse.impulse = impulse;
+            }
         }
     }
 }

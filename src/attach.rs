@@ -46,13 +46,7 @@ impl Attach {
 pub enum AttachTranslation {
     #[default]
     Instant,
-    Relative(Entity),
-    Spring {
-        //#[inspectable(min = 0.0, max = 10000.0)]
-        strength: f32,
-        //#[inspectable(min = 0.0, max = 1.0)]
-        damp_ratio: f32,
-    },
+    Spring(springy::Spring),
 }
 
 #[derive(Default, Debug, Clone, Component, Reflect)]
@@ -61,11 +55,7 @@ pub enum AttachRotation {
     #[default]
     Instant,
     Inverse,
-    Relative(Entity),
-    Spring {
-        strength: f32,
-        damp_ratio: f32,
-    },
+    Spring(springy::Spring),
 }
 
 #[derive(Default, Debug, Clone, Component, Reflect)]
@@ -73,10 +63,7 @@ pub enum AttachRotation {
 pub enum AttachScale {
     #[default]
     Instant,
-    Spring {
-        strength: f32,
-        damp_ratio: f32,
-    },
+    Spring(springy::Spring),
 }
 
 #[derive(Debug, Clone, Component)]
@@ -93,14 +80,13 @@ pub fn update_attach(
     mut commands: Commands,
     //parented: Query<Entity, (With<Attach>, With<Parent>)>,
     no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
+    particles: Query<springy::RapierParticleQuery>,
+    mut impulses: Query<Option<&mut ExternalImpulse>>,
     mut attachers: Query<
         (
             Entity,
             &mut Transform,
-            &mut Velocity,
-            Option<&mut ExternalForce>,
-            Option<&mut ExternalImpulse>,
-            Option<&ReadMassProperties>,
+            &Velocity,
             &Attach,
             Option<&AttachTranslation>,
             Option<&AttachRotation>,
@@ -141,95 +127,44 @@ pub fn update_attach(
             .insert(Velocity::default());
     }
 
-    for (
-        _entity,
-        mut transform,
-        mut velocity,
-        _force,
-        impulse,
-        mass_properties,
-        attach,
-        translation,
-        rotation,
-        scale,
-    ) in &mut attachers
+    for (attach_entity, mut transform, velocity, attach, translation, rotation, scale) in
+        &mut attachers
     {
-        if let Ok(global) = globals.get(attach.get()) {
+        let particle_entity = attach.get();
+        if let Ok(global) = globals.get(particle_entity) {
             let global_transform = global.compute_transform();
             match translation {
                 Some(AttachTranslation::Instant) => {
                     transform.translation = global_transform.translation;
                 }
-                Some(AttachTranslation::Relative(relative_entity)) => {
-                    if let Ok(relative_global) = globals.get(*relative_entity) {
-                        transform.translation =
-                            global_transform.translation - relative_global.translation();
-                    }
-                }
-                Some(&AttachTranslation::Spring {
-                    strength,
-                    damp_ratio,
-                }) => {
-                    let strength = strength.max(0.0);
-                    let damp_ratio = damp_ratio.max(0.0);
-                    let (mass, center) = match mass_properties {
-                        Some(mass_properties) => (
-                            mass_properties.0.mass,
-                            mass_properties.0.local_center_of_mass,
-                        ),
-                        None => (1.0, Vec3::ZERO),
-                    };
+                Some(&AttachTranslation::Spring(spring)) => {
+                    let timestep = crate::TICK_RATE.as_secs_f32();
+                    let [particle_a, particle_b] =
+                        if let Ok(particles) = particles.get_many([attach_entity, attach.get()]) {
+                            particles
+                        } else {
+                            warn!("Particle does not contain all necessary components");
+                            continue;
+                        };
 
-                    if mass <= 0.0 || strength <= 0.0 {
+                    let impulse = spring.impulse(timestep, particle_a, particle_b);
+
+                    let [mut attach_impulse, mut particle_impulse] = if let Ok(impulses) =
+                        impulses.get_many_mut([attach_entity, particle_entity])
+                    {
+                        impulses
+                    } else {
+                        warn!("Particle does not contain all necessary components");
                         continue;
-                    }
-
-                    let critical_damping = 2.0 * (mass * strength).sqrt();
-                    let damp_coefficient = damp_ratio * critical_damping;
-                    let _attach_spring = Spring {
-                        strength: strength,
-                        damping: damp_ratio,
                     };
 
-                    let offset = transform.translation - global_transform.translation;
-                    let offset_force = -strength * offset;
-                    let vel =
-                        velocity.linvel + velocity.angvel.cross(Vec3::ZERO - center) + offset_force;
-
-                    let mut damp_force = -damp_coefficient * vel;
-
-                    // don't let the damping force accelerate it
-                    damp_force = damp_force.clamp_length_max(vel.length());
-
-                    let spring_force = offset_force + damp_force;
-                    //spring_force = spring_force.clamp_length_max(vel.length());
-
-                    match impulse {
-                        Some(mut impulse) => {
-                            //external_force.force = spring_force;
-                            impulse.impulse = spring_force * dt;
-                        }
-                        None => {
-                            velocity.linvel += spring_force * dt;
-                        }
+                    if let Some(mut attach_impulse) = attach_impulse {
+                        attach_impulse.impulse = -impulse;
                     }
 
-                    //info!("length: {:?}", spring_force.length() / strength);
-                    let lightness = (spring_force.length() / strength).clamp(0.0, 1.0);
-                    let color = Color::Hsla {
-                        hue: 0.0,
-                        saturation: 1.0,
-                        lightness: lightness,
-                        alpha: 0.7,
-                    };
-
-                    lines.line_colored(
-                        transform.translation,
-                        transform.translation + spring_force,
-                        crate::TICK_RATE.as_secs_f32(),
-                        //Color::YELLOW,
-                        color,
-                    );
+                    if let Some(mut particle_impulse) = particle_impulse {
+                        particle_impulse.impulse = impulse;
+                    }
                 }
                 _ => {}
             }
@@ -237,17 +172,10 @@ pub fn update_attach(
             match rotation {
                 Some(AttachRotation::Instant) => {
                     transform.rotation = global_transform.rotation;
-                    velocity.angvel = Vec3::ZERO;
+                    //velocity.angvel = Vec3::ZERO;
                 }
                 Some(AttachRotation::Inverse) => {
                     transform.rotation = global_transform.rotation.inverse();
-                }
-                Some(AttachRotation::Relative(relative_entity)) => {
-                    if let Ok(relative_global) = globals.get(*relative_entity) {
-                        transform.rotation = (global_transform.rotation
-                            * relative_global.compute_transform().rotation.inverse())
-                        .normalize();
-                    }
                 }
                 _ => {}
             }

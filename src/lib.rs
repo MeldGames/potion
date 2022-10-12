@@ -321,15 +321,16 @@ fn setup_map(
         }))
         .insert(Velocity::default())
         .insert(Name::new("Welt slot"))
+        .insert(ReadMassProperties::default())
         .insert(Slot {
             containing: Some(welt),
         })
-        .insert(SlotSettings {
-            strength: 0.08,
-            damping: 0.05,
+        .insert(SlotSettings(springy::Spring {
+            strength: 1.0,
+            damping: 1.0,
             rest_distance: 0.0,
             limp_distance: 0.0,
-        });
+        }));
 
     let level_collision_mesh3: Handle<Mesh> =
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
@@ -360,10 +361,12 @@ fn setup_map(
             ..default()
         })
         .insert_bundle(Attach::translation(mock))
-        .insert(AttachTranslation::Spring {
-            strength: 20.0,
-            damp_ratio: 0.3,
-        })
+        .insert(AttachTranslation::Spring(springy::Spring {
+            strength: 0.5,
+            damping: 1.0,
+            limp_distance: 0.0,
+            rest_distance: 0.0,
+        }))
         .insert_bundle((
             //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),

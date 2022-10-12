@@ -38,6 +38,9 @@
 		},
 		{
 			"path": "../bevy_mod_inverse_kinematics"
+		},
+		{
+			"path": "../springy"
 		}
 	],
 	"settings": {

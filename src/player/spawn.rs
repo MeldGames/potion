@@ -119,7 +119,7 @@ pub fn setup_player(
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
-                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 5.0, 0.0));
+                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 10.0, 0.0));
 
                 let player_height = 1.0;
                 let player_radius = 0.5;
@@ -439,7 +439,7 @@ pub fn setup_ik(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    added_query: Query<(Entity, &Parent), (Added<AnimationPlayer>)>,
+    added_query: Query<(Entity, &Parent), Added<AnimationPlayer>>,
     children: Query<(Option<&JointChildren>, Option<&Children>)>,
     names: Query<&Name>,
     parents: Query<&Parent>,
