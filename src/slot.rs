@@ -225,7 +225,6 @@ pub fn spring_slot(
 
             let strength = slot_settings.strength;
             let damping = slot_settings.damping;
-            let rest_distance = slot_settings.rest_distance;
 
             let distance = particle_b.global_transform.translation()
                 - particle_a.global_transform.translation();
@@ -234,7 +233,7 @@ pub fn spring_slot(
             let unit_vector = distance.normalize_or_zero();
 
             let distance_error = unit_vector
-                * if slot_settings.rest_distance > distance.length() {
+                * if slot_settings.limp_distance > distance.length() {
                     0.0
                 } else {
                     distance.length() - slot_settings.rest_distance

@@ -325,8 +325,8 @@ fn setup_map(
             containing: Some(welt),
         })
         .insert(SlotSettings {
-            strength: 1.0,
-            damping: 1.0,
+            strength: 0.08,
+            damping: 0.05,
             rest_distance: 0.0,
             limp_distance: 0.0,
         });
