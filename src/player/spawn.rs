@@ -129,7 +129,7 @@ pub fn setup_player(
                         settings: ControllerSettings {
                             acceleration: 5.0,
                             max_speed: 7.0,
-                            max_acceleration_force: 10.0,
+                            max_acceleration_force: 4.0,
                             up_vector: Vec3::Y,
                             gravity: -9.8,
                             max_ground_angle: 45.0 * (PI / 180.0),

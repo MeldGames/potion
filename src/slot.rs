@@ -198,8 +198,12 @@ pub fn spring_slot(
 pub struct SlotPlugin;
 impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
-        //app.register_type::<Slot>();
-        //app.register_inspectable::<Slot>();
+        /*
+        app.register_type::<Slot>();
+        app.register_inspectable::<Slot>();
+        app.register_type::<SlotSettings>();
+        app.register_inspectable::<SlotSettings>();
+        */
 
         app.add_network_system(pending_slot);
         app.add_network_system(insert_slot);

@@ -156,6 +156,7 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
+        .motor_max_force(1.0)
         .local_anchor1(Vec3::new(0.0, 1.6, -0.73))
         .limits([0.0, PI / 1.04]);
     let mut lid_hinge = lid_hinge.build();
@@ -164,7 +165,7 @@ pub fn spawn_deposit_box(
     let _lid = commands
         .spawn_bundle(TransformBundle::from_transform(position))
         .insert_bundle((
-            ColliderMassProperties::Density(10.0),
+            ColliderMassProperties::Density(15.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Lid"),
