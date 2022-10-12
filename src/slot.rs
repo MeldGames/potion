@@ -11,10 +11,26 @@ use crate::{
     cauldron::{Ingredient, NamedEntity},
 };
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect, Inspectable)]
 #[reflect(Component)]
 pub struct Slot {
+    /// Entity this slot contains.
+    #[inspectable(read_only)]
     pub containing: Option<Entity>,
+}
+
+#[derive(Default, Debug, Copy, Clone, Component, Reflect, Inspectable)]
+#[reflect(Component)]
+pub struct SlotSettings {
+    /// Strength of the spring-like force of the slot. Ranged between 0..1
+    #[inspectable(min = 0.0, max = 1.0)]
+    pub strength: f32,
+    /// Damping of the spring-like force of the slot. Ranged between 0..1
+    #[inspectable(min = 0.0, max = 1.0)]
+    pub damping: f32,
+
+    pub rest_distance: f32,
+    pub limp_distance: f32,
 }
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
@@ -136,87 +152,106 @@ pub fn insert_slot(mut slots: Query<&mut Slot>, mut deposits: Query<&mut SlotDep
     }
 }
 
+#[derive(WorldQuery)]
+#[world_query(mutable)]
+pub struct ParticleQuery<'a> {
+    pub mass: Option<&'a ReadMassProperties>,
+    pub rigid_body: Option<&'a RigidBody>,
+    pub global_transform: &'a GlobalTransform,
+    pub velocity: &'a Velocity,
+    pub impulse: Option<&'a mut ExternalImpulse>,
+}
+
+impl<'w, 's> ParticleQueryItem<'w, 's> {
+    pub fn mass(&self) -> f32 {
+        match self.mass {
+            Some(mass_properties) => mass_properties.0.mass,
+            None => {
+                if let Some(RigidBody::Dynamic) = self.rigid_body {
+                    1.0
+                } else {
+                    f32::INFINITY
+                }
+            }
+        }
+    }
+
+    pub fn inverse_mass(&self) -> f32 {
+        let mass = self.mass();
+        if mass.is_infinite() {
+            0.0
+        } else {
+            1.0 / mass
+        }
+    }
+
+    pub fn apply_impulse(&mut self, impulse: Vec3) {
+        if let Some(physics_impulse) = self.impulse.as_mut() {
+            physics_impulse.impulse = impulse;
+        }
+    }
+}
+
 /// Keep the item in the slot with spring forces.
 ///
 /// This adds/removes the spring force to the item.
 pub fn spring_slot(
     time: Res<Time>,
-    mut items: Query<(
-        &GlobalTransform,
-        &Velocity,
-        &ReadMassProperties,
-        &mut ExternalImpulse,
-        //&mut ExternalForce,
-    )>,
-    slots: Query<(&GlobalTransform, &Slot)>,
+    mut particle: Query<ParticleQuery>,
+    slots: Query<(Entity, &Slot, &SlotSettings)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
-    let dt = time.delta_seconds();
-
-    if dt == 0.0 {
+    if time.delta_seconds() == 0.0 {
         return;
     }
 
-    for (slot_transform, slot) in &slots {
-        if let Some(contained) = slot.containing {
-            let strength: f32 = 0.5;
-            let damp_ratio: f32 = 0.5;
+    let timestep = crate::TICK_RATE.as_secs_f32();
+    let inverse_timestep = 1.0 / timestep;
 
-            let (item_transform, item_velocity, mass_properties, mut impulse) = if let Ok(item) =
-                items.get_mut(contained)
-            {
-                item
-            } else {
-                warn!("Contained entity {:?}, does not have an `ExternalImpulse` and/or `ReadMassProperties` component.", names.named(contained));
-                continue;
-            };
-
-            let strength = strength.clamp(0.0, 1.0);
-            let damp_ratio = damp_ratio.clamp(0.0, 1.0);
-            let (mass, center) = (
-                mass_properties.0.mass,
-                mass_properties.0.local_center_of_mass,
-            );
-
-            if mass <= 0.0 || strength <= 0.0 {
+    for (slot_entity, slot, slot_settings) in &slots {
+        if let Some(particle_entity) = slot.containing {
+            if particle_entity == slot_entity {
                 continue;
             }
 
-            // should calculate the reduced mass between the 2 objects here.
-            let t = crate::TICK_RATE.as_secs_f32();
-            let kmax = mass / t;
+            let [mut particle_a, mut particle_b] =
+                if let Ok(particles) = particle.get_many_mut([slot_entity, particle_entity]) {
+                    particles
+                } else {
+                    warn!("Particle does not contain all necessary components");
+                    continue;
+                };
 
-            //let critical_damping = 2.0 * (mass * strength).sqrt();
-            //let damp_coefficient = damp_ratio * critical_damping;
+            let strength = slot_settings.strength;
+            let damping = slot_settings.damping;
+            let rest_distance = slot_settings.rest_distance;
 
-            let offset = item_transform.translation() - slot_transform.translation();
-            let offset_impulse = -kmax * strength * offset;
-            let vel = item_velocity.linvel + item_velocity.angvel.cross(Vec3::ZERO - center);
+            let distance = particle_b.global_transform.translation()
+                - particle_a.global_transform.translation();
+            let velocity = particle_b.velocity.linvel - particle_a.velocity.linvel;
 
-            let damp_impulse = -damp_ratio * vel;
+            let unit_vector = distance.normalize_or_zero();
 
-            // don't let the damping force accelerate it
-            //damp_force = damp_force.clamp_length_max(vel.length());
+            let distance_error = unit_vector
+                * if slot_settings.rest_distance > distance.length() {
+                    0.0
+                } else {
+                    distance.length() - slot_settings.rest_distance
+                };
+            let velocity_error = velocity;
 
-            let spring_impulse = offset_impulse + damp_impulse;
+            let reduced_mass = 1.0 / (particle_a.inverse_mass() + particle_b.inverse_mass());
+            let strength_max = reduced_mass / timestep;
+            let damping_max = reduced_mass;
 
-            impulse.impulse = spring_impulse;
+            let distance_impulse = strength * distance_error * inverse_timestep * reduced_mass;
+            let velocity_impulse = damping * velocity_error * reduced_mass;
 
-            let lightness = (spring_impulse.length() / (strength * kmax)).clamp(0.0, 1.0);
-            let color = Color::Hsla {
-                hue: 0.0,
-                saturation: 1.0,
-                lightness: lightness,
-                alpha: 0.7,
-            };
+            let impulse = -(distance_impulse + velocity_impulse);
 
-            lines.line_colored(
-                item_transform.translation(),
-                item_transform.translation() + spring_impulse,
-                crate::TICK_RATE.as_secs_f32(),
-                color,
-            );
+            particle_a.apply_impulse(-impulse);
+            particle_b.apply_impulse(impulse);
         }
     }
 }
@@ -224,6 +259,9 @@ pub fn spring_slot(
 pub struct SlotPlugin;
 impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
+        //app.register_type::<Slot>();
+        //app.register_inspectable::<Slot>();
+
         app.add_network_system(pending_slot);
         app.add_network_system(insert_slot);
         app.add_network_system(spring_slot);

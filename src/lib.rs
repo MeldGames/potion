@@ -24,7 +24,7 @@ use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
-use slot::{Slot, SlotPlugin, Slottable};
+use slot::{Slot, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
@@ -300,7 +300,7 @@ fn setup_map(
         })
         .insert(Ingredient)
         .insert(Slottable)
-        .insert(crate::deposit::Value::new(1))
+        //.insert(crate::deposit::Value::new(1))
         .insert_bundle((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
@@ -319,9 +319,16 @@ fn setup_map(
             translation: Vec3::new(-2.5, 2.3, -0.075),
             ..default()
         }))
+        .insert(Velocity::default())
         .insert(Name::new("Welt slot"))
         .insert(Slot {
             containing: Some(welt),
+        })
+        .insert(SlotSettings {
+            strength: 1.0,
+            damping: 1.0,
+            rest_distance: 0.0,
+            limp_distance: 0.0,
         });
 
     let level_collision_mesh3: Handle<Mesh> =
