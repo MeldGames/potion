@@ -457,6 +457,7 @@ fn setup_map(
         .insert_bundle((
             Collider::cuboid(1.0, 1.0, 1.0),
             RigidBody::Dynamic,
+            ColliderMassProperties::Density(10.0),
             Name::new("Door"),
             Velocity::default(),
             DEFAULT_FRICTION,
@@ -464,10 +465,12 @@ fn setup_map(
         .insert(ColliderLoad)
         .insert(level_collision_mesh2)
         .insert(ImpulseJoint::new(walls, hinge_joint))
-        .insert(BreakableJoint {
-            impulse: Vec3::splat(100.0),
-            torque: Vec3::splat(100.0),
-        })
+        /*
+               .insert(BreakableJoint {
+                   impulse: Vec3::splat(100.0),
+                   torque: Vec3::splat(100.0),
+               })
+        */
         .id();
 
     // Bounds

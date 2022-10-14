@@ -452,7 +452,7 @@ pub fn setup_ik(
             names.named(entity),
             names.named(player),
         );
-        let mesh_right_hand = find_entity(
+        let mesh_right_hand = if let Ok(found_entity) = find_entity(
             &EntityPath {
                 parts: vec![
                     "Pelvis".into(),
@@ -467,20 +467,26 @@ pub fn setup_ik(
             entity,
             &children,
             &names,
-        )
-        .unwrap();
+        ) {
+            found_entity
+        } else {
+            continue;
+        };
 
-        let physics_right_hand = find_entity(
+        let physics_right_hand = if let Ok(found_entity) = find_entity(
             &EntityPath {
                 parts: vec!["Arm 0".into(), "Hand 0".into()],
             },
             player,
             &children,
             &names,
-        )
-        .unwrap();
+        ) {
+            found_entity
+        } else {
+            continue;
+        };
 
-        let mesh_left_hand = find_entity(
+        let mesh_left_hand = if let Ok(found_entity) = find_entity(
             &EntityPath {
                 parts: vec![
                     "Pelvis".into(),
@@ -495,18 +501,24 @@ pub fn setup_ik(
             entity,
             &children,
             &names,
-        )
-        .unwrap();
+        ) {
+            found_entity
+        } else {
+            continue;
+        };
 
-        let physics_left_hand = find_entity(
+        let physics_left_hand = if let Ok(found_entity) = find_entity(
             &EntityPath {
                 parts: vec!["Arm 1".into(), "Hand 1".into()],
             },
             player,
             &children,
             &names,
-        )
-        .unwrap();
+        ) {
+            found_entity
+        } else {
+            continue;
+        };
 
         info!("entities: {:?}, {:?}", mesh_right_hand, physics_right_hand);
 
