@@ -322,12 +322,16 @@ fn setup_map(
         .insert(Velocity::default())
         .insert(Name::new("Welt slot"))
         .insert(ReadMassProperties::default())
+        .insert(Damping {
+            linear_damping: 5.0,
+            angular_damping: 5.0,
+        })
         .insert(Slot {
             containing: Some(welt),
         })
         .insert(SlotSettings(springy::Spring {
             strength: 1.0,
-            damping: 1.0,
+            damp_ratio: 1.0,
             rest_distance: 0.0,
             limp_distance: 0.0,
         }));
@@ -355,24 +359,17 @@ fn setup_map(
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
                 // translation: Vec3::new(5., 10., -0.075),
-                translation: Vec3::new(0.0, 2.0, -3.0),
+                translation: Vec3::new(0.0, 5.0, -3.0),
                 ..default()
             },
             ..default()
         })
-        .insert_bundle(Attach::translation(mock))
-        .insert(AttachTranslation::Spring(springy::Spring {
-            strength: 0.5,
-            damping: 1.0,
-            limp_distance: 0.0,
-            rest_distance: 0.0,
-        }))
         .insert_bundle((
             //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),
             Damping {
-                linear_damping: 0.2,
-                angular_damping: 0.2,
+                linear_damping: 0.5,
+                angular_damping: 0.5,
             },
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
