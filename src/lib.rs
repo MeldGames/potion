@@ -331,13 +331,13 @@ fn setup_map(
         })
         .insert(SlotSettings(springy::SpringState {
             spring: springy::Spring {
-                strength: 0.05,
+                strength: 0.15,
                 damp_ratio: 0.7,
                 rest_distance: 0.0,
                 limp_distance: 0.0,
             },
             breaking: Some(springy::SpringBreak {
-                tear_force: 4.0,
+                tear_force: 3.0,
                 tear_step: 0.02,
                 heal_step: 0.05,
                 ..default()
