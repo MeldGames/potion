@@ -302,7 +302,7 @@ fn setup_map(
         .insert(Slottable)
         .insert(crate::deposit::Value::new(1))
         .insert_bundle((
-            Collider::cuboid(0.3, 0.3, 0.3),
+            Collider::ball(0.2),
             RigidBody::Dynamic,
             Name::new("Weltberry"),
             Velocity::default(),
@@ -331,7 +331,7 @@ fn setup_map(
         })
         .insert(SlotSettings(springy::SpringState {
             spring: springy::Spring {
-                strength: 0.15,
+                strength: 0.85,
                 damp_ratio: 0.7,
                 rest_distance: 0.0,
                 limp_distance: 0.0,
