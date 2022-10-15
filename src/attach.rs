@@ -147,7 +147,7 @@ pub fn update_attach(
                             continue;
                         };
 
-                    let impulse = spring.impulse(timestep, particle_a, particle_b);
+                    let (impulse, _) = spring.impulse(timestep, particle_a, particle_b, None);
 
                     let [mut attach_impulse, mut particle_impulse] = if let Ok(impulses) =
                         impulses.get_many_mut([attach_entity, particle_entity])

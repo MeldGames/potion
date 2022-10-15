@@ -4041,7 +4041,7 @@ dependencies = [
 [[package]]
 name = "springy"
 version = "0.1.0"
-source = "git+https://github.com/aceeri/springy#dcb5969faa496e9e95b66a82dfba9e7f5245d6d5"
+source = "git+https://github.com/aceeri/springy#d891dde651c7a0f6e3a29577cefcf88d6b3fa04c"
 dependencies = [
  "bevy",
  "bevy-inspector-egui 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",

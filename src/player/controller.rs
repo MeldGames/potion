@@ -261,18 +261,19 @@ pub fn avoid_intersecting(
             Transform::default()
         };
 
-        let toi = if let Some((_entity, toi)) = rapier_context.cast_ray(
-            global_transform.translation,
-            global_transform.rotation * avoid.dir,
-            avoid.max_toi + avoid.buffer,
-            true,
-            filter,
-        ) {
-            toi
+        let (toi, normal) = if let Some((_entity, intersection)) = rapier_context
+            .cast_ray_and_get_normal(
+                global_transform.translation,
+                global_transform.rotation * avoid.dir,
+                avoid.max_toi + avoid.buffer,
+                true,
+                filter,
+            ) {
+            (intersection.toi, intersection.normal)
         } else {
-            avoid.max_toi + avoid.buffer
+            (avoid.max_toi + avoid.buffer, Vec3::ZERO)
         };
 
-        transform.translation = avoid.dir * (toi - avoid.buffer);
+        transform.translation = avoid.dir * toi + (normal * avoid.buffer);
     }
 }

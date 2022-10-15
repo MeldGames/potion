@@ -24,7 +24,7 @@ use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
-use slot::{Slot, SlotPlugin, SlotSettings, Slottable};
+use slot::{PreviousSlotUnitVector, Slot, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
@@ -329,6 +329,7 @@ fn setup_map(
         .insert(Slot {
             containing: Some(welt),
         })
+        .insert(PreviousSlotUnitVector::default())
         .insert(SlotSettings(springy::Spring {
             strength: 1.0,
             damp_ratio: 1.0,

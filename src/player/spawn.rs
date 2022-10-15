@@ -73,7 +73,7 @@ pub fn setup_player(
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,
-                        buffer: 0.075,
+                        buffer: 0.05,
                     })
                     .insert(ZoomScroll {
                         current: 8.0,
