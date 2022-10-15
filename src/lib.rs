@@ -315,6 +315,13 @@ fn setup_map(
 
     let welt_slot = commands
         .spawn()
+        .insert_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.05,
+                ..default()
+            })),
+            ..default()
+        })
         .insert_bundle(TransformBundle::from_transform(Transform {
             translation: Vec3::new(-2.5, 2.3, -0.075),
             ..default()
@@ -352,7 +359,7 @@ fn setup_map(
         .spawn()
         .insert_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.05,
+                radius: 0.00,
                 ..default()
             })),
             ..default()

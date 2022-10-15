@@ -149,7 +149,7 @@ pub fn spring_slot(
     time: Res<Time>,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
-    mut slots: Query<(Entity, &Slot, &mut SlotSettings)>,
+    mut slots: Query<(Entity, &mut Slot, &mut SlotSettings)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -160,7 +160,7 @@ pub fn spring_slot(
     let timestep = crate::TICK_RATE.as_secs_f32();
     let inverse_timestep = 1.0 / timestep;
 
-    for (slot_entity, slot, mut slot_settings) in &mut slots {
+    for (slot_entity, mut slot, mut slot_settings) in &mut slots {
         if let Some(particle_entity) = slot.containing {
             if particle_entity == slot_entity {
                 continue;
@@ -193,7 +193,9 @@ pub fn spring_slot(
                         particle_impulse.impulse = impulse;
                     }
                 }
-                springy::SpringResult::Broke => {}
+                springy::SpringResult::Broke => {
+                    slot.containing = None;
+                }
             }
         }
     }
