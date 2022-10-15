@@ -24,7 +24,7 @@ use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
-use slot::{PreviousSlotUnitVector, Slot, SlotPlugin, SlotSettings, Slottable};
+use slot::{Slot, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
@@ -329,12 +329,20 @@ fn setup_map(
         .insert(Slot {
             containing: Some(welt),
         })
-        .insert(PreviousSlotUnitVector::default())
-        .insert(SlotSettings(springy::Spring {
-            strength: 1.0,
-            damp_ratio: 1.0,
-            rest_distance: 0.0,
-            limp_distance: 0.0,
+        .insert(deposit::Value::new(1))
+        .insert(SlotSettings(springy::SpringState {
+            spring: springy::Spring {
+                strength: 0.7,
+                damp_ratio: 0.7,
+                rest_distance: 0.0,
+                limp_distance: 0.0,
+            },
+            breaking: Some(springy::SpringBreak {
+                tear_force: 4.0,
+                tear_step: 0.02,
+                ..default()
+            }),
+            ..default()
         }));
 
     let level_collision_mesh3: Handle<Mesh> =

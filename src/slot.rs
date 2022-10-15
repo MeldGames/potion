@@ -19,13 +19,9 @@ pub struct Slot {
     pub containing: Option<Entity>,
 }
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
+#[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
-pub struct SlotSettings(pub springy::Spring);
-
-#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
-#[reflect(Component)]
-pub struct PreviousSlotUnitVector(Option<Vec3>);
+pub struct SlotSettings(pub springy::SpringState<Vec3>);
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
@@ -153,7 +149,7 @@ pub fn spring_slot(
     time: Res<Time>,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
-    mut slots: Query<(Entity, &Slot, &SlotSettings, &mut PreviousSlotUnitVector)>,
+    mut slots: Query<(Entity, &Slot, &mut SlotSettings)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -164,7 +160,7 @@ pub fn spring_slot(
     let timestep = crate::TICK_RATE.as_secs_f32();
     let inverse_timestep = 1.0 / timestep;
 
-    for (slot_entity, slot, slot_settings, mut previous_unit_vector) in &mut slots {
+    for (slot_entity, slot, mut slot_settings) in &mut slots {
         if let Some(particle_entity) = slot.containing {
             if particle_entity == slot_entity {
                 continue;
@@ -178,28 +174,27 @@ pub fn spring_slot(
                     continue;
                 };
 
-            let (impulse, unit_vector) =
-                slot_settings
-                    .0
-                    .impulse(timestep, particle_a, particle_b, previous_unit_vector.0);
+            match slot_settings.0.impulse(timestep, particle_a, particle_b) {
+                springy::SpringResult::Impulse(impulse) => {
+                    let [slot_impulse, particle_impulse] = if let Ok(impulses) =
+                        impulses.get_many_mut([slot_entity, particle_entity])
+                    {
+                        impulses
+                    } else {
+                        warn!("Particle does not contain all necessary components");
+                        continue;
+                    };
 
-            let [slot_impulse, particle_impulse] =
-                if let Ok(impulses) = impulses.get_many_mut([slot_entity, particle_entity]) {
-                    impulses
-                } else {
-                    warn!("Particle does not contain all necessary components");
-                    continue;
-                };
+                    if let Some(mut slot_impulse) = slot_impulse {
+                        slot_impulse.impulse = -impulse;
+                    }
 
-            if let Some(mut slot_impulse) = slot_impulse {
-                slot_impulse.impulse = -impulse;
+                    if let Some(mut particle_impulse) = particle_impulse {
+                        particle_impulse.impulse = impulse;
+                    }
+                }
+                springy::SpringResult::Broke => {}
             }
-
-            if let Some(mut particle_impulse) = particle_impulse {
-                particle_impulse.impulse = impulse;
-            }
-
-            previous_unit_vector.0 = Some(unit_vector);
         }
     }
 }
