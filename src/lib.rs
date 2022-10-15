@@ -300,7 +300,7 @@ fn setup_map(
         })
         .insert(Ingredient)
         .insert(Slottable)
-        //.insert(crate::deposit::Value::new(1))
+        .insert(crate::deposit::Value::new(1))
         .insert_bundle((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
@@ -329,10 +329,9 @@ fn setup_map(
         .insert(Slot {
             containing: Some(welt),
         })
-        .insert(deposit::Value::new(1))
         .insert(SlotSettings(springy::SpringState {
             spring: springy::Spring {
-                strength: 0.7,
+                strength: 0.05,
                 damp_ratio: 0.7,
                 rest_distance: 0.0,
                 limp_distance: 0.0,
@@ -340,6 +339,7 @@ fn setup_map(
             breaking: Some(springy::SpringBreak {
                 tear_force: 4.0,
                 tear_step: 0.02,
+                heal_step: 0.05,
                 ..default()
             }),
             ..default()
