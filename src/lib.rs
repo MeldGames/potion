@@ -164,6 +164,7 @@ fn setup_map(
             scale: Vec3::splat(2.),
             ..default()
         },
+        &mut meshes,
     );
 
     crate::deposit::spawn_deposit_box(
