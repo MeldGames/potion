@@ -14,14 +14,14 @@ opt-level = 3
 bevy = "0.8"
 bevy_egui = "0.16"
 #sabi = {path = "../sabi/sabi", features = ["public"]}
-sabi = {git = "https://github.com/aceeri/sabi", rev = "6871dea", features = ["public"]}
+sabi = {git = "https://github.com/aceeri/sabi", rev = "534284d", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
 
 bevy_embedded_assets = "0.4"
 bevy_fly_camera = {git = "https://github.com/Aceeri/bevy_fly_camera", branch = "bevy-0.8"}
 bevy_mod_outline = {git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313"}
-bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
+bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
 
 bevy-inspector-egui = {git = "https://github.com/jakobhellermann/bevy-inspector-egui"}
 bevy-inspector-egui-rapier = {git = "https://github.com/jakobhellermann/bevy-inspector-egui", features = ["rapier3d"]}

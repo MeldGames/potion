@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, time::Duration};
 
 use bevy::{ecs::query::WorldQuery, prelude::*, utils::HashSet};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
@@ -26,6 +26,10 @@ pub struct SlotSettings(pub springy::SpringState<Vec3>);
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct Slottable;
+
+#[derive(Default, Debug, Clone, Component, Reflect)]
+#[reflect(Component)]
+pub struct SlotGracePeriod(Timer);
 
 #[derive(Debug, Clone, Component)]
 pub struct SlotDeposit {
@@ -117,7 +121,17 @@ pub fn pending_slot(
     }
 }
 
-pub fn insert_slot(mut slots: Query<&mut Slot>, mut deposits: Query<&mut SlotDeposit>) {
+pub fn tick_grace_period(/*time: Res<Time>,*/ mut slots: Query<(&mut SlotGracePeriod)>) {
+    for mut period in &mut slots {
+        //period.0.tick(time.delta());
+        period.0.tick(crate::TICK_RATE);
+    }
+}
+
+pub fn insert_slot(
+    mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
+    mut deposits: Query<&mut SlotDeposit>,
+) {
     for mut deposit in &mut deposits {
         if deposit.slots.len() == 0 {
             warn!("no slots specified in slot deposit");
@@ -133,9 +147,12 @@ pub fn insert_slot(mut slots: Query<&mut Slot>, mut deposits: Query<&mut SlotDep
                 break;
             }
 
-            if let Ok(mut slot) = slots.get_mut(*slot_entity) {
+            if let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) {
                 if slot.containing.is_none() {
-                    slot.containing = attempting.pop_front();
+                    let next_item = attempting.pop_front();
+                    info!("slotting {:?}", next_item);
+                    slot.containing = next_item;
+                    grace_period.0 = Timer::new(Duration::from_secs(1), false);
                 }
             }
         }
@@ -146,21 +163,21 @@ pub fn insert_slot(mut slots: Query<&mut Slot>, mut deposits: Query<&mut SlotDep
 ///
 /// This adds/removes the spring force to the item.
 pub fn spring_slot(
-    time: Res<Time>,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
-    mut slots: Query<(Entity, &mut Slot, &mut SlotSettings)>,
+    mut slots: Query<(
+        Entity,
+        &mut Slot,
+        &mut SlotSettings,
+        Option<&SlotGracePeriod>,
+    )>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
-    if time.delta_seconds() == 0.0 {
-        return;
-    }
-
     let timestep = crate::TICK_RATE.as_secs_f32();
     let inverse_timestep = 1.0 / timestep;
 
-    for (slot_entity, mut slot, mut slot_settings) in &mut slots {
+    for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
         if let Some(particle_entity) = slot.containing {
             if particle_entity == slot_entity {
                 continue;
@@ -181,8 +198,8 @@ pub fn spring_slot(
                     {
                         impulses
                     } else {
-                        warn!("Particle does not contain all necessary components");
-                        continue;
+                        // The impulses are `Option<T>` so it shouldn't error here.
+                        unreachable!();
                     };
 
                     if let Some(mut slot_impulse) = slot_impulse {
@@ -193,7 +210,18 @@ pub fn spring_slot(
                         particle_impulse.impulse = impulse;
                     }
                 }
-                springy::SpringResult::Broke => {
+                springy::SpringResult::Broke(impulse) => {
+                    if let Some(grace_period) = grace_period {
+                        if !grace_period.0.finished() {
+                            continue;
+                        }
+                    }
+
+                    info!(
+                        "Removing from slot {:?}: {:?}",
+                        names.named(slot_entity),
+                        names.named(particle_entity)
+                    );
                     slot.containing = None;
                 }
             }
@@ -213,6 +241,7 @@ impl Plugin for SlotPlugin {
 
         app.add_network_system(pending_slot);
         app.add_network_system(insert_slot);
+        app.add_network_system(tick_grace_period);
         app.add_network_system(spring_slot);
     }
 }

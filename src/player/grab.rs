@@ -194,7 +194,6 @@ pub struct TargetPosition {
 pub struct Grabbing(pub bool);
 
 pub fn player_grabby_hands(
-    time: Res<Time>,
     inputs: Query<(
         &GlobalTransform,
         &LookTransform,
@@ -210,14 +209,11 @@ pub fn player_grabby_hands(
         &ImpulseJoint,
         &ReadMassProperties,
     )>,
+    ctx: Res<RapierContext>,
     mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
     mut lines: ResMut<DebugLines>,
 ) {
-    let dt = time.delta_seconds();
-
-    if dt == 0.0 {
-        return;
-    }
+    let dt = ctx.integration_parameters.dt;
 
     for (hand_entity, mut grabbing, mut collision_groups, arm_id) in &mut hands {
         let (hand_global, hand_velocity, hand_joint, hand_mass_properties) =

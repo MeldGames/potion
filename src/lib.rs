@@ -195,6 +195,8 @@ fn setup_map(
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
+            Slottable,
+            ReadMassProperties::default(),
             ExternalImpulse::default(),
             Name::new("Stone"),
             Velocity::default(),
@@ -244,6 +246,8 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Donut"),
             Velocity::default(),
+            Slottable,
+            ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
         .id();
@@ -265,6 +269,8 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Prallet"),
             Velocity::default(),
+            Slottable,
+            ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
         .id();
@@ -286,6 +292,8 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Thorns"),
             Velocity::default(),
+            Slottable,
+            ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
         .id();

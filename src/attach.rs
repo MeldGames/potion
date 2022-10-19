@@ -76,7 +76,6 @@ pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Wi
 }
 
 pub fn update_attach(
-    time: Res<Time>,
     mut commands: Commands,
     //parented: Query<Entity, (With<Attach>, With<Parent>)>,
     no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
@@ -102,12 +101,6 @@ pub fn update_attach(
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
-    let dt = time.delta_seconds();
-
-    if dt == 0.0 {
-        return;
-    }
-
     /*
        for invalid_attacher in &parented {
            info!(
@@ -202,7 +195,7 @@ impl Plugin for AttachPlugin {
         */
 
         app.add_network_system(velocity_nonphysics.label("velocity_nonphysics"));
-        //app.add_network_system(update_attach.label("update_attach"));
-        app.add_system(update_attach.label("update_attach"));
+        app.add_network_system(update_attach.label("update_attach"));
+        //app.add_system(update_attach.label("update_attach"));
     }
 }

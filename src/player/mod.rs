@@ -118,15 +118,5 @@ impl Plugin for PlayerPlugin {
         app.add_meta_network_system(Events::<spawn::PlayerEvent>::update_system);
 
         app.add_network_system(controller::teleport_player_back);
-        app.add_network_system(joint_animation);
     }
-}
-
-fn joint_animation(
-    _time: Res<Time>,
-    parent_query: Query<&Parent, With<SkinnedMesh>>,
-    _children_query: Query<&Children>,
-    _transform_query: Query<&mut Transform>,
-) {
-    for _asdf in &parent_query {}
 }

@@ -19,14 +19,14 @@ pub struct BreakPastGracePeriod;
 
 pub fn break_grace_period(
     mut commands: Commands,
-    time: Res<Time>,
+    //time: Res<Time>,
     breakable: Query<(Entity, &BreakableJoint)>,
     mut grace: Query<&mut BreakGracePeriod>,
 ) {
     for (entity, _break_at) in &breakable {
         match grace.get_mut(entity) {
             Ok(mut grace) => {
-                grace.0 -= time.delta_seconds();
+                grace.0 -= crate::TICK_RATE.as_secs_f32();
                 if grace.0 <= 0.0 {
                     commands
                         .entity(entity)
