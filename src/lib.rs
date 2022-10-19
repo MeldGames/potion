@@ -24,7 +24,7 @@ use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
-use slot::{Slot, SlotPlugin, SlotSettings, Slottable};
+use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
@@ -246,6 +246,7 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Donut"),
             Velocity::default(),
+            ExternalImpulse::default(),
             Slottable,
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
@@ -269,6 +270,7 @@ fn setup_map(
             RigidBody::Dynamic,
             Name::new("Prallet"),
             Velocity::default(),
+            ExternalImpulse::default(),
             Slottable,
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
@@ -279,7 +281,7 @@ fn setup_map(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("models/thorns.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-2.5, 1.3, -0.075),
+                translation: Vec3::new(-1.5, 2.3, -0.075),
                 scale: Vec3::splat(1.),
                 ..default()
             },
@@ -290,10 +292,12 @@ fn setup_map(
         .insert_bundle((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
-            Name::new("Thorns"),
-            Velocity::default(),
+            StoreItem,
             Slottable,
             ReadMassProperties::default(),
+            ExternalImpulse::default(),
+            Name::new("Thorns"),
+            Velocity::default(),
             DEFAULT_FRICTION,
         ))
         .id();
@@ -345,6 +349,7 @@ fn setup_map(
         .insert(Slot {
             containing: Some(welt),
         })
+        .insert(SlotGracePeriod::default())
         .insert(SlotSettings(springy::SpringState {
             spring: springy::Spring {
                 strength: 0.85,

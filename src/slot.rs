@@ -115,15 +115,15 @@ pub fn pending_slot(
 
         if colliding {
             slotter.attempt(ingredient_entity);
+            info!("attempting: {:?}", slotter.attempting);
         } else {
             slotter.stop_attempt(ingredient_entity);
         }
     }
 }
 
-pub fn tick_grace_period(/*time: Res<Time>,*/ mut slots: Query<(&mut SlotGracePeriod)>) {
+pub fn tick_grace_period(mut slots: Query<(&mut SlotGracePeriod)>) {
     for mut period in &mut slots {
-        //period.0.tick(time.delta());
         period.0.tick(crate::TICK_RATE);
     }
 }
@@ -131,6 +131,7 @@ pub fn tick_grace_period(/*time: Res<Time>,*/ mut slots: Query<(&mut SlotGracePe
 pub fn insert_slot(
     mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
     mut deposits: Query<&mut SlotDeposit>,
+    names: Query<&Name>,
 ) {
     for mut deposit in &mut deposits {
         if deposit.slots.len() == 0 {
@@ -149,10 +150,11 @@ pub fn insert_slot(
 
             if let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) {
                 if slot.containing.is_none() {
-                    let next_item = attempting.pop_front();
-                    info!("slotting {:?}", next_item);
-                    slot.containing = next_item;
-                    grace_period.0 = Timer::new(Duration::from_secs(1), false);
+                    if let Some(next_item) = attempting.pop_front() {
+                        info!("slotting {:?}", names.named(next_item));
+                        slot.containing = Some(next_item);
+                        grace_period.0 = Timer::new(Duration::from_secs(1), false);
+                    }
                 }
             }
         }
@@ -165,12 +167,7 @@ pub fn insert_slot(
 pub fn spring_slot(
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
-    mut slots: Query<(
-        Entity,
-        &mut Slot,
-        &mut SlotSettings,
-        Option<&SlotGracePeriod>,
-    )>,
+    mut slots: Query<(Entity, &mut Slot, &mut SlotSettings, &SlotGracePeriod)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -191,39 +188,32 @@ pub fn spring_slot(
                     continue;
                 };
 
-            match slot_settings.0.impulse(timestep, particle_a, particle_b) {
-                springy::SpringResult::Impulse(impulse) => {
-                    let [slot_impulse, particle_impulse] = if let Ok(impulses) =
-                        impulses.get_many_mut([slot_entity, particle_entity])
-                    {
-                        impulses
-                    } else {
-                        // The impulses are `Option<T>` so it shouldn't error here.
-                        unreachable!();
-                    };
-
-                    if let Some(mut slot_impulse) = slot_impulse {
-                        slot_impulse.impulse = -impulse;
-                    }
-
-                    if let Some(mut particle_impulse) = particle_impulse {
-                        particle_impulse.impulse = impulse;
-                    }
-                }
+            let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
+                springy::SpringResult::Impulse(impulse) => impulse,
                 springy::SpringResult::Broke(impulse) => {
-                    if let Some(grace_period) = grace_period {
-                        if !grace_period.0.finished() {
-                            continue;
-                        }
+                    if grace_period.0.finished() {
+                        info!(
+                            "Removing from slot {:?}: {:?}",
+                            names.named(slot_entity),
+                            names.named(particle_entity)
+                        );
+                        slot.containing = None;
+                        continue;
+                    } else {
+                        impulse
                     }
-
-                    info!(
-                        "Removing from slot {:?}: {:?}",
-                        names.named(slot_entity),
-                        names.named(particle_entity)
-                    );
-                    slot.containing = None;
                 }
+            };
+
+            let [slot_impulse, particle_impulse] =
+                impulses.many_mut([slot_entity, particle_entity]);
+
+            if let Some(mut slot_impulse) = slot_impulse {
+                slot_impulse.impulse = -impulse;
+            }
+
+            if let Some(mut particle_impulse) = particle_impulse {
+                particle_impulse.impulse = impulse;
             }
         }
     }
@@ -240,8 +230,8 @@ impl Plugin for SlotPlugin {
         */
 
         app.add_network_system(pending_slot);
-        app.add_network_system(insert_slot);
-        app.add_network_system(tick_grace_period);
-        app.add_network_system(spring_slot);
+        app.add_network_system(insert_slot.after(pending_slot));
+        app.add_network_system(tick_grace_period.before(insert_slot));
+        app.add_network_system(spring_slot.after(insert_slot));
     }
 }
