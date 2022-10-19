@@ -390,6 +390,7 @@ fn setup_map(
             transform: Transform {
                 // translation: Vec3::new(5., 10., -0.075),
                 translation: Vec3::new(0.0, 5.0, -3.0),
+                scale: Vec3::splat(2.5),
                 ..default()
             },
             ..default()

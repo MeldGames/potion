@@ -19,6 +19,13 @@ pub struct Slot {
     pub containing: Option<Entity>,
 }
 
+#[derive(Debug, Clone, Bundle)]
+pub struct SlotBundle {
+    pub slot: Slot,
+    pub settings: SlotSettings,
+    pub grace: SlotGracePeriod,
+}
+
 #[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct SlotSettings(pub springy::SpringState<Vec3>);
