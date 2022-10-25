@@ -80,7 +80,7 @@ impl SlotDeposit {
 
 pub fn pending_slot(
     mut commands: Commands,
-    name: Query<&Name>,
+    names: Query<&Name>,
     mut slotters: Query<(Entity, &mut SlotDeposit)>,
     slottable: Query<(Entity, &Slottable)>,
     mut collision_events: EventReader<CollisionEvent>,
@@ -122,10 +122,18 @@ pub fn pending_slot(
 
         if colliding {
             slotter.attempt(ingredient_entity);
-            info!("attempting: {:?}", slotter.attempting);
         } else {
             slotter.stop_attempt(ingredient_entity);
         }
+
+        info!(
+            "attempting: {:?}",
+            slotter
+                .attempting
+                .iter()
+                .map(|entity| names.named(*entity))
+                .collect::<Vec<_>>()
+        );
     }
 }
 
@@ -198,8 +206,8 @@ pub fn spring_slot(
             let translation_a = particle_a.global_transform.translation();
             let translation_b = particle_b.global_transform.translation();
 
-            let rigid_body_a = particle_a.rigid_body.clone();
-            let rigid_body_b = particle_a.rigid_body.clone();
+            let rigid_body_a = particle_a.rigid_body.cloned();
+            let rigid_body_b = particle_a.rigid_body.cloned();
 
             let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
                 springy::SpringResult::Impulse(impulse) => impulse,
@@ -221,8 +229,8 @@ pub fn spring_slot(
             let [slot_impulse, particle_impulse] =
                 impulses.many_mut([slot_entity, particle_entity]);
 
-            let impulse_error = |entity: Entity, rigid_body: RigidBody| {
-                if let RigidBody::Dynamic = rigid_body {
+            let impulse_error = |entity: Entity, rigid_body: Option<RigidBody>| {
+                if let Some(RigidBody::Dynamic) = rigid_body {
                     warn!(
                         "Particle {:?} does not have an `ExternalImpulse` component",
                         names.named(entity)
