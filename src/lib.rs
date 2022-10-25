@@ -39,7 +39,7 @@ use bevy::prelude::*;
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
-pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(100);
+pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -321,6 +321,7 @@ fn setup_map(
             Velocity::default(),
             ExternalImpulse::default(),
             ExternalForce::default(),
+            ColliderMassProperties::Density(50.0),
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
@@ -352,13 +353,13 @@ fn setup_map(
         .insert(SlotGracePeriod::default())
         .insert(SlotSettings(springy::SpringState {
             spring: springy::Spring {
-                strength: 0.85,
-                damp_ratio: 0.7,
+                strength: 1.0,
+                damp_ratio: 1.0,
                 rest_distance: 0.0,
                 limp_distance: 0.0,
             },
             breaking: Some(springy::SpringBreak {
-                tear_force: 3.0,
+                tear_force: 4.0,
                 tear_step: 0.02,
                 heal_step: 0.05,
                 ..default()

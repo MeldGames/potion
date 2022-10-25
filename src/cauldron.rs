@@ -68,8 +68,8 @@ pub fn spawn_cauldron(
         ))
         .insert(level_collision_mesh)
         .with_children(|builder| {
-            let center = Vec3::new(0.0, 0.4, 0.0);
-            let radius = 0.3;
+            let center = Vec3::new(0.0, 0.35, 0.0);
+            let radius = 0.2;
             let slot_count = 3;
 
             let slice = std::f32::consts::TAU / slot_count as f32;
@@ -95,8 +95,8 @@ pub fn spawn_cauldron(
                         .insert(crate::slot::SlotGracePeriod::default())
                         .insert(crate::slot::SlotSettings(springy::SpringState {
                             spring: springy::Spring {
-                                strength: 0.85,
-                                damp_ratio: 0.7,
+                                strength: 1.00,
+                                damp_ratio: 0.2,
                                 rest_distance: 0.0,
                                 limp_distance: 0.0,
                             },

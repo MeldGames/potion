@@ -17,7 +17,7 @@ impl Plugin for TreesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(MaterialPlugin::<CustomMaterial>::default())
             .add_plugin(ShaderUtilsPlugin)
-            .add_system(update_time_for_custom_material)
+            //.add_system(update_time_for_custom_material)
             .add_system(mod_scene);
     }
 }

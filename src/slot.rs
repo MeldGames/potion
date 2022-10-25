@@ -195,6 +195,12 @@ pub fn spring_slot(
                     continue;
                 };
 
+            let translation_a = particle_a.global_transform.translation();
+            let translation_b = particle_b.global_transform.translation();
+
+            let rigid_body_a = particle_a.rigid_body.clone();
+            let rigid_body_b = particle_a.rigid_body.clone();
+
             let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
                 springy::SpringResult::Impulse(impulse) => impulse,
                 springy::SpringResult::Broke(impulse) => {
@@ -215,12 +221,32 @@ pub fn spring_slot(
             let [slot_impulse, particle_impulse] =
                 impulses.many_mut([slot_entity, particle_entity]);
 
+            let impulse_error = |entity: Entity, rigid_body: RigidBody| {
+                if let RigidBody::Dynamic = rigid_body {
+                    warn!(
+                        "Particle {:?} does not have an `ExternalImpulse` component",
+                        names.named(entity)
+                    );
+                }
+            };
+
             if let Some(mut slot_impulse) = slot_impulse {
                 slot_impulse.impulse = -impulse;
+            } else {
+                impulse_error(slot_entity, rigid_body_a);
             }
 
             if let Some(mut particle_impulse) = particle_impulse {
                 particle_impulse.impulse = impulse;
+
+                lines.line_colored(
+                    translation_b,
+                    translation_b + impulse,
+                    crate::TICK_RATE.as_secs_f32(),
+                    Color::RED,
+                );
+            } else {
+                impulse_error(particle_entity, rigid_body_b);
             }
         }
     }

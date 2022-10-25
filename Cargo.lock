@@ -3826,7 +3826,7 @@ checksum = "4501abdff3ae82a1c1b477a17252eb69cee9e66eb915c1abaa4f44d873df9f09"
 [[package]]
 name = "sabi"
 version = "0.3.0"
-source = "git+https://github.com/aceeri/sabi?rev=534284d#534284d677c5d0b9a7ad50d57fe978537f1052af"
+source = "git+https://github.com/aceeri/sabi?rev=34d56b2#34d56b26a1586de687329039c049e8f74857d167"
 dependencies = [
  "bevy",
  "bevy_rapier3d 0.16.2",
@@ -3851,7 +3851,7 @@ dependencies = [
 [[package]]
 name = "sabi_derive"
 version = "0.3.0"
-source = "git+https://github.com/aceeri/sabi?rev=534284d#534284d677c5d0b9a7ad50d57fe978537f1052af"
+source = "git+https://github.com/aceeri/sabi?rev=34d56b2#34d56b26a1586de687329039c049e8f74857d167"
 dependencies = [
  "proc-macro2",
  "quote",
