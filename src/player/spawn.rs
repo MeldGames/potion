@@ -181,7 +181,9 @@ pub fn setup_player(
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
+                    .insert(ConnectedMass::default())
                     //.insert(Owned)
+                    .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
                     .id();
@@ -343,6 +345,7 @@ pub fn attach_arm(
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(ConnectedEntities::default())
+        .insert(ConnectedMass::default())
         .insert(GrabbedEntities::default())
         .insert(Grabbing(false))
         .insert(ExternalImpulse::default())
@@ -428,6 +431,44 @@ pub fn connected_entities(
         }
 
         **related = related_entities;
+    }
+}
+
+#[derive(Component, Debug, Copy, Clone)]
+pub struct ConnectedMass(pub f32);
+
+impl Default for ConnectedMass {
+    fn default() -> Self {
+        Self(f32::INFINITY)
+    }
+}
+
+pub fn connected_mass(
+    mut connected: Query<(Entity, &mut ConnectedMass, &ConnectedEntities)>,
+    masses: Query<&ReadMassProperties>,
+    names: Query<&Name>,
+) {
+    for (entity, mut connected_mass, connected) in &mut connected {
+        let mut summed_mass = 0.0;
+        for attached in &connected.grabbed {
+            if let Ok(part_mass) = masses.get(*attached) {
+                //summed_mass += part_mass.0.mass;
+            }
+        }
+
+        if let Ok(part_mass) = masses.get(entity) {
+            summed_mass += part_mass.0.mass;
+        }
+        connected_mass.0 = summed_mass * 1.0;
+        //info!("{:?} summed mass: {:?}", names.named(entity), summed_mass);
+    }
+}
+
+pub fn extended_mass(mut command: Commands, masses: Query<(Entity, &ConnectedMass)>) {
+    for (entity, mass) in &masses {
+        command
+            .entity(entity)
+            .insert(springy::rapier::ExtendedMass(mass.0));
     }
 }
 

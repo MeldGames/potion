@@ -66,13 +66,14 @@ pub fn grab_collider(
             &GlobalTransform,
             Option<&Children>,
             &ConnectedEntities,
+            &ConnectedMass,
             &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
-    grab_joints: Query<&GrabJoint>,
+    grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, grabbing, global, children, connected, mut grabbed) in &mut hands {
+    for (hand, grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
         if grabbing.0 {
             let mut already_grabbing = false;
 
@@ -168,13 +169,20 @@ pub fn grab_collider(
                     });
 
                     grabbed.insert(other_collider);
+
+                    let extended = springy::rapier::ExtendedMass(mass.0);
+                    info!("extended mass: {:?}", extended);
+                    commands.entity(other_collider).insert(extended);
                 }
             }
         } else {
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
                 for child in children.iter() {
-                    if grab_joints.get(*child).is_ok() {
+                    if let Ok((impulse_joint, joint)) = grab_joints.get(*child) {
+                        commands
+                            .entity(impulse_joint.parent)
+                            .remove::<springy::rapier::ExtendedMass>();
                         commands.entity(*child).despawn_recursive();
                         grabbed.remove(&*child);
                     }

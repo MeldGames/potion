@@ -1,6 +1,10 @@
 use std::{collections::VecDeque, time::Duration};
 
-use bevy::{ecs::query::WorldQuery, prelude::*, utils::HashSet};
+use bevy::{
+    ecs::{entity::Entities, query::WorldQuery},
+    prelude::*,
+    utils::HashSet,
+};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
@@ -34,9 +38,15 @@ pub struct SlotSettings(pub springy::SpringState<Vec3>);
 #[reflect(Component)]
 pub struct Slottable;
 
-#[derive(Default, Debug, Clone, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct SlotGracePeriod(Timer);
+
+impl Default for SlotGracePeriod {
+    fn default() -> Self {
+        Self(Timer::new(Duration::from_secs(1), false))
+    }
+}
 
 #[derive(Debug, Clone, Component)]
 pub struct SlotDeposit {
@@ -180,6 +190,7 @@ pub fn insert_slot(
 ///
 /// This adds/removes the spring force to the item.
 pub fn spring_slot(
+    entities: &Entities,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
     mut slots: Query<(Entity, &mut Slot, &mut SlotSettings, &SlotGracePeriod)>,
@@ -190,8 +201,20 @@ pub fn spring_slot(
     let inverse_timestep = 1.0 / timestep;
 
     for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
+        let mut unset = false;
         if let Some(particle_entity) = slot.containing {
+            if !entities.contains(particle_entity) {
+                warn!(
+                    "contained entity is no longer alive: {:?}",
+                    names.named(particle_entity)
+                );
+                slot.containing = None;
+                continue;
+            }
+
             if particle_entity == slot_entity {
+                warn!("Slot cannot contain itself: {:?}", names.named(slot_entity));
+                slot.containing = None;
                 continue;
             }
 
@@ -240,6 +263,13 @@ pub fn spring_slot(
 
             if let Some(mut slot_impulse) = slot_impulse {
                 slot_impulse.impulse = -impulse;
+
+                lines.line_colored(
+                    translation_a,
+                    translation_a - impulse,
+                    crate::TICK_RATE.as_secs_f32(),
+                    Color::BLUE,
+                );
             } else {
                 impulse_error(slot_entity, rigid_body_a);
             }

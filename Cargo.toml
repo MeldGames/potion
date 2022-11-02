@@ -14,7 +14,7 @@ opt-level = 3
 bevy = "0.8"
 bevy_egui = "0.16"
 #sabi = {path = "../sabi/sabi", features = ["public"]}
-sabi = {git = "https://github.com/aceeri/sabi", rev = "34d56b2", features = ["public"]}
+sabi = {git = "https://github.com/aceeri/sabi", rev = "7f5edd9", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
 

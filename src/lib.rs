@@ -321,7 +321,7 @@ fn setup_map(
             Velocity::default(),
             ExternalImpulse::default(),
             ExternalForce::default(),
-            ColliderMassProperties::Density(50.0),
+            //ColliderMassProperties::Density(50.0),
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))

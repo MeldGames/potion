@@ -97,6 +97,18 @@ impl Plugin for PlayerPlugin {
                 .before("related_entities"),
         );
         app.add_network_system(
+            spawn::connected_mass
+                .label("connected_mass")
+                .after("connected_entities"),
+        );
+
+        app.add_network_system(
+            spawn::extended_mass
+                .label("extended_mass")
+                .after("connected_mass"),
+        );
+
+        app.add_network_system(
             controller::controller_exclude
                 .label("controller_exclude")
                 .after("joint_children"),

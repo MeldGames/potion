@@ -5,6 +5,7 @@ use iyes_loopless::prelude::*;
 use sabi::{
     prelude::*,
     protocol::{client_connected, input::QueuedInputs, ServerChannel},
+    stage::NetworkSimulationInfo,
 };
 
 use crate::player::prelude::{PlayerEvent, PlayerInput};
@@ -31,6 +32,9 @@ impl Plugin for NetworkPlugin {
         });
 
         app.insert_resource(QueuedInputs::<PlayerInput>::new());
+        let mut info = NetworkSimulationInfo::new(crate::TICK_RATE);
+        //info.slowdown = 3.0;
+        app.insert_resource(info);
         /*
                app.insert_resource(ui::NetworkUiState::default());
                app.add_meta_network_system(ui::update_network_stats);

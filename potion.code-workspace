@@ -1,46 +1,60 @@
 {
 	"folders": [
 		{
+			"name": "potion",
 			"path": "."
 		},
 		{
+			"name": "sabi",
 			"path": "../sabi"
 		},
 		{
+			"name": "springy",
+			"path": "../springy"
+		},
+		{
+			"name": "bevy_rapier",
 			"path": "../bevy_rapier"
 		},
 		{
+			"name": "parry",
 			"path": "../parry"
 		},
 		{
+			"name": "bevy",
 			"path": "../bevy"
 		},
 		{
+			"name": "bevy_mod_wanderlust",
 			"path": "../bevy_mod_wanderlust"
 		},
 		{
+			"name": "bevy-mesh-stl",
 			"path": "../bevy-mesh-stl"
 		},
 		{
+			"name": "vhacd-rs",
 			"path": "../vhacd-rs"
 		},
 		{
+			"name": "fuck-vhacd-rs",
 			"path": "../fuck-vhacd-rs"
 		},
 		{
+			"name": "coacd",
 			"path": "../coacd"
 		},
 		{
+			"name": "rapier",
 			"path": "../rapier"
 		},
 		{
+			"name": "bevy-inspector-egui",
 			"path": "../bevy-inspector-egui"
 		},
 		{
+			"name": "bevy_mod_inverse_kinematics",
 			"path": "../bevy_mod_inverse_kinematics"
-		},
-		{
-			"path": "../springy"
 		}
 	],
 	"settings": {
