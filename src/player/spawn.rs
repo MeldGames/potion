@@ -226,36 +226,35 @@ pub fn setup_player(
                 // but this is easier to do.
 
                 lobby.players.insert(id, player_entity);
-                               if let Some(ref mut server) = server {
-                                   for (existing_id, existing_entity) in lobby.players.iter() {
-                                       let message = bincode::serialize(&ServerMessage::PlayerConnected {
-                                           id: *existing_id,
-                                           entity: (*existing_entity).into(),
-                                       })
-                                       .unwrap();
+                if let Some(ref mut server) = server {
+                    for (existing_id, existing_entity) in lobby.players.iter() {
+                        let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                            id: *existing_id,
+                            entity: (*existing_entity).into(),
+                        })
+                        .unwrap();
 
-                                       server.send_message(id, ServerChannel::Message.id(), message);
-                                   }
-                               }
+                        server.send_message(id, ServerChannel::Message.id(), message);
+                    }
+                }
 
+                if let Some(ref mut server) = server {
+                    let message = bincode::serialize(&ServerMessage::PlayerConnected {
+                        id: id,
+                        entity: player_entity.into(),
+                    })
+                    .unwrap();
+                    server.broadcast_message(ServerChannel::Message.id(), message);
 
-                               if let Some(ref mut server) = server {
-                                   let message = bincode::serialize(&ServerMessage::PlayerConnected {
-                                       id: id,
-                                       entity: player_entity.into(),
-                                   })
-                                   .unwrap();
-                                   server.broadcast_message(ServerChannel::Message.id(), message);
+                    let message = bincode::serialize(&ServerMessage::AssignOwnership {
+                        entity: player_entity.into(),
+                    })
+                    .unwrap();
+                    server.send_message(id, ServerChannel::Message.id(), message);
 
-                                   let message = bincode::serialize(&ServerMessage::AssignOwnership {
-                                       entity: player_entity.into(),
-                                   })
-                                   .unwrap();
-                                   server.send_message(id, ServerChannel::Message.id(), message);
-
-                                   let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
-                                   server.send_message(id, ServerChannel::Message.id(), message);
-                               }
+                    let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
+                    server.send_message(id, ServerChannel::Message.id(), message);
+                }
             }
         }
     }
