@@ -51,13 +51,13 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
+    app.add_plugin(crate::network::NetworkPlugin);
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
         warn_on_frame_drop: false,
         ..default()
     });
     app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.add_plugin(crate::network::NetworkPlugin);
     app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .insert_resource(WindowDescriptor {

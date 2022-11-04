@@ -55,6 +55,9 @@
 		{
 			"name": "bevy_mod_inverse_kinematics",
 			"path": "../bevy_mod_inverse_kinematics"
+		},
+		{
+			"path": "../bevy_editor_pls"
 		}
 	],
 	"settings": {

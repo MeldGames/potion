@@ -26,6 +26,7 @@ pub fn player_movement(
         (
             &GlobalTransform,
             &mut ControllerInput,
+            &mut ExternalImpulse,
             &LookTransform,
             &PlayerInput,
         ),
@@ -33,7 +34,7 @@ pub fn player_movement(
     >,
     _lines: ResMut<DebugLines>,
 ) {
-    for (global, mut controller, _look_transform, player_input) in query.iter_mut() {
+    for (global, mut controller, mut impulse, _look_transform, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
         if player_input.left() {
             dir.x += -1.;
@@ -81,7 +82,7 @@ pub fn player_movement(
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            controller.custom_torque.y = y * 0.5; // avoid overshooting
+            impulse.torque_impulse.y += y * 0.5; // avoid overshooting
         }
     }
 }

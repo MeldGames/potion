@@ -62,7 +62,7 @@ pub fn update_network_stats(
     if let Some(ref server) = server {
         match server_visualizer {
             Some(mut visualizer) => {
-                visualizer.update(server);
+                visualizer.update(&**server);
             }
             None => {
                 commands.insert_resource(RenetServerVisualizer::<DATA_POINTS>::new(

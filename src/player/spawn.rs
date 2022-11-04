@@ -51,7 +51,7 @@ pub fn setup_player(
     mut player_reader: EventReader<PlayerEvent>,
 
     mut lobby: ResMut<Lobby>,
-    _server: Option<ResMut<RenetServer>>,
+    mut server: Option<ResMut<RenetServer>>,
 ) {
     for (event, id) in player_reader.iter_with_id() {
         info!("player event {:?}: {:?}", id, event);
@@ -182,7 +182,7 @@ pub fn setup_player(
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
                     .insert(ConnectedMass::default())
-                    //.insert(Owned)
+                    .insert(Owned)
                     .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
@@ -226,7 +226,6 @@ pub fn setup_player(
                 // but this is easier to do.
 
                 lobby.players.insert(id, player_entity);
-                /*
                                if let Some(ref mut server) = server {
                                    for (existing_id, existing_entity) in lobby.players.iter() {
                                        let message = bincode::serialize(&ServerMessage::PlayerConnected {
@@ -257,7 +256,6 @@ pub fn setup_player(
                                    let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
                                    server.send_message(id, ServerChannel::Message.id(), message);
                                }
-                */
             }
         }
     }
@@ -439,7 +437,7 @@ pub struct ConnectedMass(pub f32);
 
 impl Default for ConnectedMass {
     fn default() -> Self {
-        Self(f32::INFINITY)
+        Self(0.0)
     }
 }
 

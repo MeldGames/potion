@@ -17,14 +17,14 @@ pub struct Cauldron;
 pub struct Ingredient;
 
 pub trait NamedEntity {
-    fn named(&self, entity: Entity) -> String;
+    fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a>;
 }
 
 impl<'w, 's, F: WorldQuery> NamedEntity for Query<'w, 's, &Name, F> {
-    fn named(&self, entity: Entity) -> String {
+    fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a> {
         match self.get_component::<Name>(entity) {
-            Ok(name) => name.as_str().to_owned(),
-            _ => format!("{:?}", entity),
+            Ok(name) => Box::new(name.as_str()),
+            _ => Box::new(entity),
         }
     }
 }
