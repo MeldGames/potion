@@ -144,8 +144,8 @@ pub fn grab_collider(
 
                     let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
-                    let stiffness = 0.0;
-                    let damping = 0.0;
+                    let stiffness = 20.0;
+                    let damping = 0.4;
                     let mut grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
                         .local_anchor2(anchor2)
@@ -190,12 +190,6 @@ pub fn grab_collider(
             }
         }
     }
-}
-
-#[derive(Default, Debug, Component, Clone, Copy)]
-pub struct TargetPosition {
-    pub translation: Option<Vec3>,
-    pub rotation: Option<Quat>,
 }
 
 #[derive(Debug, Component, Clone, Copy)]

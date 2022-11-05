@@ -172,7 +172,7 @@ fn setup_map(
         &*asset_server,
         &mut meshes,
         Transform {
-            translation: Vec3::new(-4.0, 5.0, -2.0),
+            translation: Vec3::new(-4.0, 4.0, -2.0),
             scale: Vec3::splat(2.5),
             ..default()
         },

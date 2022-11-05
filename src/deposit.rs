@@ -156,8 +156,8 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
-        .motor_max_force(1.0)
-        .local_anchor1(Vec3::new(0.0, 1.6, -0.73))
+        .motor_max_force(0.0)
+        .local_anchor1(Vec3::new(-0.05, 1.5, -0.73))
         .limits([0.0, PI / 1.04]);
     let mut lid_hinge = lid_hinge.build();
     lid_hinge.set_contacts_enabled(false);
