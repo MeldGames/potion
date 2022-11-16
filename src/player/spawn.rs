@@ -156,6 +156,7 @@ pub fn setup_player(
                                 strength: 40.0,
                                 damping: 0.7,
                             },
+                            opposing_movement_impulse_scale: 0.0,
                             ..default()
                         },
                         physics: ControllerPhysicsBundle {
@@ -175,7 +176,7 @@ pub fn setup_player(
                         scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
-                    .insert(crate::deposit::Value::new(500))
+                    //.insert(crate::deposit::Value::new(500))
                     //.insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
@@ -352,6 +353,7 @@ pub fn attach_arm(
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(arm_entity, hand_joint))
+        //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .id();
 }

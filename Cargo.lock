@@ -723,9 +723,9 @@ dependencies = [
 [[package]]
 name = "bevy_mod_wanderlust"
 version = "0.2.3"
-source = "git+https://github.com/aceeri/bevy_mod_wanderlust#ecac88125f28a3bd61844894ce4e86548159c152"
 dependencies = [
  "bevy",
+ "bevy_prototype_debug_lines",
  "bevy_rapier3d",
 ]
 

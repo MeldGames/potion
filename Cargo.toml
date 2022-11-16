@@ -14,31 +14,36 @@ opt-level = 3
 bevy = "0.8"
 bevy_egui = "0.16"
 #sabi = {path = "../sabi/sabi", features = ["public"]}
-sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
-serde = {version = "1.0", features = ["derive"]}
-springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
+sabi = { git = "https://github.com/aceeri/sabi", features = ["public"] }
+serde = { version = "1.0", features = ["derive"] }
+springy = { git = "https://github.com/aceeri/springy", features = ["rapier3d"] }
 
 bevy_embedded_assets = "0.4"
-bevy_fly_camera = {git = "https://github.com/Aceeri/bevy_fly_camera", branch = "bevy-0.8"}
-bevy_mod_outline = {git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313"}
-bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
+bevy_fly_camera = { git = "https://github.com/Aceeri/bevy_fly_camera", branch = "bevy-0.8" }
+bevy_mod_outline = { git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313" }
+#bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
+bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust", features = [
+    "debug_lines",
+] }
 
-bevy-inspector-egui = {git = "https://github.com/aceeri/bevy-inspector-egui"}
-bevy-inspector-egui-rapier = {git = "https://github.com/aceeri/bevy-inspector-egui", features = ["rapier3d"]}
+bevy-inspector-egui = { git = "https://github.com/aceeri/bevy-inspector-egui" }
+bevy-inspector-egui-rapier = { git = "https://github.com/aceeri/bevy-inspector-egui", features = [
+    "rapier3d",
+] }
 #bevy_editor_pls = "0.1"
-bevy_editor_pls = {git = "https://github.com/aceeri/bevy_editor_pls"}
+bevy_editor_pls = { git = "https://github.com/aceeri/bevy_editor_pls" }
 bevy_framepace = "0.6"
 bevy_mod_inverse_kinematics = "0.1"
-bevy_prototype_debug_lines = {version = "0.8", features = ["3d"]}
-bevy_rapier3d = {version = "0.18", features = ["serde-serialize"]}
+bevy_prototype_debug_lines = { version = "0.8", features = ["3d"] }
+bevy_rapier3d = { version = "0.18", features = ["serde-serialize"] }
 bincode = "1.3"
 bitflags = "1.3"
 derive_more = "0.99"
 egui = "0.19"
-fixed = {version = "1.11", features = ["serde", "std", "serde-str"]}
+fixed = { version = "1.11", features = ["serde", "std", "serde-str"] }
 fxhash = "0.2"
 #igd = "0.12"
-iyes_loopless = {version = "0.7", features = ["states"]}
+iyes_loopless = { version = "0.7", features = ["states"] }
 lazy_static = "1.4"
 leafwing-input-manager = "0.5"
 #my_internet_ip = "0.1"
@@ -49,16 +54,16 @@ vec-collections = "0.4"
 wgpu-types = "0.13"
 
 #bevy_renet = "0.0.5"
-bevy_renet = {git = "https://github.com/lucaspoffo/renet"}
-bevy_shader_utils = {path = "../bevy_shader_utils"}
+bevy_renet = { git = "https://github.com/lucaspoffo/renet" }
+bevy_shader_utils = { path = "../bevy_shader_utils" }
 obj = "0.10.2"
 #renet_visualizer = "0.0.2"
-renet_visualizer = {git = "https://github.com/lucaspoffo/renet"}
+renet_visualizer = { git = "https://github.com/lucaspoffo/renet" }
 
 [patch.crates-io]
-rechannel = {git = "https://github.com/lucaspoffo/renet"}
-renet = {git = "https://github.com/lucaspoffo/renet"}
-renetcode = {git = "https://github.com/lucaspoffo/renet"}
+rechannel = { git = "https://github.com/lucaspoffo/renet" }
+renet = { git = "https://github.com/lucaspoffo/renet" }
+renetcode = { git = "https://github.com/lucaspoffo/renet" }
 #bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
