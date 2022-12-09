@@ -265,38 +265,14 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bbe6f9142de83d656fb45e9629bd7f3ede71d202439922bdf473814daceefe4"
-dependencies = [
- "bevy",
- "bevy-inspector-egui-derive 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_egui",
- "image 0.23.14",
- "pretty-type-name",
-]
-
-[[package]]
-name = "bevy-inspector-egui"
-version = "0.14.0"
 source = "git+https://github.com/jakobhellermann/bevy-inspector-egui#4a8f3c34a0edf3acd7dd32724eb004778f471793"
 dependencies = [
  "bevy",
- "bevy-inspector-egui-derive 0.14.0 (git+https://github.com/jakobhellermann/bevy-inspector-egui)",
+ "bevy-inspector-egui-derive",
  "bevy_egui",
  "image 0.23.14",
  "nalgebra",
  "pretty-type-name",
-]
-
-[[package]]
-name = "bevy-inspector-egui-derive"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8369516ed94a814a8794a1e75acbd53e4f250da8f851e75870501ca0e7f083b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -315,7 +291,7 @@ version = "0.8.0"
 source = "git+https://github.com/jakobhellermann/bevy-inspector-egui#4a8f3c34a0edf3acd7dd32724eb004778f471793"
 dependencies = [
  "bevy",
- "bevy-inspector-egui 0.14.0 (git+https://github.com/jakobhellermann/bevy-inspector-egui)",
+ "bevy-inspector-egui",
  "bevy_rapier3d",
 ]
 
@@ -506,7 +482,7 @@ version = "0.2.0"
 source = "git+https://github.com/jakobhellermann/bevy_editor_pls#ea3b02783776534ed1bcb34e68ec71eba133a133"
 dependencies = [
  "bevy",
- "bevy-inspector-egui 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy-inspector-egui",
  "indexmap",
 ]
 
@@ -516,7 +492,7 @@ version = "0.2.0"
 source = "git+https://github.com/jakobhellermann/bevy_editor_pls#ea3b02783776534ed1bcb34e68ec71eba133a133"
 dependencies = [
  "bevy",
- "bevy-inspector-egui 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy-inspector-egui",
  "bevy_editor_pls_core",
  "bevy_mod_debugdump",
  "bevy_mod_raycast",
@@ -3400,7 +3376,7 @@ name = "potion"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy-inspector-egui 0.14.0 (git+https://github.com/jakobhellermann/bevy-inspector-egui)",
+ "bevy-inspector-egui",
  "bevy-inspector-egui-rapier",
  "bevy_editor_pls",
  "bevy_egui",
@@ -3429,7 +3405,7 @@ dependencies = [
  "serde",
  "springy",
  "vec-collections",
- "wgpu-types 0.13.2",
+ "wgpu-types",
 ]
 
 [[package]]
@@ -3740,7 +3716,6 @@ dependencies = [
  "serde",
  "toml",
  "vec-collections",
- "wgpu-types 0.13.2",
  "zstd",
 ]
 
@@ -3950,7 +3925,7 @@ version = "0.1.0"
 source = "git+https://github.com/aceeri/springy#8cb2cecb6030241fc281129b83b4c37f792e708f"
 dependencies = [
  "bevy",
- "bevy-inspector-egui 0.14.0 (git+https://github.com/jakobhellermann/bevy-inspector-egui)",
+ "bevy-inspector-egui",
  "bevy_rapier3d",
 ]
 
@@ -4471,7 +4446,7 @@ dependencies = [
  "web-sys",
  "wgpu-core",
  "wgpu-hal",
- "wgpu-types 0.14.1",
+ "wgpu-types",
 ]
 
 [[package]]
@@ -4495,7 +4470,7 @@ dependencies = [
  "thiserror",
  "web-sys",
  "wgpu-hal",
- "wgpu-types 0.14.1",
+ "wgpu-types",
 ]
 
 [[package]]
@@ -4533,17 +4508,8 @@ dependencies = [
  "thiserror",
  "wasm-bindgen",
  "web-sys",
- "wgpu-types 0.14.1",
+ "wgpu-types",
  "winapi",
-]
-
-[[package]]
-name = "wgpu-types"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f762cbc08e1a51389859cf9c199c7aef544789cf3510889aab12c607f701604"
-dependencies = [
- "bitflags",
 ]
 
 [[package]]

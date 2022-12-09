@@ -27,10 +27,8 @@ bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust", features = [
     "debug_lines",
 ] }
 
-bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
-bevy-inspector-egui-rapier = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", features = [
-    "rapier3d",
-] }
+bevy-inspector-egui = "0.14"
+bevy-inspector-egui-rapier = { version = "0.8", features = ["rapier3d"] }
 #bevy_editor_pls = "0.1"
 bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls" }
 bevy_framepace = "0.9"
@@ -52,7 +50,7 @@ num-traits = "0.2"
 rand = "0.8"
 ron = "0.8"
 vec-collections = "0.4"
-wgpu-types = "0.13"
+wgpu-types = "0.14"
 
 #bevy_renet = "0.0.5"
 bevy_renet = { git = "https://github.com/lucaspoffo/renet" }
@@ -72,7 +70,9 @@ renet_visualizer = { git = "https://github.com/lucaspoffo/renet", features = [
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
+bevy-inspector-egui-rapier = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
 
+bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
 [[bin]]
 name = "local"
 path = "src/local.rs"
