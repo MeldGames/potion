@@ -57,18 +57,13 @@ fn setup_camera(mut commands: Commands, _asset_server: Res<AssetServer>) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_translation(Vec3::new(0., 12., 10.))
             .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+        camera: Camera {
+            priority: 0,
+            ..default()
+        },
         ..Default::default()
     });
     //.insert(FlyCamera::default());
-
-    commands.spawn(SceneBundle {
-        scene: _asset_server.load("models/cauldron.glb#Scene0"),
-        ..default()
-    });
-    commands.spawn(SceneBundle {
-        scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
-        ..default()
-    });
 }
 
 fn setup_map(

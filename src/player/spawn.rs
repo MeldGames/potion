@@ -58,64 +58,6 @@ pub fn setup_player(
         match event {
             &PlayerEvent::SetupLocal { id } => {
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
-
-                let camera = commands
-                    .spawn(Camera3dBundle {
-                        transform: Transform::from_translation(Vec3::new(0., 0., 4.))
-                            .looking_at(Vec3::ZERO, Vec3::Y),
-                        projection: PerspectiveProjection {
-                            far: 10000.,
-                            ..default()
-                        }
-                        .into(),
-                        ..Default::default()
-                    })
-                    .insert(AvoidIntersecting {
-                        dir: Vec3::Z,
-                        max_toi: 4.0,
-                        buffer: 0.05,
-                    })
-                    .insert(ZoomScroll {
-                        current: 8.0,
-                        scroll_sensitivity: -0.5,
-                        min: 4.0,
-                        max: 24.0,
-                    })
-                    .insert(ZoomScrollForToi)
-                    .insert(Name::new("Player Camera"))
-                    .id();
-
-                let neck = commands
-                    .spawn((
-                        Transform {
-                            translation: Vec3::new(0., 1., 0.),
-                            ..Default::default()
-                        },
-                        GlobalTransform::default(),
-                        Neck,
-                        Name::new("Neck"),
-                    ))
-                    .insert(Attach::translation(player_entity))
-                    /* .insert(AttachTranslation::Spring {
-                        strength: 50.0,
-                        damp_ratio: 0.9,
-                    }) */
-                    .insert(Velocity::default())
-                    .id();
-
-                commands.entity(neck).push_children(&[camera]);
-
-                let mut material = StandardMaterial::default();
-                material.base_color = Color::hex("800000").unwrap().into();
-                material.perceptual_roughness = 0.97;
-                material.reflectance = 0.0;
-                let _red = materials.add(material);
-
-                commands
-                    .entity(player_entity)
-                    .insert(PlayerInput::default())
-                    .insert(PlayerCamera(camera))
-                    .insert(LookTransform::default());
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -187,6 +129,7 @@ pub fn setup_player(
                     .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
+                    .insert(LookTransform::default())
                     .id();
 
                 let distance_from_body = player_radius + 0.3;
@@ -223,6 +166,57 @@ pub fn setup_player(
                                    2,
                                );
                 */
+                let camera = commands
+                    .spawn(Camera3dBundle {
+                        transform: Transform::from_translation(Vec3::new(0., 0., 4.))
+                            .looking_at(Vec3::ZERO, Vec3::Y),
+                        projection: PerspectiveProjection {
+                            far: 10000.,
+                            ..default()
+                        }
+                        .into(),
+                        camera: Camera {
+                            priority: 1000,
+                            ..default()
+                        },
+                        ..default()
+                    })
+                    .insert(AvoidIntersecting {
+                        dir: Vec3::Z,
+                        max_toi: 4.0,
+                        buffer: 0.05,
+                    })
+                    .insert(ZoomScroll {
+                        current: 8.0,
+                        scroll_sensitivity: -0.5,
+                        min: 4.0,
+                        max: 24.0,
+                    })
+                    .insert(ZoomScrollForToi)
+                    .insert(Name::new("Player Camera"))
+                    .id();
+
+                let neck = commands
+                    .spawn((
+                        Transform {
+                            translation: Vec3::new(0., 1., 0.),
+                            ..Default::default()
+                        },
+                        GlobalTransform::default(),
+                        Neck,
+                        Name::new("Neck"),
+                    ))
+                    .insert(Attach::translation(player_entity))
+                    /* .insert(AttachTranslation::Spring {
+                        strength: 50.0,
+                        damp_ratio: 0.9,
+                    }) */
+                    .insert(Velocity::default())
+                    .id();
+
+                commands.entity(neck).push_children(&[camera]);
+                commands.entity(player_entity).insert(PlayerCamera(camera));
+
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 

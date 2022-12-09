@@ -712,17 +712,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_mod_outline"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "531162ea32f16c73d461b415146f8b10ca6e6112db8280f12ea646788a7fca75"
-dependencies = [
- "bevy",
- "bitfield",
- "thiserror",
-]
-
-[[package]]
 name = "bevy_mod_raycast"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1132,12 +1121,6 @@ checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
 dependencies = [
  "serde",
 ]
-
-[[package]]
-name = "bitfield"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d7e60934ceec538daadb9d8432424ed043a904d8e0243f3c6446bce549a46ac"
 
 [[package]]
 name = "bitflags"
@@ -3382,7 +3365,6 @@ dependencies = [
  "bevy_egui",
  "bevy_framepace",
  "bevy_mod_inverse_kinematics",
- "bevy_mod_outline",
  "bevy_mod_wanderlust",
  "bevy_prototype_debug_lines",
  "bevy_rapier3d",

@@ -21,32 +21,4 @@ fn spawn_local_player(
     spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
     println!("yessir");
     info!("spawning new player");
-    commands.insert_resource(AmbientLight {
-        color: Color::ALICE_BLUE,
-        brightness: 0.72,
-    });
-
-    const HALF_SIZE: f32 = 100.0;
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0,
-                far: 1000.0,
-                ..default()
-            },
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
-            ..default()
-        },
-        ..default()
-    });
 }
