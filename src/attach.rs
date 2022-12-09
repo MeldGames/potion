@@ -1,10 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cauldron::NamedEntity, physics::Spring};
+use crate::cauldron::NamedEntity;
 
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_prototype_debug_lines::DebugLines;
 use sabi::stage::NetworkSimulationAppExt;
 
 #[derive(Debug, Clone, Component)]
@@ -119,7 +117,7 @@ pub fn update_attach(
             .insert(Velocity::default());
     }
 
-    for (attach_entity, mut transform, velocity, attach, translation, rotation, scale) in
+    for (attach_entity, mut transform, _velocity, attach, translation, rotation, scale) in
         &mut attachers
     {
         let particle_entity = attach.get();

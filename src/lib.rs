@@ -20,12 +20,12 @@ use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
-use joint_break::{BreakJointPlugin, BreakableJoint};
+use joint_break::BreakJointPlugin;
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 //use trees::TreesPlugin;
 
-use attach::{Attach, AttachTranslation};
+use attach::Attach;
 
 use store::{SecurityCheck, StoreItem, StorePlugin};
 
@@ -333,7 +333,7 @@ fn setup_map(
         ))
         .id();
 
-    let welt_slot = commands
+    let _welt_slot = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.05,
@@ -375,7 +375,7 @@ fn setup_map(
     let level_collision_mesh3: Handle<Mesh> =
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
 
-    let mock = commands
+    let _mock = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.00,
@@ -699,7 +699,7 @@ fn setup_ik(
     // Use the presence of `AnimationPlayer` to determine the root entity of the skeleton.
     for (entity, _parent) in added_query.iter() {
         // Try to get the entity for the right hand joint.
-        let right_hand = find_entity(
+        let _right_hand = find_entity(
             &EntityPath {
                 parts: vec![
                     "Pelvis".into(),

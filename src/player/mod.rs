@@ -1,5 +1,3 @@
-use bevy::render::mesh::skinning::SkinnedMesh;
-
 use bevy::prelude::*;
 
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};

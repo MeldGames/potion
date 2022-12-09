@@ -1,7 +1,6 @@
-use bevy::{ecs::query::WorldQuery, prelude::*, utils::HashSet};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy::prelude::*;
+
 use bevy_rapier3d::prelude::*;
-use sabi::stage::NetworkSimulationAppExt;
 
 use crate::{
     attach::Attach,
@@ -31,7 +30,7 @@ impl<'w, 's> NamedEntity for Query<'w, 's, &Name, ()> {
 
 pub struct CauldronPlugin;
 impl Plugin for CauldronPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         //app.add_network_system(slot_ingredient);
     }
 }
@@ -40,6 +39,7 @@ pub fn spawn_cauldron(
     commands: &mut Commands,
     asset_server: &AssetServer,
     position: Transform,
+    meshes: &mut ResMut<Assets<Mesh>>,
 ) -> Entity {
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/cauldron.glb#Mesh0/Primitive0");

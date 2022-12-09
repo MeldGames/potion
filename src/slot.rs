@@ -1,19 +1,12 @@
 use std::{collections::VecDeque, time::Duration};
 
-use bevy::{
-    ecs::{entity::Entities, query::WorldQuery},
-    prelude::*,
-    utils::HashSet,
-};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy::{ecs::entity::Entities, prelude::*};
+use bevy_inspector_egui::Inspectable;
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
 use sabi::stage::NetworkSimulationAppExt;
 
-use crate::{
-    attach::Attach,
-    cauldron::{Ingredient, NamedEntity},
-};
+use crate::cauldron::NamedEntity;
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect, Inspectable)]
 #[reflect(Component)]
@@ -62,7 +55,7 @@ impl SlotDeposit {
         }
     }
 
-    pub fn contains(&self, entity: Entity) -> Option<usize> {
+    pub fn contains(&self, _entity: Entity) -> Option<usize> {
         self.attempting
             .iter()
             .enumerate()
@@ -95,7 +88,7 @@ pub fn pending_slot(
     mut collision_events: EventReader<CollisionEvent>,
 ) {
     for collision_event in collision_events.iter() {
-        let ((slotter_entity, mut slotter), (ingredient_entity, ingredient), colliding) =
+        let ((_slotter_entity, mut slotter), (ingredient_entity, _ingredient), colliding) =
             match collision_event {
                 &CollisionEvent::Started(collider1, collider2, _flags) => {
                     let (slotter, potential) = if let Ok(slotter) = slotters.get_mut(collider1) {
@@ -146,7 +139,7 @@ pub fn pending_slot(
     }
 }
 
-pub fn tick_grace_period(mut slots: Query<(&mut SlotGracePeriod)>) {
+pub fn tick_grace_period(mut slots: Query<&mut SlotGracePeriod>) {
     for mut period in &mut slots {
         period.0.tick(crate::TICK_RATE);
     }
@@ -197,7 +190,7 @@ pub fn spring_slot(
     mut lines: ResMut<DebugLines>,
 ) {
     let timestep = crate::TICK_RATE.as_secs_f32();
-    let inverse_timestep = 1.0 / timestep;
+    let _inverse_timestep = 1.0 / timestep;
 
     for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
         if let Some(particle_entity) = slot.containing {

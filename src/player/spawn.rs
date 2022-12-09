@@ -450,7 +450,7 @@ pub fn connected_mass(
     for (entity, mut connected_mass, connected) in &mut connected {
         let mut summed_mass = 0.0;
         for attached in &connected.grabbed {
-            if let Ok(part_mass) = masses.get(*attached) {
+            if let Ok(_part_mass) = masses.get(*attached) {
                 //summed_mass += part_mass.0.mass;
             }
         }

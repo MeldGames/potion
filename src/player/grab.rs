@@ -178,7 +178,7 @@ pub fn grab_collider(
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
                 for child in children.iter() {
-                    if let Ok((impulse_joint, joint)) = grab_joints.get(*child) {
+                    if let Ok((impulse_joint, _joint)) = grab_joints.get(*child) {
                         commands
                             .entity(impulse_joint.parent)
                             .remove::<springy::rapier::ExtendedMass>();
@@ -235,7 +235,7 @@ pub fn player_grabby_hands(
             };
 
         let player_entity = arm_joint.parent;
-        let (_player_global, _direction, input, camera_entity, player_velocity) =
+        let (_player_global, _direction, input, camera_entity, _player_velocity) =
             if let Ok(input) = inputs.get(player_entity) {
                 input
             } else {
