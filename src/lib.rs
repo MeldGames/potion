@@ -717,7 +717,7 @@ fn setup_ik(
         )
         .unwrap();
 
-        let target = commands
+        let _target = commands
             .spawn(PbrBundle {
                 transform: Transform::from_xyz(0.3, 0.8, 0.2),
                 mesh: meshes.add(Mesh::from(shape::Icosphere {

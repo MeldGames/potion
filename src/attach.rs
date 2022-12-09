@@ -99,7 +99,6 @@ pub fn update_attach(
     >,
     globals: Query<&GlobalTransform>,
     names: Query<&Name>,
-    mut lines: ResMut<DebugLines>,
 ) {
     /*
        for invalid_attacher in &parented {
@@ -142,7 +141,7 @@ pub fn update_attach(
 
                     let (impulse, _) = spring.impulse(timestep, particle_a, particle_b, None);
 
-                    let [mut attach_impulse, mut particle_impulse] = if let Ok(impulses) =
+                    let [attach_impulse, particle_impulse] = if let Ok(impulses) =
                         impulses.get_many_mut([attach_entity, particle_entity])
                     {
                         impulses

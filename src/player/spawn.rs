@@ -445,7 +445,7 @@ impl Default for ConnectedMass {
 pub fn connected_mass(
     mut connected: Query<(Entity, &mut ConnectedMass, &ConnectedEntities)>,
     masses: Query<&ReadMassProperties>,
-    names: Query<&Name>,
+    //names: Query<&Name>,
 ) {
     for (entity, mut connected_mass, connected) in &mut connected {
         let mut summed_mass = 0.0;

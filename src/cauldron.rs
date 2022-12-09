@@ -40,7 +40,6 @@ pub fn spawn_cauldron(
     commands: &mut Commands,
     asset_server: &AssetServer,
     position: Transform,
-    mut meshes: &mut ResMut<Assets<Mesh>>,
 ) -> Entity {
     let level_collision_mesh: Handle<Mesh> =
         asset_server.load("models/cauldron.glb#Mesh0/Primitive0");

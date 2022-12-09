@@ -33,7 +33,7 @@ impl Plugin for NetworkPlugin {
         });
 
         app.insert_resource(QueuedInputs::<PlayerInput>::new());
-        let mut info = NetworkSimulationInfo::new(crate::TICK_RATE);
+        let info = NetworkSimulationInfo::new(crate::TICK_RATE);
         //info.slowdown = 3.0;
         app.insert_resource(info);
         app.insert_resource(ui::NetworkUiState::default());

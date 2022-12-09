@@ -66,7 +66,7 @@ impl SlotDeposit {
         self.attempting
             .iter()
             .enumerate()
-            .find(|(index, entity)| entity == entity)
+            .find(|(_index, entity)| entity == entity)
             .map(|(index, _)| index)
     }
 
@@ -89,7 +89,6 @@ impl SlotDeposit {
 }
 
 pub fn pending_slot(
-    mut commands: Commands,
     names: Query<&Name>,
     mut slotters: Query<(Entity, &mut SlotDeposit)>,
     slottable: Query<(Entity, &Slottable)>,
@@ -201,7 +200,6 @@ pub fn spring_slot(
     let inverse_timestep = 1.0 / timestep;
 
     for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
-        let mut unset = false;
         if let Some(particle_entity) = slot.containing {
             if !entities.contains(particle_entity) {
                 warn!(
