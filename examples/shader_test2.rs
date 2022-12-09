@@ -32,13 +32,13 @@ fn setup(
     });
 
     // camera
-    commands.spawn().insert_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 2.0, 5.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
     // plane
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
         material: materials.add(Color::rgb(0.1, 0.1, 0.1).into()),
         ..default()
@@ -63,8 +63,7 @@ fn setup(
     for location in locations {
         // spawn orbs
         commands
-            .spawn()
-            .insert_bundle(MaterialMeshBundle {
+            .spawn(MaterialMeshBundle {
                 mesh: meshes.add(Mesh::from(shape::UVSphere {
                     radius: 1.0,
                     ..default()
@@ -75,7 +74,7 @@ fn setup(
             })
             .add_children(|parent| {
                 // child light
-                parent.spawn_bundle(PointLightBundle {
+                parent.spawn(PointLightBundle {
                     point_light: PointLight {
                         intensity: 10000.0,
                         radius: 1.0,

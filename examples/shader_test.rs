@@ -49,7 +49,7 @@ fn setup(
     _assets: Res<AssetServer>,
 ) {
     commands
-        .spawn_bundle(MaterialMesh2dBundle {
+        .spawn(MaterialMesh2dBundle {
             mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
             material: my_material_assets.add(DopeMaterial {
                 color: Color::rgb(0.0, 1.0, 0.3),
@@ -62,7 +62,7 @@ fn setup(
         .insert(Health { value: 0.2 });
 
     commands
-        .spawn_bundle(MaterialMesh2dBundle {
+        .spawn(MaterialMesh2dBundle {
             mesh: mesh_assets.add(Mesh::from(shape::Quad::default())).into(),
             material: my_material_assets.add(DopeMaterial {
                 color: Color::rgb(0.0, 1.0, 0.3),
@@ -86,7 +86,7 @@ fn spawn_camera(mut commands: Commands) {
 
     camera.projection.scaling_mode = ScalingMode::None;
 
-    commands.spawn_bundle(camera);
+    commands.spawn(camera);
 }
 
 #[derive(AsBindGroup, TypeUuid, Clone)]

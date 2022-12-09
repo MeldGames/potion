@@ -10,22 +10,20 @@ pub mod physics;
 pub mod player;
 pub mod slot;
 pub mod store;
-pub mod trees;
+//pub mod trees;
 
 use std::f32::consts::PI;
 
 use bevy_egui::EguiPlugin;
-use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
-use bevy_mod_outline::{Outline, OutlinePlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
 use joint_break::{BreakJointPlugin, BreakableJoint};
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
-use trees::TreesPlugin;
+//use trees::TreesPlugin;
 
 use attach::{Attach, AttachTranslation};
 
@@ -34,7 +32,10 @@ use store::{SecurityCheck, StoreItem, StorePlugin};
 //use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    window::{CursorGrabMode, WindowPlugin},
+};
 
 use bevy_prototype_debug_lines::*;
 
@@ -43,32 +44,36 @@ pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
-    app.add_plugins_with(DefaultPlugins, |group| {
-        group.add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
-    });
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                window: WindowDescriptor {
+                    title: "Brewalized".to_string(),
+                    width: 1600.,
+                    height: 900.,
+                    cursor_visible: true,
+                    cursor_grab_mode: CursorGrabMode::None,
+                    present_mode: bevy::window::PresentMode::Immediate,
+                    ..default()
+                },
+                ..default()
+            })
+            .set(AssetPlugin {
+                watch_for_changes: true,
+                ..default()
+            }),
+    );
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 14 });
     app.add_plugin(EguiPlugin);
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
-    app.add_plugin(bevy_editor_pls::EditorPlugin);
+    //app.add_plugin(bevy_editor_pls::EditorPlugin);
     app.add_plugin(crate::network::NetworkPlugin);
 
-    app.insert_resource(bevy_framepace::FramepaceSettings {
-        warn_on_frame_drop: false,
-        ..default()
-    });
+    app.insert_resource(bevy_framepace::FramepaceSettings { ..default() });
     app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
-        .insert_resource(WindowDescriptor {
-            title: "Brewalized".to_string(),
-            width: 1600.,
-            height: 900.,
-            cursor_visible: true,
-            cursor_locked: false,
-            present_mode: bevy::window::PresentMode::Immediate,
-            ..Default::default()
-        })
         .add_plugin(PlayerPlugin)
         .add_plugin(CauldronPlugin)
         .add_plugin(SlotPlugin)
@@ -76,7 +81,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(DepositPlugin)
         .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
-        .add_plugin(TreesPlugin)
+        //.add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
             always_on_top: false,
@@ -84,7 +89,7 @@ pub fn setup_app(app: &mut App) {
             style: Default::default(),
             mode: DebugRenderMode::COLLIDER_SHAPES,
         })
-        .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
+        //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     //app.add_plugin(OutlinePlugin);
@@ -100,6 +105,7 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
+/*
 fn outline_meshes(
     mut commands: Commands,
     mut outlines: ResMut<Assets<Outline>>,
@@ -117,6 +123,7 @@ fn outline_meshes(
         }
     }
 }
+ */
 
 fn setup_map(
     mut commands: Commands,
@@ -126,17 +133,16 @@ fn setup_map(
     _assets: Res<AssetServer>,
 ) {
     commands
-        .spawn()
-        .insert_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/ground.gltf#Scene0"),
             ..default()
         })
         .add_children(|children| {
             children
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, -10.0, 0.0,
                 )))
-                .insert_bundle((
+                .insert((
                     RigidBody::Fixed,
                     Collider::cuboid(50.0, 10.0, 50.0),
                     Name::new("Plane"),
@@ -146,10 +152,10 @@ fn setup_map(
         });
 
     commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             5.0, 2.0, 5.0,
         )))
-        .insert_bundle((
+        .insert((
             RigidBody::KinematicPositionBased,
             Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
             Name::new("Test capsule"),
@@ -178,10 +184,10 @@ fn setup_map(
         },
     );
 
-    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    //crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/rock1.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-2.0, 5.0, 2.0),
@@ -191,7 +197,7 @@ fn setup_map(
         })
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
-        .insert_bundle((
+        .insert((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
@@ -205,7 +211,7 @@ fn setup_map(
         .id();
 
     let _sky = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/sky.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-1.5, 1.3, 1.075),
@@ -218,7 +224,7 @@ fn setup_map(
     let _sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
 
     let _sky_clouds = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-1.5, 1.3, 1.075),
@@ -230,7 +236,7 @@ fn setup_map(
         .id();
 
     let _donut = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {
                 radius: 0.4,
                 ring_radius: 0.2,
@@ -241,7 +247,7 @@ fn setup_map(
         })
         .insert(crate::deposit::Value::new(5))
         .insert(Ingredient)
-        .insert_bundle((
+        .insert((
             Collider::round_cylinder(0.025, 0.4, 0.2),
             RigidBody::Dynamic,
             Name::new("Donut"),
@@ -254,7 +260,7 @@ fn setup_map(
         .id();
 
     let _prallet = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/prallet.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-2.5, 1.3, -0.075),
@@ -265,7 +271,7 @@ fn setup_map(
         })
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
-        .insert_bundle((
+        .insert((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             Name::new("Prallet"),
@@ -278,7 +284,7 @@ fn setup_map(
         .id();
 
     let _thorns = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/thorns.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-1.5, 2.3, -0.075),
@@ -289,7 +295,7 @@ fn setup_map(
         })
         .insert(Ingredient)
         .insert(crate::deposit::Value::new(1))
-        .insert_bundle((
+        .insert((
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
@@ -303,7 +309,7 @@ fn setup_map(
         .id();
 
     let welt = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/weltberry.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-2.5, 2.3, -0.075),
@@ -314,7 +320,7 @@ fn setup_map(
         .insert(Ingredient)
         .insert(Slottable)
         .insert(crate::deposit::Value::new(1))
-        .insert_bundle((
+        .insert((
             Collider::ball(0.2),
             RigidBody::Dynamic,
             Name::new("Weltberry"),
@@ -328,15 +334,14 @@ fn setup_map(
         .id();
 
     let welt_slot = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.05,
                 ..default()
             })),
             ..default()
         })
-        .insert_bundle(TransformBundle::from_transform(Transform {
+        .insert(TransformBundle::from_transform(Transform {
             translation: Vec3::new(-2.5, 2.3, -0.075),
             ..default()
         }))
@@ -371,22 +376,21 @@ fn setup_map(
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
 
     let mock = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.00,
                 ..default()
             })),
             ..default()
         })
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .insert(TransformBundle::from_transform(Transform::from_xyz(
             0.0, 2.0, -3.0,
         )))
         .insert(Name::new("Mock spring location"))
         .id();
 
     let _stirrer = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
                 // translation: Vec3::new(5., 10., -0.075),
@@ -396,7 +400,7 @@ fn setup_map(
             },
             ..default()
         })
-        .insert_bundle((
+        .insert((
             //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),
             Damping {
@@ -421,7 +425,7 @@ fn setup_map(
 
     let scale = Vec3::splat(3.0);
     let walls = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/walls_shop1.glb#Scene0"),
             transform: Transform {
                 translation: Vec3::new(0.0, 0.0, -10.0),
@@ -430,7 +434,7 @@ fn setup_map(
             },
             ..default()
         })
-        .insert_bundle((
+        .insert((
             Collider::cuboid(1.0, 1.0, 1.0),
             RigidBody::Fixed,
             Name::new("Walls Shop"),
@@ -443,10 +447,10 @@ fn setup_map(
         .id();
 
     let security_check = commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             1.1, 1.0, 0.5,
         )))
-        .insert_bundle((
+        .insert((
             Collider::cuboid(0.5, 1.0, 0.5),
             RigidBody::Fixed,
             Sensor,
@@ -456,8 +460,8 @@ fn setup_map(
         .id();
 
     let _shop_follower = commands
-        .spawn_bundle(TransformBundle::default())
-        .insert_bundle(Attach::all(walls))
+        .spawn(TransformBundle::default())
+        .insert(Attach::all(walls))
         .insert(Name::new("Shop Followers"))
         .add_child(security_check)
         .id();
@@ -475,7 +479,7 @@ fn setup_map(
     let level_collision_mesh2: Handle<Mesh> = asset_server.load("models/door.glb#Mesh0/Primitive0");
 
     let _door = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
                 scale: scale,
@@ -483,7 +487,7 @@ fn setup_map(
             },
             ..default()
         })
-        .insert_bundle((
+        .insert((
             Collider::cuboid(1.0, 1.0, 1.0),
             RigidBody::Dynamic,
             ColliderMassProperties::Density(10.0),
@@ -504,22 +508,20 @@ fn setup_map(
 
     // Bounds
     commands
-        .spawn()
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             0.0, 10.0, 50.0,
         )))
-        .insert_bundle((
+        .insert((
             RigidBody::Fixed,
             Collider::cuboid(50.0, 20.0, 1.0),
             Name::new("Bound Wall"),
             crate::physics::TERRAIN_GROUPING,
         ));
     commands
-        .spawn()
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             0.0, 10.0, -50.0,
         )))
-        .insert_bundle((
+        .insert((
             RigidBody::Fixed,
             Collider::cuboid(50.0, 20.0, 1.0),
             Name::new("Bound Wall"),
@@ -527,22 +529,20 @@ fn setup_map(
         ));
 
     commands
-        .spawn()
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             50.0, 10.0, 0.0,
         )))
-        .insert_bundle((
+        .insert((
             RigidBody::Fixed,
             Collider::cuboid(1.0, 20.0, 50.0),
             Name::new("Bound Wall"),
             crate::physics::TERRAIN_GROUPING,
         ));
     commands
-        .spawn()
-        .insert_bundle(TransformBundle::from_transform(Transform::from_xyz(
+        .spawn(TransformBundle::from_transform(Transform::from_xyz(
             -50.0, 10.0, 0.0,
         )))
-        .insert_bundle((
+        .insert((
             RigidBody::Fixed,
             Collider::cuboid(1.0, 20.0, 50.0),
             Name::new("Bound Wall"),
@@ -718,7 +718,7 @@ fn setup_ik(
         .unwrap();
 
         let target = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 transform: Transform::from_xyz(0.3, 0.8, 0.2),
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: 0.05,

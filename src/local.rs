@@ -1,16 +1,12 @@
 use potion::player::prelude::{PlayerEvent, PlayerInputPlugin};
 
-use bevy::{asset::AssetServerSettings, prelude::*};
+use bevy::prelude::*;
 
 fn main() {
     let mut app = App::new();
     app.insert_resource(sabi::Local);
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
-    app.insert_resource(AssetServerSettings {
-        watch_for_changes: true,
-        ..default()
-    });
     app.add_startup_system(spawn_local_player);
 
     app.run();
@@ -31,7 +27,7 @@ fn spawn_local_player(
     });
 
     const HALF_SIZE: f32 = 100.0;
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {

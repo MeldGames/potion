@@ -7,6 +7,7 @@ use sabi::{prelude::ServerEntities, protocol::update::UpdateMessages, tick::Netw
 
 pub const DATA_POINTS: usize = 100;
 
+#[derive(Resource, Debug, Clone)]
 pub struct NetworkUiState {
     pub client_ip: String,
     pub client_port: u16,

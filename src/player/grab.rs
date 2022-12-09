@@ -163,8 +163,7 @@ pub fn grab_collider(
 
                     commands.entity(hand).add_children(|children| {
                         children
-                            .spawn()
-                            .insert(ImpulseJoint::new(other_collider, grab_joint))
+                            .spawn(ImpulseJoint::new(other_collider, grab_joint))
                             .insert(GrabJoint);
                     });
 

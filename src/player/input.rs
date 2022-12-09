@@ -16,7 +16,7 @@ use super::prelude::*;
 
 use super::window_focused;
 
-#[derive(Debug)]
+#[derive(Resource, Debug)]
 pub struct MouseSensitivity(f32);
 
 impl Default for MouseSensitivity {
@@ -83,7 +83,7 @@ impl Debug for Radians {
     }
 }
 
-#[derive(Clone, Copy, Default, Component, Serialize, Deserialize)]
+#[derive(Resource, Clone, Copy, Default, Component, Serialize, Deserialize)]
 pub struct PlayerInput {
     /// Movement inputs
     pub binary_inputs: PlayerInputSet,
@@ -173,13 +173,13 @@ impl PlayerInput {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MouseState {
     Free,
     Locked,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LockToggle(bool);
 
 impl Default for LockToggle {
@@ -188,7 +188,7 @@ impl Default for LockToggle {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Resource, Debug, Clone)]
 pub struct InitialClick;
 
 pub fn initial_mouse_click(
@@ -235,7 +235,11 @@ pub fn mouse_lock(mut windows: ResMut<Windows>, state: Res<CurrentState<MouseSta
 
     if let Some(window) = windows.get_primary_mut() {
         window.set_cursor_visibility(!locked);
-        window.set_cursor_lock_mode(locked);
+        if locked {
+            window.set_cursor_grab_mode(bevy::window::CursorGrabMode::Locked);
+        } else {
+            window.set_cursor_grab_mode(bevy::window::CursorGrabMode::None);
+        }
     }
 }
 

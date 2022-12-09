@@ -60,7 +60,7 @@ pub fn setup_player(
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
 
                 let camera = commands
-                    .spawn_bundle(Camera3dBundle {
+                    .spawn(Camera3dBundle {
                         transform: Transform::from_translation(Vec3::new(0., 0., 4.))
                             .looking_at(Vec3::ZERO, Vec3::Y),
                         projection: PerspectiveProjection {
@@ -86,16 +86,16 @@ pub fn setup_player(
                     .id();
 
                 let neck = commands
-                    .spawn_bundle((
+                    .spawn((
                         Transform {
                             translation: Vec3::new(0., 1., 0.),
                             ..Default::default()
                         },
-                        GlobalTransform::identity(),
+                        GlobalTransform::default(),
                         Neck,
                         Name::new("Neck"),
                     ))
-                    .insert_bundle(Attach::translation(player_entity))
+                    .insert(Attach::translation(player_entity))
                     /* .insert(AttachTranslation::Spring {
                         strength: 50.0,
                         damp_ratio: 0.9,
@@ -125,7 +125,7 @@ pub fn setup_player(
                 let player_radius = 0.5;
                 // Spawn player cube
                 let player_entity = commands
-                    .spawn_bundle(CharacterControllerBundle {
+                    .spawn(CharacterControllerBundle {
                         settings: ControllerSettings {
                             acceleration: 5.0,
                             max_speed: 7.0,
@@ -172,7 +172,7 @@ pub fn setup_player(
                         global_transform: global_transform,
                         ..default()
                     })
-                    .insert_bundle(SceneBundle {
+                    .insert(SceneBundle {
                         scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
@@ -300,7 +300,7 @@ pub fn attach_arm(
     //arm_joint.set_contacts_enabled(false);
 
     let arm_entity = commands
-        .spawn_bundle(TransformBundle::from_transform(to_transform))
+        .spawn(TransformBundle::from_transform(to_transform))
         .insert(Name::new(format!("Arm {}", index)))
         .insert(Arm)
         .insert(RigidBody::Dynamic)
@@ -339,7 +339,7 @@ pub fn attach_arm(
     hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
-        .spawn_bundle(TransformBundle::from_transform(to_transform))
+        .spawn(TransformBundle::from_transform(to_transform))
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(ConnectedEntities::default())
@@ -563,7 +563,7 @@ pub fn setup_ik(
         info!("entities: {:?}, {:?}", mesh_right_hand, physics_right_hand);
 
         let pole_target = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 transform: Transform::from_xyz(-1.0, 0.4, -0.4),
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: 0.05,
@@ -587,7 +587,7 @@ pub fn setup_ik(
         });
 
         let pole_target = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 transform: Transform::from_xyz(1.0, 0.4, -0.4),
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: 0.05,

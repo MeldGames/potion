@@ -36,7 +36,7 @@ pub fn spawn_trees(
     let tree_positions = vec![Vec3::new(12.5, 0., -0.075)];
     for i in tree_positions {
         let _tree = commands
-            .spawn_bundle(SceneBundle {
+            .spawn(SceneBundle {
                 scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
                 transform: Transform {
                     translation: i.clone(),
@@ -45,7 +45,7 @@ pub fn spawn_trees(
                 },
                 ..default()
             })
-            .insert_bundle((
+            .insert((
                 ColliderMassProperties::Density(5.0),
                 RigidBody::Fixed,
                 Collider::cylinder(3.4, 0.2),
@@ -58,7 +58,7 @@ pub fn spawn_trees(
 
 fn update_time_for_custom_material(mut materials: ResMut<Assets<CustomMaterial>>, time: Res<Time>) {
     for material in materials.iter_mut() {
-        material.1.time = time.seconds_since_startup() as f32;
+        material.1.time = time.elapsed().as_secs_f32();
     }
 }
 

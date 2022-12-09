@@ -44,7 +44,7 @@ pub struct SlotGracePeriod(Timer);
 
 impl Default for SlotGracePeriod {
     fn default() -> Self {
-        Self(Timer::new(Duration::from_secs(1), false))
+        Self(Timer::new(Duration::from_secs(1), TimerMode::Once))
     }
 }
 
@@ -178,7 +178,7 @@ pub fn insert_slot(
                     if let Some(next_item) = attempting.pop_front() {
                         info!("slotting {:?}", names.named(next_item));
                         slot.containing = Some(next_item);
-                        grace_period.0 = Timer::new(Duration::from_secs(1), false);
+                        grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
                     }
                 }
             }

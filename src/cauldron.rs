@@ -20,7 +20,7 @@ pub trait NamedEntity {
     fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a>;
 }
 
-impl<'w, 's, F: WorldQuery> NamedEntity for Query<'w, 's, &Name, F> {
+impl<'w, 's> NamedEntity for Query<'w, 's, &Name, ()> {
     fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a> {
         match self.get_component::<Name>(entity) {
             Ok(name) => Box::new(name.as_str()),
@@ -47,12 +47,12 @@ pub fn spawn_cauldron(
 
     let mut slots = Vec::new();
     let cauldron = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/cauldron.glb#Scene0"),
             transform: position,
             ..default()
         })
-        .insert_bundle((
+        .insert((
             ColliderMassProperties::Density(100.0),
             ReadMassProperties::default(),
             RigidBody::Dynamic,
@@ -78,17 +78,16 @@ pub fn spawn_cauldron(
                 let z = (slice * i as f32).sin();
                 slots.push(
                     builder
-                        .spawn()
-                        .insert_bundle(PbrBundle {
+                        .spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::UVSphere {
                                 radius: 0.02,
                                 ..default()
                             })),
+                            transform: Transform::from_translation(
+                                center + Vec3::new(x, 0.0, z) * radius,
+                            ),
                             ..default()
                         })
-                        .insert_bundle(TransformBundle::from_transform(
-                            Transform::from_translation(center + Vec3::new(x, 0.0, z) * radius),
-                        ))
                         .insert(Name::new(format!("Cauldron slot {}", i)))
                         .insert(Velocity::default())
                         .insert(Slot::default())
@@ -115,15 +114,15 @@ pub fn spawn_cauldron(
         .id();
 
     commands
-        .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle(Attach::all(cauldron))
-        .insert_bundle((
+        .spawn(TransformBundle::from_transform(position))
+        .insert(Attach::all(cauldron))
+        .insert((
             Name::new("Cauldron Deposit"),
             crate::physics::TERRAIN_GROUPING,
         ))
         .with_children(|children| {
             children
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, 0.25, 0.0,
                 )))
                 .insert(ActiveEvents::COLLISION_EVENTS)

@@ -15,7 +15,7 @@ pub struct DepositBox;
 
 /// Component determining the value of specific items
 /// as well as the global money of the players.
-#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
+#[derive(Resource, Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct Value(u64);
 
@@ -124,7 +124,7 @@ pub fn spawn_deposit_box(
     position: Transform,
 ) -> Entity {
     let crate_model = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/crate.gltf#Scene0"),
             ..default()
         })
@@ -132,7 +132,7 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_model = commands
-        .spawn_bundle(SceneBundle {
+        .spawn(SceneBundle {
             scene: asset_server.load("models/crate_lid.gltf#Scene0"),
             ..default()
         })
@@ -140,8 +140,8 @@ pub fn spawn_deposit_box(
         .id();
 
     let deposit = commands
-        .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle((
+        .spawn(TransformBundle::from_transform(position))
+        .insert((
             ColliderMassProperties::Density(50.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
@@ -151,7 +151,7 @@ pub fn spawn_deposit_box(
         .insert(crate::DecompLoad(
             "assets/models/crate_decomp.obj".to_owned(),
         ))
-        .insert_bundle(VisibilityBundle::default())
+        .insert(VisibilityBundle::default())
         .add_child(crate_model)
         .id();
 
@@ -163,8 +163,8 @@ pub fn spawn_deposit_box(
     lid_hinge.set_contacts_enabled(false);
 
     let _lid = commands
-        .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle((
+        .spawn(TransformBundle::from_transform(position))
+        .insert((
             ColliderMassProperties::Density(15.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
@@ -174,18 +174,18 @@ pub fn spawn_deposit_box(
         .insert(crate::DecompLoad(
             "assets/models/crate_lid_decomp.obj".to_owned(),
         ))
-        .insert_bundle(VisibilityBundle::default())
+        .insert(VisibilityBundle::default())
         .insert(ImpulseJoint::new(deposit, lid_hinge))
         .add_child(lid_model)
         .id();
 
     commands
-        .spawn_bundle(TransformBundle::from_transform(position))
-        .insert_bundle(Attach::all(deposit))
-        .insert_bundle((Name::new("Deposit Area"), crate::physics::TERRAIN_GROUPING))
+        .spawn(TransformBundle::from_transform(position))
+        .insert(Attach::all(deposit))
+        .insert((Name::new("Deposit Area"), crate::physics::TERRAIN_GROUPING))
         .with_children(|children| {
             children
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, 0.175, 0.0,
                 )))
                 .insert(Collider::cuboid(0.475, 0.05, 0.25))

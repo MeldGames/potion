@@ -1,4 +1,4 @@
-use bevy_fly_camera::FlyCamera;
+//use bevy_fly_camera::FlyCamera;
 use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::*;
 
@@ -15,17 +15,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.add_loopless_state(MouseState::Locked);
     app.insert_resource(LockToggle::default());
 
-    app.add_system(
-        bevy_fly_camera::camera_movement_system
-            .run_if(window_focused)
-            .label("player_fly_movement"),
-    )
-    .add_system(
-        bevy_fly_camera::mouse_motion_system
-            .run_in_state(MouseState::Locked)
-            .run_if(window_focused)
-            .label("player_mouse_input"),
-    );
+    /*
+       app.add_system(
+           bevy_fly_camera::camera_movement_system
+               .run_if(window_focused)
+               .label("player_fly_movement"),
+       )
+       .add_system(
+           bevy_fly_camera::mouse_motion_system
+               .run_in_state(MouseState::Locked)
+               .run_if(window_focused)
+               .label("player_mouse_input"),
+       );
+    */
     app.add_system(
         toggle_mouse_lock
             .run_if(window_focused)
@@ -52,19 +54,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn setup_camera(mut commands: Commands, _asset_server: Res<AssetServer>) {
-    commands
-        .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-                .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-            ..Default::default()
-        })
-        .insert(FlyCamera::default());
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+            .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+        ..Default::default()
+    });
+    //.insert(FlyCamera::default());
 
-    commands.spawn_bundle(SceneBundle {
+    commands.spawn(SceneBundle {
         scene: _asset_server.load("models/cauldron.glb#Scene0"),
         ..default()
     });
-    commands.spawn_bundle(SceneBundle {
+    commands.spawn(SceneBundle {
         scene: _asset_server.load("models/cauldronmap.glb#Scene0"),
         ..default()
     });
@@ -77,9 +78,7 @@ fn setup_map(
     assets: Res<AssetServer>,
 ) {
     commands
-        .spawn()
-        .insert_bundle((GlobalTransform::default(), Transform::default()))
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
             material: materials.add(assets.load("icons/autoattack.png").into()),
             transform: Transform {
@@ -88,7 +87,7 @@ fn setup_map(
             },
             ..Default::default()
         })
-        .insert_bundle((
+        .insert((
             RigidBody::Fixed,
             Collider::cuboid(50.0, 0.1, 50.0),
             Name::new("Plane"),
@@ -96,20 +95,17 @@ fn setup_map(
         ));
 
     commands
-        .spawn()
-        .insert_bundle((GlobalTransform::default(), Transform::default(), Rotate))
+        .spawn((GlobalTransform::default(), Transform::default(), Rotate))
         .with_children(|child| {
-            child
-                .spawn_bundle(TransformBundle::default())
-                .insert_bundle((
-                    RigidBody::KinematicPositionBased,
-                    //Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
-                    //Collider::ball(1.0),
-                    Name::new("Test capsule"),
-                    potion::physics::TERRAIN_GROUPING,
-                ));
+            child.spawn(TransformBundle::default()).insert((
+                RigidBody::KinematicPositionBased,
+                //Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
+                //Collider::ball(1.0),
+                Name::new("Test capsule"),
+                potion::physics::TERRAIN_GROUPING,
+            ));
         })
-        .insert_bundle(());
+        .insert(());
 }
 
 #[derive(Debug, Clone, Component)]
@@ -118,6 +114,6 @@ pub struct Rotate;
 pub fn rotate(time: Res<Time>, mut to_rotate: Query<&mut Transform, With<Rotate>>) {
     for mut transform in &mut to_rotate {
         transform.rotation =
-            Quat::from_axis_angle(Vec3::Y, time.time_since_startup().as_secs_f32() * 0.01).into();
+            Quat::from_axis_angle(Vec3::Y, time.elapsed().as_secs_f32() * 0.01).into();
     }
 }

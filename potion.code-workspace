@@ -58,6 +58,12 @@
 		},
 		{
 			"path": "../bevy_editor_pls"
+		},
+		{
+			"path": "../spite"
+		},
+		{
+			"path": "../bevy_egui"
 		}
 	],
 	"settings": {
