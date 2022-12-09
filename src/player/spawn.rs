@@ -58,6 +58,20 @@ pub fn setup_player(
         match event {
             &PlayerEvent::SetupLocal { id } => {
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
+
+                commands.entity(player_entity)
+                    .insert(Camera3dBundle {
+                        projection: PerspectiveProjection {
+                            far: 10000.,
+                            ..default()
+                        }
+                        .into(),
+                        camera: Camera {
+                            priority: 0,
+                            ..default()
+                        },
+                        ..default()
+                    });
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -167,20 +181,8 @@ pub fn setup_player(
                                );
                 */
                 let camera = commands
-                    .spawn(Camera3dBundle {
-                        transform: Transform::from_translation(Vec3::new(0., 0., 4.))
-                            .looking_at(Vec3::ZERO, Vec3::Y),
-                        projection: PerspectiveProjection {
-                            far: 10000.,
-                            ..default()
-                        }
-                        .into(),
-                        camera: Camera {
-                            priority: 1000,
-                            ..default()
-                        },
-                        ..default()
-                    })
+                    .spawn(TransformBundle::from_transform(Transform::from_translation(Vec3::new(0., 0., 4.))
+                            .looking_at(Vec3::ZERO, Vec3::Y)))
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,
@@ -247,7 +249,7 @@ pub fn setup_player(
                     .unwrap();
                     server.send_message(id, ServerChannel::Message.id(), message);
 
-                    let message = bincode::serialize(&ServerMessage::SetPlayer { id: id }).unwrap();
+                    let message = bincode::serialize(&ServerMessage::SetPlayer { id }).unwrap();
                     server.send_message(id, ServerChannel::Message.id(), message);
                 }
             }

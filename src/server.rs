@@ -35,10 +35,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
 
-    app.add_startup_system(setup_camera);
-    app.add_startup_system(setup_map);
-    app.add_system(rotate);
-
     #[cfg(feature = "public")]
     let ip = sabi::protocol::public_ip()?;
     #[cfg(not(feature = "public"))]
@@ -51,64 +47,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.run();
 
     Ok(())
-}
-
-fn setup_camera(mut commands: Commands, _asset_server: Res<AssetServer>) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-            .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-        camera: Camera {
-            priority: 0,
-            ..default()
-        },
-        ..Default::default()
-    });
-    //.insert(FlyCamera::default());
-}
-
-fn setup_map(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    assets: Res<AssetServer>,
-) {
-    commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-            material: materials.add(assets.load("icons/autoattack.png").into()),
-            transform: Transform {
-                translation: Vec3::new(0.0, -0.01, 0.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(50.0, 0.1, 50.0),
-            Name::new("Plane"),
-            potion::physics::TERRAIN_GROUPING,
-        ));
-
-    commands
-        .spawn((GlobalTransform::default(), Transform::default(), Rotate))
-        .with_children(|child| {
-            child.spawn(TransformBundle::default()).insert((
-                RigidBody::KinematicPositionBased,
-                //Collider::capsule(Vec3::ZERO, Vec3::Y, 0.5),
-                //Collider::ball(1.0),
-                Name::new("Test capsule"),
-                potion::physics::TERRAIN_GROUPING,
-            ));
-        })
-        .insert(());
-}
-
-#[derive(Debug, Clone, Component)]
-pub struct Rotate;
-
-pub fn rotate(time: Res<Time>, mut to_rotate: Query<&mut Transform, With<Rotate>>) {
-    for mut transform in &mut to_rotate {
-        transform.rotation =
-            Quat::from_axis_angle(Vec3::Y, time.elapsed().as_secs_f32() * 0.01).into();
-    }
 }

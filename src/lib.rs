@@ -132,6 +132,16 @@ fn setup_map(
     _materials: ResMut<Assets<StandardMaterial>>,
     _assets: Res<AssetServer>,
 ) {
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+            .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+        camera: Camera {
+            priority: 1000,
+            ..default()
+        },
+        ..Default::default()
+    });
+
     commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/ground.gltf#Scene0"),

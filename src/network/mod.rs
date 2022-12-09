@@ -106,7 +106,10 @@ pub fn client_sync_players(
                     }
                 }
             }
-            ServerMessage::SetPlayer { id } => player_events.send(PlayerEvent::SetupLocal { id }),
+            ServerMessage::SetPlayer { id } => {
+                info!("set up local player: {:?}.", id);
+                player_events.send(PlayerEvent::SetupLocal { id })
+            }
             ServerMessage::AssignOwnership {
                 entity: server_entity,
             } => {
