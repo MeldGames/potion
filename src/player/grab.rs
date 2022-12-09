@@ -170,8 +170,8 @@ pub fn grab_collider(
                     grabbed.insert(other_collider);
 
                     let extended = springy::rapier::ExtendedMass(mass.0);
-                    info!("extended mass: {:?}", extended);
-                    commands.entity(other_collider).insert(extended);
+                    //info!("extended mass: {:?}", extended);
+                    //commands.entity(other_collider).insert(extended);
                 }
             }
         } else {

@@ -190,7 +190,6 @@ pub fn spring_slot(
     mut lines: ResMut<DebugLines>,
 ) {
     let timestep = crate::TICK_RATE.as_secs_f32();
-    let _inverse_timestep = 1.0 / timestep;
 
     for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
         if let Some(particle_entity) = slot.containing {
