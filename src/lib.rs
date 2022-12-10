@@ -44,14 +44,31 @@ pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
+    let default_res = (1728.0, 1117.0);
+    //let default_res = (1920.0, 1080.0);
+    let half_width = ((default_res.0 / 2.0), default_res.1);
+    let (title, (width, height), position) = match (app.world.contains_resource::<sabi::Local>(), app.world.contains_resource::<sabi::Client>(), app.world.contains_resource::<sabi::Server>()) {
+        (true, _, _) => {
+            ("Brewalized Local".to_owned(), default_res, WindowPosition::Automatic)
+        },
+        (_, true, _) => {
+            ("Brewalized Client".to_owned(), half_width, WindowPosition::At(Vec2::new(half_width.0, 0.0)))
+        },
+        (_, _, true) => {
+            ("Brewalized Server".to_owned(), half_width, WindowPosition::At(Vec2::new(0.0, 0.0)))
+        },
+        _ => {panic!("unknown program")},
+    };
+
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {
                 window: WindowDescriptor {
-                    title: "Brewalized".to_string(),
-                    width: 1920.,
-                    height: 1080.,
+                    title: title,
+                    width: width,
+                    height: height,
                     cursor_visible: true,
+                    position: position,
                     cursor_grab_mode: CursorGrabMode::None,
                     present_mode: bevy::window::PresentMode::Immediate,
                     ..default()
@@ -97,7 +114,11 @@ pub fn setup_app(app: &mut App) {
 
     app.add_event::<AssetEvent<Mesh>>();
 
-    app.add_startup_system(setup_map);
+    app.add_startup_system(fallback_camera);
+
+    if !app.world.contains_resource::<sabi::Client>() {
+        app.add_startup_system(setup_map);
+    }
     app.add_system(update_level_collision);
     app.add_system(decomp_load);
 
@@ -125,7 +146,8 @@ fn outline_meshes(
 }
  */
 
-fn setup_map(
+
+fn fallback_camera(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -141,8 +163,16 @@ fn setup_map(
             ..default()
         },
         ..default()
-    });
+    }).insert(Name::new("Fallback camera"));
+}
 
+fn setup_map(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
+    _assets: Res<AssetServer>,
+) {
     commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/ground.gltf#Scene0"),
