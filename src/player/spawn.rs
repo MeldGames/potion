@@ -49,6 +49,7 @@ pub fn setup_player(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
+    player_cameras: Query<&PlayerCamera>,
 
     mut lobby: ResMut<Lobby>,
     mut server: Option<ResMut<RenetServer>>,
@@ -58,20 +59,6 @@ pub fn setup_player(
         match event {
             &PlayerEvent::SetupLocal { id } => {
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
-
-                commands.entity(player_entity)
-                    .insert(Camera3dBundle {
-                        projection: PerspectiveProjection {
-                            far: 10000.,
-                            ..default()
-                        }
-                        .into(),
-                        camera: Camera {
-                            priority: 0,
-                            ..default()
-                        },
-                        ..default()
-                    });
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -181,8 +168,23 @@ pub fn setup_player(
                                );
                 */
                 let camera = commands
-                    .spawn(TransformBundle::from_transform(Transform::from_translation(Vec3::new(0., 0., 4.))
-                            .looking_at(Vec3::ZERO, Vec3::Y)))
+                    .spawn(TransformBundle::from_transform(
+                        Transform::from_translation(Vec3::new(0., 0., 4.))
+                            .looking_at(Vec3::ZERO, Vec3::Y),
+                    ))
+                    .insert(Camera3dBundle {
+                        projection: PerspectiveProjection {
+                            far: 10000.,
+                            ..default()
+                        }
+                        .into(),
+                        camera: Camera {
+                            priority: 50,
+                            is_active: true,
+                            ..default()
+                        },
+                        ..default()
+                    })
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,

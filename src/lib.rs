@@ -49,8 +49,8 @@ pub fn setup_app(app: &mut App) {
             .set(WindowPlugin {
                 window: WindowDescriptor {
                     title: "Brewalized".to_string(),
-                    width: 600.,
-                    height: 400.,
+                    width: 1920.,
+                    height: 1080.,
                     cursor_visible: true,
                     cursor_grab_mode: CursorGrabMode::None,
                     present_mode: bevy::window::PresentMode::Immediate,
@@ -67,7 +67,7 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(EguiPlugin);
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
-    //app.add_plugin(bevy_editor_pls::EditorPlugin);
+    app.add_plugin(bevy_editor_pls::EditorPlugin);
     app.add_plugin(crate::network::NetworkPlugin);
 
     app.insert_resource(bevy_framepace::FramepaceSettings { ..default() });
@@ -136,10 +136,11 @@ fn setup_map(
         transform: Transform::from_translation(Vec3::new(0., 12., 10.))
             .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
         camera: Camera {
-            priority: 1000,
+            priority: -50,
+            is_active: true,
             ..default()
         },
-        ..Default::default()
+        ..default()
     });
 
     commands

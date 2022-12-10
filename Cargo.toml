@@ -71,8 +71,46 @@ renet_visualizer = { git = "https://github.com/lucaspoffo/renet", features = [
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
 bevy-inspector-egui-rapier = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
-
 bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
+
+bevy = {git = "https://github.com/aceeri/bevy"}
+bevy_animation = {git = "https://github.com/aceeri/bevy"}
+bevy_app = {git = "https://github.com/aceeri/bevy"}
+bevy_asset = {git = "https://github.com/aceeri/bevy"}
+bevy_audio = {git = "https://github.com/aceeri/bevy"}
+bevy_core = {git = "https://github.com/aceeri/bevy"}
+bevy_core_pipeline = {git = "https://github.com/aceeri/bevy"}
+bevy_derive = {git = "https://github.com/aceeri/bevy"}
+bevy_diagnostic = {git = "https://github.com/aceeri/bevy"}
+#bevy_dylib = {git = "https://github.com/aceeri/bevy"}
+#bevy_dynamic_plugin = {git = "https://github.com/aceeri/bevy"}
+bevy_ecs = {git = "https://github.com/aceeri/bevy"}
+#bevy_ecs_compile_fail_tests = {git = "https://github.com/aceeri/bevy"}
+bevy_encase_derive = {git = "https://github.com/aceeri/bevy"}
+bevy_gilrs = {git = "https://github.com/aceeri/bevy"}
+bevy_gltf = {git = "https://github.com/aceeri/bevy"}
+bevy_hierarchy = {git = "https://github.com/aceeri/bevy"}
+bevy_input = {git = "https://github.com/aceeri/bevy"}
+bevy_internal = {git = "https://github.com/aceeri/bevy"}
+bevy_log = {git = "https://github.com/aceeri/bevy"}
+bevy_macro_utils = {git = "https://github.com/aceeri/bevy"}
+bevy_math = {git = "https://github.com/aceeri/bevy"}
+bevy_mikktspace = {git = "https://github.com/aceeri/bevy"}
+bevy_pbr = {git = "https://github.com/aceeri/bevy"}
+bevy_ptr = {git = "https://github.com/aceeri/bevy"}
+bevy_reflect = {git = "https://github.com/aceeri/bevy"}
+bevy_render = {git = "https://github.com/aceeri/bevy"}
+bevy_scene = {git = "https://github.com/aceeri/bevy"}
+bevy_sprite = {git = "https://github.com/aceeri/bevy"}
+bevy_tasks = {git = "https://github.com/aceeri/bevy"}
+bevy_text = {git = "https://github.com/aceeri/bevy"}
+bevy_time = {git = "https://github.com/aceeri/bevy"}
+bevy_transform = {git = "https://github.com/aceeri/bevy"}
+bevy_ui = {git = "https://github.com/aceeri/bevy"}
+bevy_utils = {git = "https://github.com/aceeri/bevy"}
+bevy_window = {git = "https://github.com/aceeri/bevy"}
+bevy_winit = {git = "https://github.com/aceeri/bevy"}
+
 [[bin]]
 name = "local"
 path = "src/local.rs"
