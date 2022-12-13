@@ -4,15 +4,16 @@ use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_inspector_egui::Inspectable;
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
-use sabi::stage::NetworkSimulationAppExt;
+use sabi::{stage::{NetworkSimulationAppExt}, prelude::ReplicatePlugin};
 
 use crate::cauldron::NamedEntity;
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect, Inspectable)]
 #[reflect(Component)]
 pub struct Slot {
     /// Entity this slot contains.
     #[inspectable(read_only)]
+    #[reflect(default)]
     pub containing: Option<Entity>,
 }
 
@@ -23,15 +24,15 @@ pub struct SlotBundle {
     pub grace: SlotGracePeriod,
 }
 
-#[derive(Default, Debug, Clone, Component, Reflect)]
+#[derive(Default, Debug, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct SlotSettings(pub springy::SpringState<Vec3>);
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct Slottable;
 
-#[derive(Debug, Clone, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct SlotGracePeriod(Timer);
 
@@ -41,9 +42,11 @@ impl Default for SlotGracePeriod {
     }
 }
 
-#[derive(Debug, Clone, Component)]
+#[derive(Debug, Clone, Component, Reflect, FromReflect)]
 pub struct SlotDeposit {
+    #[reflect(default)]
     pub slots: Vec<Entity>,
+    #[reflect(default)]
     pub attempting: VecDeque<Entity>,
 }
 
@@ -283,12 +286,21 @@ pub fn spring_slot(
 pub struct SlotPlugin;
 impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
-        /*
-        app.register_type::<Slot>();
-        app.register_inspectable::<Slot>();
-        app.register_type::<SlotSettings>();
-        app.register_inspectable::<SlotSettings>();
-        */
+        app.register_type::<Slot>()
+            .register_type::<VecDeque<Entity>>()
+            .register_type::<springy::SpringState<Vec3>>()
+            .register_type::<Option<springy::SpringBreak>>()
+            .register_type::<Option<Entity>>()
+            .register_type::<springy::Spring>()
+            .register_type::<springy::SpringBreak>()
+            .register_type::<bevy::time::TimerMode>()
+            .register_type::<SlotSettings>();
+
+        app.add_plugin(ReplicatePlugin::<Slot>::default());
+        app.add_plugin(ReplicatePlugin::<SlotSettings>::default());
+        app.add_plugin(ReplicatePlugin::<Slottable>::default());
+        app.add_plugin(ReplicatePlugin::<SlotGracePeriod>::default());
+        app.add_plugin(ReplicatePlugin::<SlotDeposit>::default());
 
         app.add_network_system(pending_slot);
         app.add_network_system(insert_slot.after(pending_slot));
