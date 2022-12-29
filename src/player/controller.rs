@@ -82,7 +82,7 @@ pub fn player_movement(
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            //impulse.torque_impulse.y += y * 0.5; // avoid overshooting
+            impulse.torque_impulse.y += y * 0.5; // avoid overshooting
         }
     }
 }

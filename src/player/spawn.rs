@@ -289,7 +289,7 @@ pub fn attach_arm(
     let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
-    let upperarm_joint = SphericalJointBuilder::new()
+    let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
         .local_anchor2(upperarm_height)
         .motor_model(JointAxis::AngX, motor_model)
@@ -302,7 +302,6 @@ pub fn attach_arm(
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
-    let mut upperarm_joint = upperarm_joint.build();
     upperarm_joint.set_contacts_enabled(false);
 
     let upperarm_entity = commands
@@ -319,7 +318,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         .id();
 
-    let forearm_joint = SphericalJointBuilder::new()
+    let mut forearm_joint = SphericalJointBuilder::new()
         .local_anchor2(forearm_height)
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
@@ -331,7 +330,6 @@ pub fn attach_arm(
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
-    let mut forearm_joint = forearm_joint.build();
     forearm_joint.set_contacts_enabled(false);
 
     let forearm_entity = commands
@@ -348,7 +346,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         .id();
 
-    let hand_joint = SphericalJointBuilder::new()
+    let mut hand_joint = SphericalJointBuilder::new()
         //.local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
         .local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
@@ -369,8 +367,8 @@ pub fn attach_arm(
             resting_stiffness * 2.0,
             resting_damping * 2.0,
         )
-        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping);
-    let mut hand_joint = hand_joint.build();
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .build();
     hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands

@@ -15,6 +15,7 @@ use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 use super::controller::{ConnectedEntities, LookTransform};
 use super::input::PlayerInput;
 use super::prelude::*;
+use crate::cauldron::NamedEntity;
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GrabJoint;
@@ -232,6 +233,7 @@ pub fn player_grabby_hands(
     )>,
     ctx: Res<RapierContext>,
     mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
+    names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
     let dt = ctx.integration_parameters.dt;
@@ -245,16 +247,26 @@ pub fn player_grabby_hands(
                 continue;
             };
 
-        let arm_entity = hand_joint.parent;
-        let (arm_global, arm_velocity, arm_joint, arm_mass_properties) =
-            if let Ok(joint) = joints.get(arm_entity) {
+        let forearm_entity = hand_joint.parent;
+        let (forearm_global, forearm_velocity, forearm_joint, forearm_mass_properties) =
+            if let Ok(joint) = joints.get(forearm_entity) {
                 joint
             } else {
-                warn!("arm does not have a joint/velocity/global");
+                warn!("forearm does not have a joint/velocity/global");
                 continue;
             };
 
-        let player_entity = arm_joint.parent;
+        let upperarm_entity = forearm_joint.parent;
+        let (upperarm_global, upperarm_velocity, upperarm_joint, upperarm_mass_properties) =
+            if let Ok(joint) = joints.get(upperarm_entity) {
+                joint
+            } else {
+                warn!("upperarm does not have a joint/velocity/global");
+                continue;
+            };
+
+
+        let player_entity = upperarm_joint.parent;
         let (_player_global, _direction, input, camera_entity, _player_velocity) =
             if let Ok(input) = inputs.get(player_entity) {
                 input
@@ -270,12 +282,12 @@ pub fn player_grabby_hands(
             continue;
         };
 
-        let arm_transform = arm_global.compute_transform();
-        let shoulder = arm_transform * arm_joint.data.local_anchor2();
+        let upperarm_transform = upperarm_global.compute_transform();
+        let shoulder = upperarm_transform * upperarm_joint.data.local_anchor2();
 
         let hand_transform = hand_global.compute_transform();
         let hand = hand_global.translation();
-        let arm_dir = (hand - shoulder).normalize_or_zero();
+        let upperarm_dir = (hand - shoulder).normalize_or_zero();
 
         let camera = camera_global.translation();
         let camera_dir = (shoulder - camera).normalize_or_zero();
@@ -289,7 +301,7 @@ pub fn player_grabby_hands(
 
         lines.line_colored(
             shoulder,
-            shoulder + arm_dir,
+            shoulder + upperarm_dir,
             crate::TICK_RATE.as_secs_f32(),
             Color::RED,
         );
@@ -327,17 +339,17 @@ pub fn player_grabby_hands(
                 hand_impulse.torque_impulse = torque;
             }
 
-            if let Ok(mut arm_impulse) = impulses.get_mut(arm_entity) {
-                let current_dir = arm_transform.rotation * -Vec3::Y;
+            if let Ok(mut arm_impulse) = impulses.get_mut(upperarm_entity) {
+                let current_dir = upperarm_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
                 // Not normalizing this doubles as a strength of the difference
                 // if we normalize we tend to get jitters so uh... don't do that
                 let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
 
                 //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
-                let local_angular_velocity = arm_velocity.angvel;
+                let local_angular_velocity = upperarm_velocity.angvel;
 
-                let arm_mass = arm_mass_properties.0.mass;
+                let arm_mass = upperarm_mass_properties.0.mass;
                 let back_spring = Spring {
                     strength: 100.0,
                     damping: 0.3,
