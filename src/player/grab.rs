@@ -54,6 +54,26 @@ pub fn joint_children(
     }
 }
 
+pub fn twist_arms(
+    name: Query<&Name>,
+    rapier_context: Res<RapierContext>,
+    globals: Query<&GlobalTransform>,
+    mut hands: Query<
+        (
+            Entity,
+            &Grabbing,
+            &GlobalTransform,
+            Option<&Children>,
+            &ConnectedEntities,
+            &ConnectedMass,
+            &mut GrabbedEntities,
+        ),
+        With<Hand>,
+    >,
+    grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
+) {
+}
+
 pub fn grab_collider(
     mut commands: Commands,
     name: Query<&Name>,

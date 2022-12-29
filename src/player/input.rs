@@ -93,7 +93,8 @@ pub struct PlayerInput {
     pub pitch: f32,
     /// Horizontal rotation of camera
     pub yaw: f32,
-    //pub casted: [Option<CastInput>; 4],
+    /// Modifier for grabbing
+    pub twist: bool,
 }
 
 impl Debug for PlayerInput {
@@ -102,6 +103,16 @@ impl Debug for PlayerInput {
             .field("keys", &self.binary_inputs.shorthand_display())
             .field("pitch", &Radians(self.pitch))
             .field("yaw", &Radians(self.yaw))
+            .field("twist", &self.twist)
+            .field(
+                "grabby_hands",
+                &self
+                    .grabby_hands
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, grabbing)| **grabbing)
+                    .map(|(index, _)| index),
+            )
             .finish()
     }
 }
@@ -116,7 +127,7 @@ impl PlayerInput {
             grabby_hands: [false; 8],
             pitch: 0.0,
             yaw: 0.0,
-            //casted: [None; 4],
+            twist: false,
         }
     }
 
@@ -142,6 +153,10 @@ impl PlayerInput {
 
     pub fn set_grabby_hands(&mut self, index: usize, grabby_hands: bool) {
         self.grabby_hands[index] = grabby_hands;
+    }
+
+    pub fn set_twist(&mut self, twist: bool) {
+        self.twist = twist;
     }
 
     pub fn forward(&self) -> bool {
@@ -170,6 +185,10 @@ impl PlayerInput {
 
     pub fn grabby_hands(&self, index: usize) -> bool {
         self.grabby_hands[index]
+    }
+    
+    pub fn twist(&self) -> bool {
+        self.twist
     }
 }
 
@@ -265,6 +284,10 @@ pub fn player_binary_inputs(
     player_input.set_grabby_hands(
         1,
         mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::LShift),
+    );
+
+    player_input.set_twist(
+        keyboard_input.pressed(KeyCode::LControl)
     );
 }
 

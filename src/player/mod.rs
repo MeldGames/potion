@@ -79,14 +79,6 @@ impl Plugin for PlayerPlugin {
                 .before(bevy_mod_wanderlust::movement)
                 .after("update_player_inputs"),
         );
-        app.add_network_system(
-            controller::pull_up
-                .label("pull_up")
-                .before(bevy_mod_wanderlust::movement)
-                .after("update_player_inputs")
-                .after("player_swivel_and_tilt")
-                .after("player_movement"),
-        );
         app.add_network_system(grab::joint_children.label("joint_children"));
         app.add_network_system(
             spawn::connected_entities

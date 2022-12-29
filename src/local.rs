@@ -1,4 +1,7 @@
-use potion::{setup_map, player::prelude::{PlayerEvent, PlayerInputPlugin}};
+use potion::{
+    player::prelude::{PlayerEvent, PlayerInputPlugin},
+    setup_map,
+};
 
 use bevy::prelude::*;
 

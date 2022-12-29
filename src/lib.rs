@@ -47,17 +47,29 @@ pub fn setup_app(app: &mut App) {
     let default_res = (1728.0, 1117.0);
     //let default_res = (1920.0, 1080.0);
     let half_width = ((default_res.0 / 2.0), default_res.1);
-    let (title, (width, height), position) = match (app.world.contains_resource::<sabi::Local>(), app.world.contains_resource::<sabi::Client>(), app.world.contains_resource::<sabi::Server>()) {
-        (true, _, _) => {
-            ("Brewalized Local".to_owned(), default_res, WindowPosition::Automatic)
-        },
-        (_, true, _) => {
-            ("Brewalized Client".to_owned(), half_width, WindowPosition::At(Vec2::new(half_width.0, 0.0)))
-        },
-        (_, _, true) => {
-            ("Brewalized Server".to_owned(), half_width, WindowPosition::At(Vec2::new(0.0, 0.0)))
-        },
-        _ => {panic!("unknown program")},
+    let (title, (width, height), position) = match (
+        app.world.contains_resource::<sabi::Local>(),
+        app.world.contains_resource::<sabi::Client>(),
+        app.world.contains_resource::<sabi::Server>(),
+    ) {
+        (true, _, _) => (
+            "Brewalized Local".to_owned(),
+            default_res,
+            WindowPosition::Automatic,
+        ),
+        (_, true, _) => (
+            "Brewalized Client".to_owned(),
+            half_width,
+            WindowPosition::At(Vec2::new(half_width.0, 0.0)),
+        ),
+        (_, _, true) => (
+            "Brewalized Server".to_owned(),
+            half_width,
+            WindowPosition::At(Vec2::new(0.0, 0.0)),
+        ),
+        _ => {
+            panic!("unknown program")
+        }
     };
 
     app.add_plugins(
@@ -143,7 +155,6 @@ fn outline_meshes(
 }
  */
 
-
 fn fallback_camera(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -151,16 +162,18 @@ fn fallback_camera(
     _materials: ResMut<Assets<StandardMaterial>>,
     _assets: Res<AssetServer>,
 ) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-            .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-        camera: Camera {
-            priority: -50,
-            is_active: true,
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+                .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+            camera: Camera {
+                priority: -50,
+                is_active: true,
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-    }).insert(Name::new("Fallback camera"));
+        })
+        .insert(Name::new("Fallback camera"));
 }
 
 pub fn setup_map(

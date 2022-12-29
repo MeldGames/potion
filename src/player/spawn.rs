@@ -25,11 +25,15 @@ pub struct Player {
 }
 #[derive(Component, Debug)]
 pub struct LocalPlayer;
+
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Arm;
+pub struct UpperArm;
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Hand;
+
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ForeArm;
 
 #[derive(Component, Debug)]
 pub struct Neck;
@@ -280,12 +284,14 @@ pub fn attach_arm(
     let motor_model = MotorModel::ForceBased;
 
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
-    let arm_height = Vec3::new(0.0, 1.25 - arm_radius, 0.0);
+    let forearm_height = Vec3::new(0.0, 0.625 - arm_radius, 0.0);
+    let upperarm_height = Vec3::new(0.0, 0.625 - arm_radius, 0.0);
+    let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
-    let arm_joint = SphericalJointBuilder::new()
+    let upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
-        .local_anchor2(arm_height)
+        .local_anchor2(upperarm_height)
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
         .motor_model(JointAxis::AngZ, motor_model)
@@ -296,19 +302,49 @@ pub fn attach_arm(
         .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
-    //arm_joint.set_contacts_enabled(false);
+    let mut upperarm_joint = upperarm_joint.build();
+    upperarm_joint.set_contacts_enabled(false);
 
-    let arm_entity = commands
+    let upperarm_entity = commands
         .spawn(TransformBundle::from_transform(to_transform))
-        .insert(Name::new(format!("Arm {}", index)))
-        .insert(Arm)
+        .insert(Name::new(format!("UpperArm {}", index)))
+        .insert(UpperArm)
         .insert(RigidBody::Dynamic)
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
         .insert(ReadMassProperties::default())
         .insert(crate::physics::REST_GROUPING)
-        .insert(Collider::capsule(Vec3::ZERO, arm_height, arm_radius))
-        .insert(ImpulseJoint::new(to, arm_joint))
+        .insert(Collider::capsule(Vec3::ZERO, upperarm_height, arm_radius))
+        .insert(ImpulseJoint::new(to, upperarm_joint))
+        .insert(ArmId(index))
+        .id();
+
+    let forearm_joint = SphericalJointBuilder::new()
+        .local_anchor2(forearm_height)
+        .motor_model(JointAxis::AngX, motor_model)
+        .motor_model(JointAxis::AngY, motor_model)
+        .motor_model(JointAxis::AngZ, motor_model)
+        .motor_max_force(JointAxis::AngX, max_force)
+        .motor_max_force(JointAxis::AngY, max_force)
+        .motor_max_force(JointAxis::AngZ, max_force)
+        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .build();
+    let mut forearm_joint = forearm_joint.build();
+    forearm_joint.set_contacts_enabled(false);
+
+    let forearm_entity = commands
+        .spawn(TransformBundle::from_transform(to_transform))
+        .insert(Name::new(format!("ForeArm {}", index)))
+        .insert(ForeArm)
+        .insert(RigidBody::Dynamic)
+        .insert(ExternalImpulse::default())
+        .insert(Velocity::default())
+        .insert(ReadMassProperties::default())
+        .insert(crate::physics::REST_GROUPING)
+        .insert(Collider::capsule(Vec3::ZERO, forearm_height, arm_radius))
+        .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
         .insert(ArmId(index))
         .id();
 
@@ -351,7 +387,7 @@ pub fn attach_arm(
         .insert(RigidBody::Dynamic)
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
-        .insert(ImpulseJoint::new(arm_entity, hand_joint))
+        .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .id();

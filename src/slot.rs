@@ -4,7 +4,7 @@ use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_inspector_egui::Inspectable;
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
-use sabi::{stage::{NetworkSimulationAppExt}, prelude::ReplicatePlugin};
+use sabi::{prelude::ReplicatePlugin, stage::NetworkSimulationAppExt};
 
 use crate::cauldron::NamedEntity;
 
