@@ -25,7 +25,7 @@ use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 //use trees::TreesPlugin;
 
-use bevy_mod_outline::{AutoGenerateOutlineNormalsPlugin, OutlinePlugin, OutlineBundle, OutlineVolume, ATTRIBUTE_OUTLINE_NORMAL, OutlineMeshExt};
+use bevy_mod_outline::*;
 
 use attach::Attach;
 
@@ -138,6 +138,21 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
+fn update_outline_depth(
+    mut query: Query<(&GlobalTransform, &mut SetOutlineDepth)>,
+) {
+    for (global, mut set) in &mut query {
+        match *set {
+            SetOutlineDepth::Flat {
+                ref mut model_origin
+            } => {
+                *model_origin = global.translation();
+            }
+            _ => {},
+        }
+    }
+}
+
 fn outline_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -148,11 +163,15 @@ fn outline_meshes(
             if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
                 let _ = mesh.generate_outline_normals();
 
-                commands.entity(entity).insert(OutlineBundle {
+                commands.entity(entity)
+                .insert(SetOutlineDepth::Flat {
+                    model_origin: Vec3::new(0.0, 0.0, 0.0),
+                })
+                .insert(OutlineBundle {
                     outline: OutlineVolume {
                         visible: true,
                         width: 5.0,
-                        colour: Color::rgba(0.0, 0.0, 0.0, 0.8),
+                        colour: Color::rgba(0.0, 0.0, 0.0, 1.0),
                     },
                     ..default()
                 });

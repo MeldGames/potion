@@ -64,6 +64,9 @@
 		},
 		{
 			"path": "../bevy_egui"
+		},
+		{
+			"path": "../bevy_mod_outline"
 		}
 	],
 	"settings": {
