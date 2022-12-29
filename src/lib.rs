@@ -25,6 +25,8 @@ use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 //use trees::TreesPlugin;
 
+use bevy_mod_outline::{AutoGenerateOutlineNormalsPlugin, OutlinePlugin, OutlineBundle, OutlineVolume, ATTRIBUTE_OUTLINE_NORMAL, OutlineMeshExt};
+
 use attach::Attach;
 
 use store::{SecurityCheck, StoreItem, StorePlugin};
@@ -121,8 +123,9 @@ pub fn setup_app(app: &mut App) {
         //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    //app.add_plugin(OutlinePlugin);
-    //app.add_system(outline_meshes);
+    app.add_plugin(OutlinePlugin);
+        //.add_plugin(AutoGenerateOutlineNormalsPlugin);
+    app.add_system(outline_meshes);
 
     app.add_event::<AssetEvent<Mesh>>();
 
@@ -135,25 +138,28 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
-/*
 fn outline_meshes(
     mut commands: Commands,
-    mut outlines: ResMut<Assets<Outline>>,
-    meshes: ResMut<Assets<Mesh>>,
-    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<Handle<Outline>>)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<OutlineVolume>)>,
 ) {
     for (entity, mesh) in &query {
-        if let Some(mesh) = meshes.get(mesh) {
+        if let Some(mut mesh) = meshes.get_mut(mesh) {
             if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
-                commands.entity(entity).insert(outlines.add(Outline {
-                    colour: Color::rgba(0.0, 0.0, 0.0, 0.8),
-                    width: 5.0,
-                }));
+                let _ = mesh.generate_outline_normals();
+
+                commands.entity(entity).insert(OutlineBundle {
+                    outline: OutlineVolume {
+                        visible: true,
+                        width: 5.0,
+                        colour: Color::rgba(0.0, 0.0, 0.0, 0.8),
+                    },
+                    ..default()
+                });
             }
         }
     }
 }
- */
 
 fn fallback_camera(
     mut commands: Commands,

@@ -186,7 +186,7 @@ impl PlayerInput {
     pub fn grabby_hands(&self, index: usize) -> bool {
         self.grabby_hands[index]
     }
-    
+
     pub fn twist(&self) -> bool {
         self.twist
     }
@@ -286,9 +286,7 @@ pub fn player_binary_inputs(
         mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::LShift),
     );
 
-    player_input.set_twist(
-        keyboard_input.pressed(KeyCode::LControl)
-    );
+    player_input.set_twist(keyboard_input.pressed(KeyCode::LControl));
 }
 
 #[derive(Debug, Clone, Component)]

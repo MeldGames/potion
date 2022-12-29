@@ -265,7 +265,6 @@ pub fn player_grabby_hands(
                 continue;
             };
 
-
         let player_entity = upperarm_joint.parent;
         let (_player_global, _direction, input, camera_entity, _player_velocity) =
             if let Ok(input) = inputs.get(player_entity) {
