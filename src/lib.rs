@@ -116,9 +116,6 @@ pub fn setup_app(app: &mut App) {
 
     app.add_startup_system(fallback_camera);
 
-    if !app.world.contains_resource::<sabi::Client>() {
-        app.add_startup_system(setup_map);
-    }
     app.add_system(update_level_collision);
     app.add_system(decomp_load);
 
@@ -166,7 +163,7 @@ fn fallback_camera(
     }).insert(Name::new("Fallback camera"));
 }
 
-fn setup_map(
+pub fn setup_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,

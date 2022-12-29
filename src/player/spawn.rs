@@ -108,6 +108,7 @@ pub fn setup_player(
                                 Vec3::new(0.0, player_height, 0.0),
                                 player_radius,
                             ),
+                            //collider: Collider::ball(player_radius),
                             //rigidbody: RigidBody::KinematicPositionBased,
                             ..default()
                         },

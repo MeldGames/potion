@@ -1,4 +1,4 @@
-use potion::player::prelude::{PlayerEvent, PlayerInputPlugin};
+use potion::{setup_map, player::prelude::{PlayerEvent, PlayerInputPlugin}};
 
 use bevy::prelude::*;
 
@@ -8,6 +8,7 @@ fn main() {
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);
+    app.add_startup_system(setup_map);
 
     app.run();
 }

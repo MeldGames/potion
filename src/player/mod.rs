@@ -23,7 +23,7 @@ impl Plugin for CustomWanderlustPlugin {
         app.register_type::<ControllerState>()
             .register_type::<ControllerSettings>()
             .register_type::<ControllerInput>()
-            .add_startup_system(bevy_mod_wanderlust::setup_physics_context)
+            //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
             .add_network_system(bevy_mod_wanderlust::movement);
     }
 }

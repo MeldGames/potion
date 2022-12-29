@@ -6,6 +6,7 @@ use bevy::prelude::*;
 
 use potion::player::prelude::{mouse_lock, toggle_mouse_lock, LockToggle, MouseState};
 use potion::player::window_focused;
+use potion::setup_map;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
@@ -34,6 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .label("toggle_mouse_lock"),
     )
     .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
+
+    app.add_startup_system(setup_map);
 
     #[cfg(feature = "public")]
     let ip = sabi::protocol::public_ip()?;
