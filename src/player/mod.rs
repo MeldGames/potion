@@ -86,6 +86,13 @@ impl Plugin for PlayerPlugin {
                 .after("joint_children")
                 .before("related_entities"),
         );
+
+        app.add_network_system(
+            spawn::contact_filter
+                .label("contact_filter")
+                .after("joint_children")
+                .before("related_entities"),
+        );
         app.add_network_system(
             spawn::connected_mass
                 .label("connected_mass")

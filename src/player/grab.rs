@@ -282,6 +282,7 @@ pub fn player_grabby_hands(
             continue;
         };
 
+        let forearm_transform = forearm_global.compute_transform();
         let upperarm_transform = upperarm_global.compute_transform();
         let shoulder = upperarm_transform * upperarm_joint.data.local_anchor2();
 
@@ -339,6 +340,29 @@ pub fn player_grabby_hands(
                 hand_impulse.torque_impulse = torque;
             }
 
+            if let Ok(mut arm_impulse) = impulses.get_mut(forearm_entity) {
+                let current_dir = forearm_transform.rotation * -Vec3::Y;
+                let desired_dir = camera_dir;
+                // Not normalizing this doubles as a strength of the difference
+                // if we normalize we tend to get jitters so uh... don't do that
+                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
+
+                //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
+                let local_angular_velocity = forearm_velocity.angvel;
+
+                let arm_mass = forearm_mass_properties.0.mass;
+                let back_spring = Spring {
+                    strength: 50.0,
+                    damping: 0.3,
+                };
+
+                let back_spring = (desired_axis * back_spring.strength)
+                    - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
+
+                let torque = back_spring.clamp_length_max(30.0) * dt;
+                arm_impulse.torque_impulse = torque;
+            }
+
             if let Ok(mut arm_impulse) = impulses.get_mut(upperarm_entity) {
                 let current_dir = upperarm_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
@@ -351,7 +375,7 @@ pub fn player_grabby_hands(
 
                 let arm_mass = upperarm_mass_properties.0.mass;
                 let back_spring = Spring {
-                    strength: 100.0,
+                    strength: 50.0,
                     damping: 0.3,
                 };
 
@@ -359,7 +383,7 @@ pub fn player_grabby_hands(
                     - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
 
                 let torque = back_spring.clamp_length_max(30.0) * dt;
-                arm_impulse.torque_impulse = torque;
+                //arm_impulse.torque_impulse = torque;
             }
 
             *collision_groups = GRAB_GROUPING;

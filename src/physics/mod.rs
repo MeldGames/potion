@@ -4,7 +4,9 @@ use bevy_rapier3d::prelude::*;
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 pub mod spring;
+pub mod contact_filter;
 
+pub use contact_filter::*;
 pub use spring::Spring;
 
 bitflags::bitflags! {
@@ -66,29 +68,31 @@ impl Plugin for PhysicsPlugin {
             ..Default::default()
         });
 
+        app.insert_resource(PhysicsHooksWithQueryResource::<HookData>(Box::new(ContactFilterHook)));
+
         let physics_plugin =
-            RapierPhysicsPlugin::<NoUserData>::default().with_default_system_setup(false);
+            RapierPhysicsPlugin::<HookData>::default().with_default_system_setup(false);
         app.add_plugin(physics_plugin);
 
         app.add_network_stage_after(
             NetworkCoreStage::Update,
             PhysicsStages::SyncBackend,
             SystemStage::parallel().with_system_set(
-                RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsStages::SyncBackend),
+                RapierPhysicsPlugin::<HookData>::get_systems(PhysicsStages::SyncBackend),
             ),
         );
         app.add_network_stage_after(
             PhysicsStages::SyncBackend,
             PhysicsStages::StepSimulation,
             SystemStage::parallel().with_system_set(
-                RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsStages::StepSimulation),
+                RapierPhysicsPlugin::<HookData>::get_systems(PhysicsStages::StepSimulation),
             ),
         );
         app.add_network_stage_after(
             PhysicsStages::StepSimulation,
             PhysicsStages::Writeback,
             SystemStage::parallel().with_system_set(
-                RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsStages::Writeback),
+                RapierPhysicsPlugin::<HookData>::get_systems(PhysicsStages::Writeback),
             ),
         );
 
@@ -97,7 +101,7 @@ impl Plugin for PhysicsPlugin {
             NetworkCoreStage::Last,
             PhysicsStages::DetectDespawn,
             SystemStage::parallel().with_system_set(
-                RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsStages::DetectDespawn),
+                RapierPhysicsPlugin::<HookData>::get_systems(PhysicsStages::DetectDespawn),
             ),
         );
 

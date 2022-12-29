@@ -142,7 +142,7 @@ pub fn spawn_deposit_box(
     let deposit = commands
         .spawn(TransformBundle::from_transform(position))
         .insert((
-            ColliderMassProperties::Density(50.0),
+            ColliderMassProperties::Density(30.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Crate"),
@@ -165,7 +165,7 @@ pub fn spawn_deposit_box(
     let _lid = commands
         .spawn(TransformBundle::from_transform(position))
         .insert((
-            ColliderMassProperties::Density(15.0),
+            ColliderMassProperties::Density(3.0),
             RigidBody::Dynamic,
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Lid"),

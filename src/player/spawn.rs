@@ -17,6 +17,7 @@ use sabi::prelude::*;
 use super::prelude::*;
 use crate::attach::Attach;
 use crate::cauldron::NamedEntity;
+use crate::physics::ContactFilter;
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -315,6 +316,8 @@ pub fn attach_arm(
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, upperarm_height, arm_radius))
         .insert(ImpulseJoint::new(to, upperarm_joint))
+        .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
+        .insert(ContactFilter::default())
         .insert(ArmId(index))
         .id();
 
@@ -343,6 +346,8 @@ pub fn attach_arm(
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, forearm_height, arm_radius))
         .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
+        .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
+        .insert(ContactFilter::default())
         .insert(ArmId(index))
         .id();
 
@@ -386,6 +391,8 @@ pub fn attach_arm(
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
+        .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
+        .insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .id();
@@ -493,6 +500,16 @@ pub fn connected_mass(
         }
         connected_mass.0 = summed_mass * 1.0;
         //info!("{:?} summed mass: {:?}", names.named(entity), summed_mass);
+    }
+}
+
+pub fn contact_filter(
+    mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>,
+    masses: Query<&ReadMassProperties>,
+    //names: Query<&Name>,
+) {
+    for (entity, mut contact_filter, connected) in &mut connected {
+        contact_filter.0 = connected.grabbed.clone();
     }
 }
 
