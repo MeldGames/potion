@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
 use bevy_egui::EguiContext;
 use egui::{FontData, FontDefinitions, FontFamily};
 
@@ -6,8 +7,8 @@ pub struct SetupEguiPlugin;
 
 impl Plugin for SetupEguiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_fonts)
-            .add_startup_system(setup_style);
+        app.add_system(setup_fonts.run_if_resource_added::<EguiContext>())
+            .add_system(setup_style.run_if_resource_added::<EguiContext>());
     }
 }
 

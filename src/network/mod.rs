@@ -38,7 +38,7 @@ impl Plugin for NetworkPlugin {
         app.insert_resource(info);
         app.insert_resource(ui::NetworkUiState::default());
         app.add_meta_network_system(ui::update_network_stats);
-        app.add_system(ui::display_network_stats);
+        app.add_system(ui::display_network_stats.run_if_resource_exists::<bevy_egui::EguiContext>());
         app.add_system(
             ui::update_connected_clients
                 .run_if_resource_exists::<RenetServer>()

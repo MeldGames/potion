@@ -185,12 +185,6 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachRotation>()
             .register_type::<AttachScale>();
 
-        /*
-               app.register_inspectable::<AttachTranslation>()
-                   .register_inspectable::<AttachRotation>()
-                   .register_inspectable::<AttachScale>();
-        */
-
         app.add_network_system(velocity_nonphysics.label("velocity_nonphysics"));
         app.add_network_system(update_attach.label("update_attach"));
         //app.add_system(update_attach.label("update_attach"));

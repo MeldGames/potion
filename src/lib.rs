@@ -14,8 +14,6 @@ pub mod store;
 
 use std::f32::consts::PI;
 
-use bevy_egui::EguiPlugin;
-use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
@@ -95,7 +93,6 @@ pub fn setup_app(app: &mut App) {
             }),
     );
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 14 });
-    app.add_plugin(EguiPlugin);
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
@@ -134,7 +131,6 @@ pub fn setup_app(app: &mut App) {
     app.add_system(update_level_collision);
     app.add_system(decomp_load);
 
-    app.add_plugin(InspectableRapierPlugin);
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
@@ -164,9 +160,7 @@ fn outline_meshes(
                 let _ = mesh.generate_outline_normals();
 
                 commands.entity(entity)
-                .insert(SetOutlineDepth::Flat {
-                    model_origin: Vec3::new(0.0, 0.0, 0.0),
-                })
+                .insert(SetOutlineDepth::Real)
                 .insert(OutlineBundle {
                     outline: OutlineVolume {
                         visible: true,

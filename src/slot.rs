@@ -1,18 +1,16 @@
 use std::{collections::VecDeque, time::Duration};
 
 use bevy::{ecs::entity::Entities, prelude::*};
-use bevy_inspector_egui::Inspectable;
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
 use sabi::{prelude::ReplicatePlugin, stage::NetworkSimulationAppExt};
 
 use crate::cauldron::NamedEntity;
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect, Inspectable)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct Slot {
     /// Entity this slot contains.
-    #[inspectable(read_only)]
     #[reflect(default)]
     pub containing: Option<Entity>,
 }
