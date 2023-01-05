@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use bevy_editor_pls::EditorState;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
@@ -44,6 +45,14 @@ pub fn window_focused(windows: Option<Res<Windows>>) -> bool {
     }
 
     false
+}
+
+pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
+    if let Some(editor) = editor {
+        editor.active
+    } else {
+        false
+    }
 }
 
 pub struct PlayerPlugin;
