@@ -273,7 +273,7 @@ dependencies = [
  "bevy_core",
  "bevy_core_pipeline",
  "bevy_ecs",
- "bevy_egui 0.18.0",
+ "bevy_egui",
  "bevy_hierarchy",
  "bevy_math",
  "bevy_pbr",
@@ -461,7 +461,6 @@ dependencies = [
 [[package]]
 name = "bevy_editor_pls"
 version = "0.2.0"
-source = "git+https://github.com/jakobhellermann/bevy_editor_pls#ef8977e1c824a32438452e4b49ae3317d8858687"
 dependencies = [
  "bevy",
  "bevy_editor_pls_core",
@@ -472,7 +471,6 @@ dependencies = [
 [[package]]
 name = "bevy_editor_pls_core"
 version = "0.2.0"
-source = "git+https://github.com/jakobhellermann/bevy_editor_pls#ef8977e1c824a32438452e4b49ae3317d8858687"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
@@ -483,7 +481,6 @@ dependencies = [
 [[package]]
 name = "bevy_editor_pls_default_windows"
 version = "0.2.0"
-source = "git+https://github.com/jakobhellermann/bevy_editor_pls#ef8977e1c824a32438452e4b49ae3317d8858687"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
@@ -493,19 +490,6 @@ dependencies = [
  "indexmap",
  "opener",
  "pretty-type-name",
-]
-
-[[package]]
-name = "bevy_egui"
-version = "0.17.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cec5fb091ccae94917266fe9b1af8339ef1e47763360b38273a31457598b030"
-dependencies = [
- "arboard",
- "bevy",
- "egui 0.19.0",
- "thread_local",
- "webbrowser",
 ]
 
 [[package]]
@@ -1762,9 +1746,6 @@ name = "emath"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9542a40106fdba943a055f418d1746a050e1a903a049b030c2b097d4686a33cf"
-dependencies = [
- "bytemuck",
-]
 
 [[package]]
 name = "emath"
@@ -1826,7 +1807,6 @@ dependencies = [
  "ab_glyph",
  "ahash 0.8.2",
  "atomic_refcell",
- "bytemuck",
  "emath 0.19.0",
  "nohash-hasher",
  "parking_lot",
@@ -3440,7 +3420,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_editor_pls",
- "bevy_egui 0.17.1",
+ "bevy_egui",
  "bevy_framepace",
  "bevy_mod_inverse_kinematics",
  "bevy_mod_outline",
@@ -3451,7 +3431,7 @@ dependencies = [
  "bincode",
  "bitflags",
  "derive_more",
- "egui 0.19.0",
+ "egui 0.20.1",
  "fixed",
  "fxhash",
  "iyes_loopless",

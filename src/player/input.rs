@@ -1,12 +1,12 @@
 use std::fmt::Debug;
 
-use bevy_editor_pls::EditorState;
 use bevy::input::mouse::MouseWheel;
 use bevy::{input::mouse::MouseMotion, prelude::*};
-use std::f32::consts::PI;
+use bevy_editor_pls::EditorState;
+use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
 use sabi::stage::NetworkSimulationAppExt;
 use serde::{Deserialize, Serialize};
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
+use std::f32::consts::PI;
 
 use super::prelude::*;
 use crate::player::editor_active;
@@ -246,10 +246,13 @@ pub fn toggle_mouse_lock(
     }
 }
 
-pub fn mouse_lock(mut windows: ResMut<Windows>, editor: Option<Res<EditorState>>, state: Res<CurrentState<MouseState>>) {
+pub fn mouse_lock(
+    mut windows: ResMut<Windows>,
+    editor: Option<Res<EditorState>>,
+    state: Res<CurrentState<MouseState>>,
+) {
     let editor_active = editor.map(|state| state.active).unwrap_or(false);
     let locked = state.0 == MouseState::Locked && !editor_active;
-
 
     if let Some(window) = windows.get_primary_mut() {
         window.set_cursor_visibility(!locked);

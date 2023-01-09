@@ -50,7 +50,7 @@ pub enum PlayerEvent {
 
 pub fn setup_player(
     mut commands: Commands,
-    _meshes: ResMut<Assets<Mesh>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
@@ -142,6 +142,7 @@ pub fn setup_player(
                 let distance_from_body = player_radius + 0.3;
                 attach_arm(
                     &mut commands,
+                    &mut meshes,
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(distance_from_body, player_height, 0.0),
@@ -149,6 +150,7 @@ pub fn setup_player(
                 );
                 attach_arm(
                     &mut commands,
+                    &mut meshes,
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(-distance_from_body, player_height, 0.0),
@@ -270,6 +272,7 @@ pub struct ArmId(pub usize);
 
 pub fn attach_arm(
     commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
     to: Entity,
     to_transform: Transform,
     at: Vec3,
@@ -289,6 +292,45 @@ pub fn attach_arm(
     let upperarm_height = Vec3::new(0.0, 0.625 - arm_radius, 0.0);
     let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
+
+    let upperarm_target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(at),
+            ..default()
+        })
+        .id();
+
+    let forearm_target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(-forearm_height),
+            ..default()
+        })
+        .id();
+
+    let hand_target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(
+                -forearm_height - Vec3::new(0.0, arm_radius, 0.0),
+            ),
+            ..default()
+        })
+        .id();
+
+    commands.entity(to).add_child(upperarm_target);
+    commands.entity(upperarm_target).add_child(forearm_target);
+    commands.entity(forearm_target).add_child(hand_target);
 
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local

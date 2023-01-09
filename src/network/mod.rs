@@ -1,5 +1,6 @@
 use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
+use bevy_editor_pls::AddEditorWindow;
 use iyes_loopless::prelude::*;
 
 use renet_visualizer::RenetServerVisualizer;
@@ -32,18 +33,12 @@ impl Plugin for NetworkPlugin {
             ..Default::default()
         });
 
+        app.add_editor_window::<ui::NetworkWindow>();
+
         app.insert_resource(QueuedInputs::<PlayerInput>::new());
         let info = NetworkSimulationInfo::new(crate::TICK_RATE);
         //info.slowdown = 3.0;
         app.insert_resource(info);
-        app.insert_resource(ui::NetworkUiState::default());
-        app.add_meta_network_system(ui::update_network_stats);
-        app.add_system(ui::display_network_stats.run_if_resource_exists::<bevy_egui::EguiContext>());
-        app.add_system(
-            ui::update_connected_clients
-                .run_if_resource_exists::<RenetServer>()
-                .run_if_resource_exists::<RenetServerVisualizer<{ ui::DATA_POINTS }>>(),
-        );
         app.add_meta_network_system(
             client_sync_players
                 .run_if_resource_exists::<RenetClient>()

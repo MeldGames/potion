@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
 use bevy_egui::EguiContext;
 use egui::{FontData, FontDefinitions, FontFamily};
+use iyes_loopless::prelude::*;
 
 pub struct SetupEguiPlugin;
 

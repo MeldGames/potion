@@ -121,7 +121,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
     app.add_plugin(OutlinePlugin);
-        //.add_plugin(AutoGenerateOutlineNormalsPlugin);
+    //.add_plugin(AutoGenerateOutlineNormalsPlugin);
     app.add_system(outline_meshes);
 
     app.add_event::<AssetEvent<Mesh>>();
@@ -134,17 +134,15 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
-fn update_outline_depth(
-    mut query: Query<(&GlobalTransform, &mut SetOutlineDepth)>,
-) {
+fn update_outline_depth(mut query: Query<(&GlobalTransform, &mut SetOutlineDepth)>) {
     for (global, mut set) in &mut query {
         match *set {
             SetOutlineDepth::Flat {
-                ref mut model_origin
+                ref mut model_origin,
             } => {
                 *model_origin = global.translation();
             }
-            _ => {},
+            _ => {}
         }
     }
 }
@@ -159,16 +157,17 @@ fn outline_meshes(
             if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
                 let _ = mesh.generate_outline_normals();
 
-                commands.entity(entity)
-                .insert(SetOutlineDepth::Real)
-                .insert(OutlineBundle {
-                    outline: OutlineVolume {
-                        visible: true,
-                        width: 5.0,
-                        colour: Color::rgba(0.0, 0.0, 0.0, 1.0),
-                    },
-                    ..default()
-                });
+                commands
+                    .entity(entity)
+                    .insert(SetOutlineDepth::Real)
+                    .insert(OutlineBundle {
+                        outline: OutlineVolume {
+                            visible: true,
+                            width: 5.0,
+                            colour: Color::rgba(0.0, 0.0, 0.0, 1.0),
+                        },
+                        ..default()
+                    });
             }
         }
     }
