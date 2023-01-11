@@ -316,6 +316,7 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
 
+            /*
             if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
                 let current_dir = hand_transform.rotation * -Vec3::Y;
                 let desired_dir = camera_dir;
@@ -384,6 +385,7 @@ pub fn player_grabby_hands(
                 let torque = back_spring.clamp_length_max(30.0) * dt;
                 //arm_impulse.torque_impulse = torque;
             }
+ */
 
             *collision_groups = GRAB_GROUPING;
         } else {

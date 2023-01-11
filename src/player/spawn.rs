@@ -17,7 +17,7 @@ use sabi::prelude::*;
 use super::prelude::*;
 use crate::attach::Attach;
 use crate::cauldron::NamedEntity;
-use crate::physics::ContactFilter;
+use crate::physics::{ContactFilter, MuscleTarget};
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -293,6 +293,18 @@ pub fn attach_arm(
     let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
+    let target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
+            ..default()
+        })
+        .insert(Name::new("Hand target"))
+        .id();
+
     let upperarm_target = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
@@ -315,6 +327,17 @@ pub fn attach_arm(
         })
         .id();
 
+    let pole_target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
+            ..default()
+        })
+        .id();
+
     let hand_target = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
@@ -326,8 +349,16 @@ pub fn attach_arm(
             ),
             ..default()
         })
+        .insert(IkConstraint {
+            chain_length: 2,
+            iterations: 20,
+            target: target,
+            pole_target: Some(pole_target),
+            pole_angle: std::f32::consts::FRAC_PI_2,
+        })
         .id();
 
+    commands.entity(to).add_child(target);
     commands.entity(to).add_child(upperarm_target);
     commands.entity(upperarm_target).add_child(forearm_target);
     commands.entity(forearm_target).add_child(hand_target);
@@ -361,6 +392,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ArmId(index))
+        .insert(MuscleTarget(upperarm_target))
         .id();
 
     let mut forearm_joint = SphericalJointBuilder::new()
@@ -391,6 +423,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ArmId(index))
+        .insert(MuscleTarget(forearm_target))
         .id();
 
     let mut hand_joint = SphericalJointBuilder::new()
@@ -437,6 +470,7 @@ pub fn attach_arm(
         .insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
+        .insert(MuscleTarget(hand_target))
         .id();
 }
 

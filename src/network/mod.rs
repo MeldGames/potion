@@ -1,6 +1,6 @@
 use bevy::{ecs::entity::Entities, prelude::*};
-use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
 use bevy_editor_pls::AddEditorWindow;
+use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
 use iyes_loopless::prelude::*;
 
 use renet_visualizer::RenetServerVisualizer;

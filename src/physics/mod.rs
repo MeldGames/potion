@@ -5,9 +5,11 @@ use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 pub mod contact_filter;
 pub mod spring;
+pub mod muscle;
 
 pub use contact_filter::*;
 pub use spring::Spring;
+pub use muscle::*;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {
@@ -35,6 +37,51 @@ pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(
     Group::from_bits_truncate(Groups::PLAYER.bits()),
 );
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
+
+/*
+RigidBody
+Velocity
+AdditionalMassProperties
+MassProperties
+LockedAxes
+ExternalForce
+ExternalImpulse
+Sleeping
+Damping
+Dominance
+Ccd
+GravityScale
+CollidingEntities
+Sensor
+Friction
+Restitution
+CollisionGroups
+SolverGroups
+ContactForceEventThreshold;
+*/
+
+#[derive(Bundle)]
+pub struct RigidBodyBundle {
+    pub rigid_body: RigidBody,
+    pub velocity: Velocity,
+    pub additional_mass_properties: AdditionalMassProperties,
+    pub read_mass_properties: ReadMassProperties,
+    pub locked_axes: LockedAxes,
+    pub external_force: ExternalForce,
+    pub external_impulse: ExternalImpulse,
+    pub sleeping: Sleeping,
+    pub damping: Damping,
+    pub dominance: Dominance,
+    pub ccd: Ccd,
+    pub gravity_scale: GravityScale,
+    pub colliding_entities: CollidingEntities,
+    pub sensor: Sensor,
+    pub friction: Friction,
+    pub restitution: Restitution,
+    pub collision_groups: CollisionGroups,
+    pub solver_groups: SolverGroups,
+    pub contact_force_event_threshold: ContactForceEventThreshold,
+}
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     let integration = &mut context.integration_parameters;

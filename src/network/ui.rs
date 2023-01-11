@@ -1,6 +1,12 @@
-use bevy::{ecs::{system::{SystemState, SystemParam}, entity::Entities}, prelude::*};
-use bevy_egui::EguiContext;
+use bevy::{
+    ecs::{
+        entity::Entities,
+        system::{SystemParam, SystemState},
+    },
+    prelude::*,
+};
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
+use bevy_egui::EguiContext;
 use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
 use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
 use sabi::{prelude::ServerEntities, protocol::update::UpdateMessages, tick::NetworkTick};
@@ -40,7 +46,10 @@ impl Default for NetworkWindow {
 }
 
 impl EditorWindow for NetworkWindow {
-    type State = (Self, Option<SystemState<NetworkInfoQuery<'static, 'static>>>);
+    type State = (
+        Self,
+        Option<SystemState<NetworkInfoQuery<'static, 'static>>>,
+    );
     const NAME: &'static str = "Network Info";
 
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {

@@ -111,6 +111,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(InverseKinematicsPlugin)
         //.add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
+        .add_plugin(crate::physics::MusclePlugin)
         .add_plugin(RapierDebugRenderPlugin {
             always_on_top: false,
             enabled: true,
