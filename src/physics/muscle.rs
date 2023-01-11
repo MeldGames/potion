@@ -27,6 +27,7 @@ impl Plugin for MusclePlugin {
 #[reflect(Component)]
 pub struct Muscle {
     pub target: Option<Entity>,
+    pub strength: f32,
     pub tense: bool,
 }
 
@@ -34,6 +35,7 @@ impl Muscle {
     pub fn new(target: Entity) -> Self {
         Self {
             target: Some(target),
+            strength: 30.0,
             tense: false,
         }
     }
@@ -47,6 +49,7 @@ pub fn muscle_target(
     let dt = ctx.integration_parameters.dt;
 
     for (current_entity, muscle, mut impulse) in &mut targets {
+        info!("muscle: {:?}", muscle);
         if !muscle.tense {
             continue;
         }
@@ -78,8 +81,8 @@ pub fn muscle_target(
 
         //let mass = mass.0.mass;
         let muscle = Spring {
-            strength: 30.0,
-            damping: 0.3,
+            strength: muscle.strength,
+            damping: 0.5,
         };
 
         let wrist_force = (target_axis * muscle.strength);
