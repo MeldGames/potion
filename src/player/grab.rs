@@ -10,7 +10,7 @@ use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::physics::{GRAB_GROUPING, REST_GROUPING, MuscleTarget};
+use crate::physics::{GRAB_GROUPING, REST_GROUPING, Muscle};
 
 use super::controller::{ConnectedEntities, LookTransform};
 use super::input::PlayerInput;
@@ -232,7 +232,7 @@ pub fn player_grabby_hands(
             &mut Grabbing,
             &mut CollisionGroups,
             &ArmId,
-            &MuscleTarget,
+            &Muscle,
         ),
         With<Hand>,
     >,

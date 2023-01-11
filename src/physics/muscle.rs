@@ -18,23 +18,47 @@ use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Muscle>();
         app.add_network_system(muscle_target);
     }
 }
 
-#[derive(Debug, Component, Clone, Copy)]
-pub struct MuscleTarget(pub Entity);
+#[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[reflect(Component)]
+pub struct Muscle {
+    pub target: Option<Entity>,
+    pub tense: bool,
+}
+
+impl Muscle {
+    pub fn new(target: Entity) -> Self {
+        Self {
+            target: Some(target),
+            tense: false,
+        }
+    }
+}
 
 pub fn muscle_target(
     ctx: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    mut targets: Query<(Entity, &MuscleTarget, &mut ExternalImpulse)>,
+    mut targets: Query<(Entity, &Muscle, &mut ExternalImpulse)>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (current_entity, target_rotation, mut impulse) in &mut targets {
+    for (current_entity, muscle, mut impulse) in &mut targets {
+        if !muscle.tense {
+            continue;
+        }
+
+        let target = if let Some(target) = muscle.target {
+            target
+        } else {
+            continue;
+        };
+
         let [target_global, current_global] =
-            if let Ok(globals) = globals.get_many([target_rotation.0, current_entity]) {
+            if let Ok(globals) = globals.get_many([target, current_entity]) {
                 globals
             } else {
                 continue;

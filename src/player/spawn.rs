@@ -17,7 +17,7 @@ use sabi::prelude::*;
 use super::prelude::*;
 use crate::attach::Attach;
 use crate::cauldron::NamedEntity;
-use crate::physics::{ContactFilter, MuscleTarget};
+use crate::physics::{ContactFilter, Muscle};
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -393,7 +393,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ArmId(index))
-        .insert(MuscleTarget(upperarm_target))
+        .insert(Muscle::new(upperarm_target))
         .id();
 
     let mut forearm_joint = SphericalJointBuilder::new()
@@ -424,7 +424,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ArmId(index))
-        .insert(MuscleTarget(forearm_target))
+        .insert(Muscle::new(forearm_target))
         .id();
 
     let mut hand_joint = SphericalJointBuilder::new()
@@ -471,7 +471,7 @@ pub fn attach_arm(
         .insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
-        .insert(MuscleTarget(hand_target))
+        .insert(Muscle::new(hand_target))
         .id();
 }
 
