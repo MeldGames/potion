@@ -134,7 +134,6 @@ pub struct NetworkInfoQuery<'w, 's> {
     is_client: Option<Res<'w, sabi::Client>>,
     client: Option<ResMut<'w, RenetClient>>,
     //client_visualizer: Option<ResMut<'w, RenetClientVisualizer<DATA_POINTS>>>,
-
     is_server: Option<Res<'w, sabi::Server>>,
     server: Option<ResMut<'w, RenetServer>>,
     //server_visualizer: Option<ResMut<'w, RenetServerVisualizer<DATA_POINTS>>>,
@@ -153,7 +152,6 @@ pub fn network_info(ui: &mut egui::Ui, ui_state: &mut NetworkWindow, mut query: 
         is_client,
         mut client,
         //client_visualizer,
-
         is_server,
         mut server,
         //server_visualizer,

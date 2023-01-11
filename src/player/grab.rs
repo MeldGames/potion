@@ -10,7 +10,7 @@ use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
+use crate::physics::{GRAB_GROUPING, REST_GROUPING, MuscleTarget};
 
 use super::controller::{ConnectedEntities, LookTransform};
 use super::input::PlayerInput;
@@ -223,170 +223,55 @@ pub fn player_grabby_hands(
         &PlayerCamera,
         &Velocity,
     )>,
-    mut impulses: Query<&mut ExternalImpulse>,
-    globals: Query<&GlobalTransform>,
-    joints: Query<(
-        &GlobalTransform,
-        &Velocity,
-        &ImpulseJoint,
-        &ReadMassProperties,
-    )>,
+    parents: Query<&Parent>,
+    joints: Query<&ImpulseJoint>,
     ctx: Res<RapierContext>,
-    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId), With<Hand>>,
+    mut hands: Query<
+        (
+            Entity,
+            &mut Grabbing,
+            &mut CollisionGroups,
+            &ArmId,
+            &MuscleTarget,
+        ),
+        With<Hand>,
+    >,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id) in &mut hands {
-        let (hand_global, hand_velocity, hand_joint, hand_mass_properties) =
-            if let Ok(joint) = joints.get(hand_entity) {
-                joint
-            } else {
-                warn!("hand does not have a joint/velocity/global");
-                continue;
-            };
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_target) in &mut hands {
+        let mut checked = HashSet::new();
+        let mut possibilities = vec![hand_entity];
+        let mut input = None;
 
-        let forearm_entity = hand_joint.parent;
-        let (forearm_global, forearm_velocity, forearm_joint, forearm_mass_properties) =
-            if let Ok(joint) = joints.get(forearm_entity) {
-                joint
-            } else {
-                warn!("forearm does not have a joint/velocity/global");
-                continue;
-            };
+        while let Some(possible) = possibilities.pop() {
+            checked.insert(possible);
 
-        let upperarm_entity = forearm_joint.parent;
-        let (upperarm_global, upperarm_velocity, upperarm_joint, upperarm_mass_properties) =
-            if let Ok(joint) = joints.get(upperarm_entity) {
-                joint
-            } else {
-                warn!("upperarm does not have a joint/velocity/global");
-                continue;
-            };
+            input = inputs.get(possible).ok();
+            if input.is_some() {
+                break;
+            }
 
-        let player_entity = upperarm_joint.parent;
-        let (_player_global, _direction, input, camera_entity, _player_velocity) =
-            if let Ok(input) = inputs.get(player_entity) {
-                input
-            } else {
-                warn!("player does not have an input/direction/global");
-                continue;
-            };
+            if let Ok(parent) = parents.get(possible) {
+                possibilities.push(parent.get());
+            }
 
-        let camera_global = if let Ok(global) = globals.get(camera_entity.0) {
-            global
+            if let Ok(joint) = joints.get(possible) {
+                possibilities.push(joint.parent);
+            }
+        }
+
+        let (global, look, input, cam, velocity) = if let Some(input) = input {
+            input
         } else {
-            warn!("camera does not have an global");
+            warn!("couldn't find parent input for hand entity");
             continue;
         };
 
-        let forearm_transform = forearm_global.compute_transform();
-        let upperarm_transform = upperarm_global.compute_transform();
-        let shoulder = upperarm_transform * upperarm_joint.data.local_anchor2();
-
-        let hand_transform = hand_global.compute_transform();
-        let hand = hand_global.translation();
-        let upperarm_dir = (hand - shoulder).normalize_or_zero();
-
-        let camera = camera_global.translation();
-        let camera_dir = (shoulder - camera).normalize_or_zero();
-
-        lines.line_colored(
-            shoulder,
-            shoulder + camera_dir,
-            crate::TICK_RATE.as_secs_f32(),
-            Color::BLUE,
-        );
-
-        lines.line_colored(
-            shoulder,
-            shoulder + upperarm_dir,
-            crate::TICK_RATE.as_secs_f32(),
-            Color::RED,
-        );
-
-        lines.line_colored(
-            shoulder,
-            shoulder + camera_dir,
-            crate::TICK_RATE.as_secs_f32(),
-            Color::BLUE,
-        );
-
         if input.grabby_hands(arm_id.0) {
             grabbing.0 = true;
-
-            /*
-            if let Ok(mut hand_impulse) = impulses.get_mut(hand_entity) {
-                let current_dir = hand_transform.rotation * -Vec3::Y;
-                let desired_dir = camera_dir;
-
-                // Not normalizing this doubles as a strength of the difference
-                // if we normalize we tend to get jitters so uh... don't do that
-                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-
-                //let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
-                let local_angular_velocity = hand_velocity.angvel;
-
-                let hand_mass = hand_mass_properties.0.mass;
-                let wrist_spring = Spring {
-                    strength: 100.0,
-                    damping: 0.3,
-                };
-
-                let wrist_force = (desired_axis * wrist_spring.strength)
-                    - (local_angular_velocity * wrist_spring.damp_coefficient(hand_mass));
-                let torque = wrist_force.clamp_length_max(30.0) * dt;
-                hand_impulse.torque_impulse = torque;
-            }
-
-            if let Ok(mut arm_impulse) = impulses.get_mut(forearm_entity) {
-                let current_dir = forearm_transform.rotation * -Vec3::Y;
-                let desired_dir = camera_dir;
-                // Not normalizing this doubles as a strength of the difference
-                // if we normalize we tend to get jitters so uh... don't do that
-                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-
-                //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
-                let local_angular_velocity = forearm_velocity.angvel;
-
-                let arm_mass = forearm_mass_properties.0.mass;
-                let back_spring = Spring {
-                    strength: 50.0,
-                    damping: 0.3,
-                };
-
-                let back_spring = (desired_axis * back_spring.strength)
-                    - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
-
-                let torque = back_spring.clamp_length_max(30.0) * dt;
-                arm_impulse.torque_impulse = torque;
-            }
-
-            if let Ok(mut arm_impulse) = impulses.get_mut(upperarm_entity) {
-                let current_dir = upperarm_transform.rotation * -Vec3::Y;
-                let desired_dir = camera_dir;
-                // Not normalizing this doubles as a strength of the difference
-                // if we normalize we tend to get jitters so uh... don't do that
-                let desired_axis = current_dir.normalize().cross(desired_dir.normalize());
-
-                //let local_angular_velocity = arm_velocity.angvel - player_velocity.angvel;
-                let local_angular_velocity = upperarm_velocity.angvel;
-
-                let arm_mass = upperarm_mass_properties.0.mass;
-                let back_spring = Spring {
-                    strength: 50.0,
-                    damping: 0.3,
-                };
-
-                let back_spring = (desired_axis * back_spring.strength)
-                    - (local_angular_velocity * back_spring.damp_coefficient(arm_mass));
-
-                let torque = back_spring.clamp_length_max(30.0) * dt;
-                //arm_impulse.torque_impulse = torque;
-            }
- */
-
             *collision_groups = GRAB_GROUPING;
         } else {
             grabbing.0 = false;

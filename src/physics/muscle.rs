@@ -12,8 +12,8 @@ use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 use crate::cauldron::NamedEntity;
+use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 pub struct MusclePlugin;
 impl Plugin for MusclePlugin {

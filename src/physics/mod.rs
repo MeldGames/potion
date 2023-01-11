@@ -4,12 +4,12 @@ use bevy_rapier3d::prelude::*;
 use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 pub mod contact_filter;
-pub mod spring;
 pub mod muscle;
+pub mod spring;
 
 pub use contact_filter::*;
-pub use spring::Spring;
 pub use muscle::*;
+pub use spring::Spring;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {
