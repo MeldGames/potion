@@ -336,6 +336,7 @@ pub fn attach_arm(
             transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
             ..default()
         })
+        .insert(Name::new("Elbow pole target"))
         .id();
 
     let hand_target = commands

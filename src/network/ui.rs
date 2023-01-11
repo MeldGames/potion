@@ -8,7 +8,7 @@ use bevy::{
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_egui::EguiContext;
 use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
-use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
+//use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
 use sabi::{prelude::ServerEntities, protocol::update::UpdateMessages, tick::NetworkTick};
 
 pub const DATA_POINTS: usize = 100;
@@ -67,6 +67,7 @@ impl EditorWindow for NetworkWindow {
     }
 }
 
+/*
 pub fn update_network_stats(
     mut commands: Commands,
     client: Option<Res<RenetClient>>,
@@ -118,6 +119,7 @@ pub fn update_connected_clients(
         }
     }
 }
+ */
 
 #[derive(SystemParam)]
 pub struct NetworkInfoQuery<'w, 's> {
@@ -131,11 +133,11 @@ pub struct NetworkInfoQuery<'w, 's> {
 
     is_client: Option<Res<'w, sabi::Client>>,
     client: Option<ResMut<'w, RenetClient>>,
-    client_visualizer: Option<ResMut<'w, RenetClientVisualizer<DATA_POINTS>>>,
+    //client_visualizer: Option<ResMut<'w, RenetClientVisualizer<DATA_POINTS>>>,
 
     is_server: Option<Res<'w, sabi::Server>>,
     server: Option<ResMut<'w, RenetServer>>,
-    server_visualizer: Option<ResMut<'w, RenetServerVisualizer<DATA_POINTS>>>,
+    //server_visualizer: Option<ResMut<'w, RenetServerVisualizer<DATA_POINTS>>>,
 }
 
 pub fn network_info(ui: &mut egui::Ui, ui_state: &mut NetworkWindow, mut query: NetworkInfoQuery) {
@@ -150,11 +152,11 @@ pub fn network_info(ui: &mut egui::Ui, ui_state: &mut NetworkWindow, mut query: 
 
         is_client,
         mut client,
-        client_visualizer,
+        //client_visualizer,
 
         is_server,
         mut server,
-        server_visualizer,
+        //server_visualizer,
     } = query;
 
     egui::ScrollArea::vertical().show(ui, |ui| {

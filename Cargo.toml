@@ -56,9 +56,9 @@ wgpu-types = "0.14"
 bevy_renet = { git = "https://github.com/lucaspoffo/renet" }
 obj = "0.10.2"
 #renet_visualizer = "0.0.2"
-renet_visualizer = { git = "https://github.com/lucaspoffo/renet", features = [
-    "bevy",
-] }
+#renet_visualizer = { git = "https://github.com/lucaspoffo/renet", features = [
+#    "bevy",
+#] }
 
 [patch.crates-io]
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
@@ -70,7 +70,7 @@ renet_visualizer = { git = "https://github.com/lucaspoffo/renet", features = [
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
-#bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
+bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
 
 bevy = {git = "https://github.com/aceeri/bevy"}
 bevy_animation = {git = "https://github.com/aceeri/bevy"}
