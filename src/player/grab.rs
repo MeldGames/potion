@@ -1,6 +1,9 @@
 use std::fmt::Debug;
 
-use bevy::ecs::entity::Entities;
+use bevy::ecs::{
+    entity::Entities,
+    query::{ReadOnlyWorldQuery, WorldQuery},
+};
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -10,7 +13,7 @@ use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::physics::{GRAB_GROUPING, REST_GROUPING, Muscle};
+use crate::physics::{Muscle, GRAB_GROUPING, REST_GROUPING};
 
 use super::controller::{ConnectedEntities, LookTransform};
 use super::input::PlayerInput;
@@ -215,6 +218,36 @@ pub fn grab_collider(
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Grabbing(pub bool);
 
+pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
+    query: &'a Query<Q, F>,
+    parents: &'a Query<&Parent>,
+    joints: &'a Query<&ImpulseJoint>,
+    base: Entity,
+) -> Option<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
+    let mut checked = HashSet::new();
+    let mut possibilities = vec![base];
+    let mut queried = None;
+
+    while let Some(possible) = possibilities.pop() {
+        checked.insert(possible);
+
+        queried = query.get(possible).ok();
+        if queried.is_some() {
+            break;
+        }
+
+        if let Ok(parent) = parents.get(possible) {
+            possibilities.push(parent.get());
+        }
+
+        if let Ok(joint) = joints.get(possible) {
+            possibilities.push(joint.parent);
+        }
+    }
+
+    queried
+}
+
 pub fn player_grabby_hands(
     inputs: Query<(
         &GlobalTransform,
@@ -226,42 +259,14 @@ pub fn player_grabby_hands(
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
     ctx: Res<RapierContext>,
-    mut hands: Query<
-        (
-            Entity,
-            &mut Grabbing,
-            &mut CollisionGroups,
-            &ArmId,
-            &Muscle,
-        ),
-        With<Hand>,
-    >,
+    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId, &Muscle), With<Hand>>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
     for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_target) in &mut hands {
-        let mut checked = HashSet::new();
-        let mut possibilities = vec![hand_entity];
-        let mut input = None;
-
-        while let Some(possible) = possibilities.pop() {
-            checked.insert(possible);
-
-            input = inputs.get(possible).ok();
-            if input.is_some() {
-                break;
-            }
-
-            if let Ok(parent) = parents.get(possible) {
-                possibilities.push(parent.get());
-            }
-
-            if let Ok(joint) = joints.get(possible) {
-                possibilities.push(joint.parent);
-            }
-        }
+        let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (global, look, input, cam, velocity) = if let Some(input) = input {
             input

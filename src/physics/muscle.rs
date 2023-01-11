@@ -49,7 +49,6 @@ pub fn muscle_target(
     let dt = ctx.integration_parameters.dt;
 
     for (current_entity, muscle, mut impulse) in &mut targets {
-        info!("muscle: {:?}", muscle);
         if !muscle.tense {
             continue;
         }
