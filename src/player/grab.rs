@@ -249,6 +249,7 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 }
 
 pub fn player_grabby_hands(
+    mut transforms: Query<&mut Transform>,
     inputs: Query<(
         &GlobalTransform,
         &LookTransform,
@@ -259,13 +260,13 @@ pub fn player_grabby_hands(
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
     ctx: Res<RapierContext>,
-    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId, &Muscle), With<Hand>>,
+    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId, &MuscleIKTarget), With<Hand>>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_target) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (global, look, input, cam, velocity) = if let Some(input) = input {
@@ -276,6 +277,11 @@ pub fn player_grabby_hands(
         };
 
         if input.grabby_hands(arm_id.0) {
+            if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
+                let camera_dir = look.0.rotation * -Vec3::Z * 4.;
+                target_position.translation = global.translation() + camera_dir;
+            }
+
             grabbing.0 = true;
             *collision_groups = GRAB_GROUPING;
         } else {

@@ -270,6 +270,15 @@ pub fn setup_player(
 #[derive(Debug, Clone, Component)]
 pub struct ArmId(pub usize);
 
+#[derive(Debug, Clone, Component)]
+pub struct MuscleIKTarget(pub Entity);
+
+impl MuscleIKTarget {
+    pub fn new(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+
 pub fn attach_arm(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -302,7 +311,8 @@ pub fn attach_arm(
             transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
             ..default()
         })
-        .insert(Name::new("Hand target"))
+        .insert(Name::new(format!("IK Target {}", index)))
+        .insert(ArmId(index))
         .id();
 
     let upperarm_target = commands
@@ -314,6 +324,7 @@ pub fn attach_arm(
             transform: Transform::from_translation(at),
             ..default()
         })
+        .insert(Name::new(format!("Upperarm Target {}", index)))
         .id();
 
     let forearm_target = commands
@@ -325,6 +336,7 @@ pub fn attach_arm(
             transform: Transform::from_translation(-forearm_height),
             ..default()
         })
+        .insert(Name::new(format!("Forearm Target {}", index)))
         .id();
 
     let pole_target = commands
@@ -336,7 +348,7 @@ pub fn attach_arm(
             transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
             ..default()
         })
-        .insert(Name::new("Elbow pole target"))
+        .insert(Name::new(format!("Elbow pole {}", index)))
         .id();
 
     let hand_target = commands
@@ -357,9 +369,10 @@ pub fn attach_arm(
             pole_target: Some(pole_target),
             pole_angle: std::f32::consts::FRAC_PI_2,
         })
+        .insert(Name::new(format!("Hand Target {}", index)))
         .id();
 
-    commands.entity(to).add_child(target);
+    //commands.entity(to).add_child(target);
     commands.entity(to).add_child(upperarm_target);
     commands.entity(upperarm_target).add_child(forearm_target);
     commands.entity(forearm_target).add_child(hand_target);
@@ -472,6 +485,7 @@ pub fn attach_arm(
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .insert(Muscle::new(hand_target))
+        .insert(MuscleIKTarget::new(target))
         .id();
 }
 
