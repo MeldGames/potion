@@ -130,6 +130,7 @@ pub fn setup_app(app: &mut App) {
     app.add_startup_system(fallback_camera);
 
     app.add_system(update_level_collision);
+    app.add_system(active_cameras);
     app.add_system(decomp_load);
 
     app.add_plugin(crate::player::CustomWanderlustPlugin);
@@ -181,6 +182,7 @@ fn fallback_camera(
     _materials: ResMut<Assets<StandardMaterial>>,
     _assets: Res<AssetServer>,
 ) {
+    /*
     commands
         .spawn(Camera3dBundle {
             transform: Transform::from_translation(Vec3::new(0., 12., 10.))
@@ -193,6 +195,7 @@ fn fallback_camera(
             ..default()
         })
         .insert(Name::new("Fallback camera"));
+ */
 }
 
 pub fn setup_map(
@@ -647,6 +650,17 @@ pub fn setup_map(
             Name::new("Bound Wall"),
             crate::physics::TERRAIN_GROUPING,
         ));
+}
+
+pub fn active_cameras(names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
+    let mut active = 0;
+    for (entity, camera) in &cameras {
+        if camera.is_active {
+            active += 1;
+        }
+    }
+
+    assert!(active <= 1);
 }
 
 #[derive(Debug, Component, Clone)]
