@@ -89,6 +89,7 @@ impl Plugin for PlayerPlugin {
                 .after("update_player_inputs"),
         );
         app.add_network_system(grab::joint_children.label("joint_children"));
+        app.add_network_system(grab::tense_arms.label("tense_arms"));
         app.add_network_system(
             spawn::connected_entities
                 .label("connected_entities")

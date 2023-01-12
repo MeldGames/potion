@@ -248,6 +248,27 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     queried
 }
 
+pub fn tense_arms(
+    hands: Query<(Entity, &Grabbing), With<Hand>>,
+    mut muscles: Query<(Entity, &mut Muscle)>,
+    parents: Query<&Parent>,
+    joints: Query<&ImpulseJoint>,
+    names: Query<&Name>,
+) {
+    for (hand_entity, grabbing) in &hands {
+        let mut entity = hand_entity;
+        while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
+            muscle.tense = grabbing.0;
+
+            if let Ok(joint) = joints.get(entity) {
+                entity = joint.parent;
+            } else {
+                break;
+            }
+        }
+    }
+}
+
 pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
     mut transforms: Query<&mut Transform>,
