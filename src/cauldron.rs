@@ -90,6 +90,7 @@ pub fn spawn_cauldron(
                         .insert(Name::new(format!("Cauldron slot {}", i)))
                         .insert(Velocity::default())
                         .insert(Slot::default())
+                        .insert(crate::DebugVisible)
                         .insert(crate::slot::SlotGracePeriod::default())
                         .insert(crate::slot::SlotSettings(springy::SpringState {
                             spring: springy::Spring {

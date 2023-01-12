@@ -3453,7 +3453,6 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_editor_pls",
  "bevy_egui",
- "bevy_framepace",
  "bevy_mod_inverse_kinematics",
  "bevy_mod_outline",
  "bevy_mod_wanderlust",

@@ -44,7 +44,13 @@ impl Muscle {
 pub fn muscle_target(
     ctx: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    mut targets: Query<(Entity, &Muscle, &mut ExternalImpulse, &Velocity, &ReadMassProperties)>,
+    mut targets: Query<(
+        Entity,
+        &Muscle,
+        &mut ExternalImpulse,
+        &Velocity,
+        &ReadMassProperties,
+    )>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
@@ -82,7 +88,8 @@ pub fn muscle_target(
             damping: 0.1,
         };
 
-        let mut torque = (target_axis * spring.strength) - (local_angular_velocity * spring.damp_coefficient(mass));
+        let mut torque = (target_axis * spring.strength)
+            - (local_angular_velocity * spring.damp_coefficient(mass));
         torque = torque.clamp_length_max(spring.strength) * dt;
         impulse.torque_impulse += torque;
     }

@@ -30,7 +30,7 @@ bevy-inspector-egui = "0.16"
 #bevy_editor_pls = "0.1"
 bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls" }
 #bevy_editor_pls = { path = "../bevy_editor_pls/crates/bevy_editor_pls" }
-bevy_framepace = "0.9"
+#bevy_framepace = "0.9"
 bevy_mod_inverse_kinematics = "0.2"
 bevy_prototype_debug_lines = { version = "0.9", features = ["3d"] }
 bevy_rapier3d = { version = "0.19", features = ["serde-serialize"] }

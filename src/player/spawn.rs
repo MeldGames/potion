@@ -18,6 +18,7 @@ use super::prelude::*;
 use crate::attach::Attach;
 use crate::cauldron::NamedEntity;
 use crate::physics::{ContactFilter, Muscle};
+use crate::DebugVisible;
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -320,6 +321,7 @@ pub fn attach_arm(
             transform: Transform::from_translation(at),
             ..default()
         })
+        .insert(DebugVisible)
         .insert(Name::new(format!("Upperarm Target {}", index)))
         .id();
 
@@ -335,8 +337,8 @@ pub fn attach_arm(
         .insert(Name::new(format!("IK Target {}", index)))
         .insert(ArmId(index))
         .insert(IKBase::new(upperarm_target))
+        .insert(DebugVisible)
         .id();
-
 
     let forearm_target = commands
         .spawn(PbrBundle {
@@ -348,6 +350,7 @@ pub fn attach_arm(
             ..default()
         })
         .insert(Name::new(format!("Forearm Target {}", index)))
+        .insert(DebugVisible)
         .id();
 
     let pole_target = commands
@@ -360,6 +363,7 @@ pub fn attach_arm(
             ..default()
         })
         .insert(Name::new(format!("Elbow pole {}", index)))
+        .insert(DebugVisible)
         .id();
 
     let hand_target = commands
@@ -381,6 +385,7 @@ pub fn attach_arm(
             pole_angle: std::f32::consts::FRAC_PI_2,
         })
         .insert(Name::new(format!("Hand Target {}", index)))
+        .insert(DebugVisible)
         .id();
 
     //commands.entity(to).add_child(target);

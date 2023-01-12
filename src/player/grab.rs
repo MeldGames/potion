@@ -283,7 +283,16 @@ pub fn player_grabby_hands(
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
     ctx: Res<RapierContext>,
-    mut hands: Query<(Entity, &mut Grabbing, &mut CollisionGroups, &ArmId, &MuscleIKTarget), With<Hand>>,
+    mut hands: Query<
+        (
+            Entity,
+            &mut Grabbing,
+            &mut CollisionGroups,
+            &ArmId,
+            &MuscleIKTarget,
+        ),
+        With<Hand>,
+    >,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
@@ -303,7 +312,8 @@ pub fn player_grabby_hands(
             if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
                 if let Ok(base) = ik_base.get(muscle_ik_target.0) {
                     if let Ok([shoulder, camera]) = globals.get_many([base.0, cam.0]) {
-                        let direction = (camera.translation() - shoulder.translation()).normalize_or_zero();
+                        let direction =
+                            (camera.translation() - shoulder.translation()).normalize_or_zero();
                         target_position.translation = shoulder.translation() - direction * 1.5;
                     }
                 }

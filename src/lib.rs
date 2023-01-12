@@ -1,6 +1,7 @@
 pub mod attach;
 //pub mod brew;
 pub mod cauldron;
+pub mod debug;
 pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
@@ -24,6 +25,8 @@ use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 //use trees::TreesPlugin;
 
 use bevy_mod_outline::*;
+
+pub use debug::DebugVisible;
 
 use attach::Attach;
 
@@ -109,6 +112,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(DepositPlugin)
         .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
+        .add_plugin(crate::debug::DebugPlugin)
         //.add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(crate::physics::MusclePlugin)
@@ -183,19 +187,19 @@ fn fallback_camera(
     _assets: Res<AssetServer>,
 ) {
     /*
-    commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-                .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-            camera: Camera {
-                priority: -50,
-                is_active: true,
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Name::new("Fallback camera"));
- */
+       commands
+           .spawn(Camera3dBundle {
+               transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+                   .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+               camera: Camera {
+                   priority: -50,
+                   is_active: true,
+                   ..default()
+               },
+               ..default()
+           })
+           .insert(Name::new("Fallback camera"));
+    */
 }
 
 pub fn setup_map(
