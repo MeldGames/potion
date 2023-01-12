@@ -44,11 +44,11 @@ impl Muscle {
 pub fn muscle_target(
     ctx: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    mut targets: Query<(Entity, &Muscle, &mut ExternalImpulse)>,
+    mut targets: Query<(Entity, &Muscle, &mut ExternalImpulse, &Velocity, &ReadMassProperties)>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (current_entity, muscle, mut impulse) in &mut targets {
+    for (current_entity, muscle, mut impulse, velocity, mass_properties) in &mut targets {
         if !muscle.tense {
             continue;
         }
@@ -72,21 +72,18 @@ pub fn muscle_target(
         let target_dir = target_transform.rotation * -Vec3::Y;
 
         // Not normalizing this doubles as a strength of the difference
-        // if we normalize we tend to get jitters so uh... don't do that
         let target_axis = current_dir.normalize().cross(target_dir.normalize());
 
-        //let local_angular_velocity = hand_velocity.angvel - arm_velocity.angvel;
-        //let local_angular_velocity = hand_velocity.angvel;
+        let local_angular_velocity = velocity.angvel;
 
-        //let mass = mass.0.mass;
-        let muscle = Spring {
+        let mass = mass_properties.0.mass;
+        let spring = Spring {
             strength: muscle.strength,
-            damping: 0.5,
+            damping: 0.1,
         };
 
-        let wrist_force = (target_axis * muscle.strength);
-        //- (local_angular_velocity * wrist_spring.damp_coefficient(hand_mass));
-        let torque = wrist_force.clamp_length_max(muscle.strength) * dt;
+        let mut torque = (target_axis * spring.strength) - (local_angular_velocity * spring.damp_coefficient(mass));
+        torque = torque.clamp_length_max(spring.strength) * dt;
         impulse.torque_impulse += torque;
     }
 }
