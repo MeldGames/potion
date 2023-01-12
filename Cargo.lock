@@ -459,16 +459,19 @@ dependencies = [
 [[package]]
 name = "bevy_editor_pls"
 version = "0.2.0"
+source = "git+https://github.com/jakobhellermann/bevy_editor_pls#7eae739d863d51aa34eb7962bbf269d6c25ef5be"
 dependencies = [
  "bevy",
  "bevy_editor_pls_core",
  "bevy_editor_pls_default_windows",
+ "bevy_framepace",
  "egui",
 ]
 
 [[package]]
 name = "bevy_editor_pls_core"
 version = "0.2.0"
+source = "git+https://github.com/jakobhellermann/bevy_editor_pls#7eae739d863d51aa34eb7962bbf269d6c25ef5be"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
@@ -479,12 +482,13 @@ dependencies = [
 [[package]]
 name = "bevy_editor_pls_default_windows"
 version = "0.2.0"
+source = "git+https://github.com/jakobhellermann/bevy_editor_pls#7eae739d863d51aa34eb7962bbf269d6c25ef5be"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_editor_pls_core",
  "bevy_mod_debugdump",
- "bevy_mod_raycast",
+ "bevy_mod_picking",
  "indexmap",
  "opener",
  "pretty-type-name",
@@ -703,6 +707,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mod_picking"
+version = "0.11.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+ "bevy_picking_core",
+ "bevy_picking_egui",
+ "bevy_picking_input",
+ "bevy_picking_raycast",
+ "bevy_picking_sprite",
+]
+
+[[package]]
 name = "bevy_mod_raycast"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -714,6 +732,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_wanderlust"
 version = "0.2.3"
+source = "git+https://github.com/PROMETHIA-27/bevy_mod_wanderlust#601b94f9aaa75c76258583853d982692e1d7edaa"
 dependencies = [
  "bevy",
  "bevy_prototype_debug_lines",
@@ -739,6 +758,52 @@ dependencies = [
  "bitflags",
  "bytemuck",
  "radsort",
+]
+
+[[package]]
+name = "bevy_picking_core"
+version = "0.1.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "bevy_picking_egui"
+version = "0.1.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+ "bevy_picking_core",
+]
+
+[[package]]
+name = "bevy_picking_input"
+version = "0.1.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+ "bevy_picking_core",
+]
+
+[[package]]
+name = "bevy_picking_raycast"
+version = "0.1.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+ "bevy_mod_raycast",
+ "bevy_picking_core",
+]
+
+[[package]]
+name = "bevy_picking_sprite"
+version = "0.1.0"
+source = "git+https://github.com/aevyrie/bevy_mod_picking?rev=554649a951689dce66d0d759839b326874e8826f#554649a951689dce66d0d759839b326874e8826f"
+dependencies = [
+ "bevy",
+ "bevy_picking_core",
 ]
 
 [[package]]
@@ -3707,6 +3772,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 [[package]]
 name = "sabi"
 version = "0.3.0"
+source = "git+https://github.com/aceeri/sabi#509e6346445d1fc474e858ea6879db59a7af0712"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
