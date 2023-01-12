@@ -664,7 +664,9 @@ pub fn active_cameras(names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
         }
     }
 
-    assert!(active <= 1);
+    if active > 1 {
+        warn!("More than 1 active camera");
+    }
 }
 
 #[derive(Debug, Component, Clone)]

@@ -307,8 +307,8 @@ pub fn attach_arm(
     let motor_model = MotorModel::ForceBased;
 
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
-    let forearm_height = Vec3::new(0.0, 0.625 - arm_radius, 0.0);
-    let upperarm_height = Vec3::new(0.0, 0.625 - arm_radius, 0.0);
+    let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
+    let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
     let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
