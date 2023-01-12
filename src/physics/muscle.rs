@@ -36,7 +36,7 @@ impl Muscle {
         Self {
             target: Some(target),
             strength: 30.0,
-            tense: false,
+            tense: true,
         }
     }
 }

@@ -279,6 +279,15 @@ impl MuscleIKTarget {
     }
 }
 
+#[derive(Debug, Clone, Component)]
+pub struct IKBase(pub Entity);
+
+impl IKBase {
+    pub fn new(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+
 pub fn attach_arm(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -302,19 +311,6 @@ pub fn attach_arm(
     let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
-    let target = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
-                ..default()
-            })),
-            transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
-            ..default()
-        })
-        .insert(Name::new(format!("IK Target {}", index)))
-        .insert(ArmId(index))
-        .id();
-
     let upperarm_target = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
@@ -326,6 +322,21 @@ pub fn attach_arm(
         })
         .insert(Name::new(format!("Upperarm Target {}", index)))
         .id();
+
+    let target = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 0.02,
+                ..default()
+            })),
+            transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
+            ..default()
+        })
+        .insert(Name::new(format!("IK Target {}", index)))
+        .insert(ArmId(index))
+        .insert(IKBase::new(upperarm_target))
+        .id();
+
 
     let forearm_target = commands
         .spawn(PbrBundle {
@@ -405,6 +416,7 @@ pub fn attach_arm(
         .insert(ImpulseJoint::new(to, upperarm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
+        .insert(ConnectedEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(upperarm_target))
         .id();
@@ -436,6 +448,7 @@ pub fn attach_arm(
         .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
+        .insert(ConnectedEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(forearm_target))
         .id();

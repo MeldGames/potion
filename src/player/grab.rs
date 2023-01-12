@@ -249,6 +249,7 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 }
 
 pub fn player_grabby_hands(
+    globals: Query<&GlobalTransform>,
     mut transforms: Query<&mut Transform>,
     inputs: Query<(
         &GlobalTransform,
@@ -257,6 +258,7 @@ pub fn player_grabby_hands(
         &PlayerCamera,
         &Velocity,
     )>,
+    ik_base: Query<&IKBase>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
     ctx: Res<RapierContext>,
@@ -278,8 +280,12 @@ pub fn player_grabby_hands(
 
         if input.grabby_hands(arm_id.0) {
             if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
-                let camera_dir = look.0.rotation * -Vec3::Z * 4.;
-                target_position.translation = global.translation() + camera_dir;
+                if let Ok(base) = ik_base.get(muscle_ik_target.0) {
+                    if let Ok([shoulder, camera]) = globals.get_many([base.0, cam.0]) {
+                        let direction = (camera.translation() - shoulder.translation()).normalize_or_zero();
+                        target_position.translation = shoulder.translation() - direction * 1.5;
+                    }
+                }
             }
 
             grabbing.0 = true;
