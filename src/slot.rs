@@ -40,11 +40,9 @@ impl Default for SlotGracePeriod {
     }
 }
 
-#[derive(Debug, Clone, Component, Reflect, FromReflect)]
+#[derive(Debug, Clone, Component)]
 pub struct SlotDeposit {
-    #[reflect(default)]
     pub slots: Vec<Entity>,
-    #[reflect(default)]
     pub attempting: VecDeque<Entity>,
 }
 
@@ -285,7 +283,7 @@ pub struct SlotPlugin;
 impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Slot>()
-            .register_type::<VecDeque<Entity>>()
+            //.register_type::<VecDeque<Entity>>()
             .register_type::<springy::SpringState<Vec3>>()
             .register_type::<Option<springy::SpringBreak>>()
             .register_type::<Option<Entity>>()
@@ -298,7 +296,7 @@ impl Plugin for SlotPlugin {
         app.add_plugin(ReplicatePlugin::<SlotSettings>::default());
         app.add_plugin(ReplicatePlugin::<Slottable>::default());
         app.add_plugin(ReplicatePlugin::<SlotGracePeriod>::default());
-        app.add_plugin(ReplicatePlugin::<SlotDeposit>::default());
+        //app.add_plugin(ReplicatePlugin::<SlotDeposit>::default());
 
         app.add_network_system(pending_slot);
         app.add_network_system(insert_slot.after(pending_slot));

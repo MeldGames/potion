@@ -36,6 +36,7 @@ use store::{SecurityCheck, StoreItem, StorePlugin};
 use crate::player::PlayerPlugin;
 
 use bevy::{
+    pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     window::{CursorGrabMode, WindowPlugin},
 };
@@ -95,7 +96,7 @@ pub fn setup_app(app: &mut App) {
                 ..default()
             }),
     );
-    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 14 });
+    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 8 });
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
@@ -214,6 +215,8 @@ pub fn setup_map(
             scene: asset_server.load("models/ground.gltf#Scene0"),
             ..default()
         })
+        .insert(NotShadowCaster)
+        .insert(NotShadowReceiver)
         .add_children(|children| {
             children
                 .spawn(TransformBundle::from_transform(Transform::from_xyz(
@@ -325,9 +328,9 @@ pub fn setup_map(
             },
             ..default()
         })
+        .insert(NotShadowCaster)
+        .insert(NotShadowReceiver)
         .id();
-
-    let _sky_mesh: Handle<Mesh> = asset_server.load("models/sky_clouds.glb#Mesh0/Primitive0");
 
     let _sky_clouds = commands
         .spawn(SceneBundle {
@@ -338,7 +341,8 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(SkyLoad)
+        .insert(NotShadowCaster)
+        .insert(NotShadowReceiver)
         .id();
 
     let _donut = commands
