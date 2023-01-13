@@ -98,7 +98,7 @@ pub fn grab_collider(
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
     for (hand, grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
-        if grabbing.0 {
+        if grabbing.grabbing {
             let mut already_grabbing = false;
 
             if let Some(children) = children {
@@ -215,8 +215,18 @@ pub fn grab_collider(
     }
 }
 
-#[derive(Debug, Component, Clone, Copy)]
-pub struct Grabbing(pub bool);
+#[derive(Default, Debug, Component, Clone, Copy)]
+pub struct Grabbing {
+    pub grabbing: bool,
+
+    // Offset from the cameras target position 
+    pub target_offset: Vec3,
+
+    // Theoretical sphere of rotation for the arms.
+    // By default this is centered slightly infront of the player
+    // and at the midpoint between the two arm's elbows.
+    pub center: Vec3,
+}
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     query: &'a Query<Q, F>,
@@ -258,7 +268,7 @@ pub fn tense_arms(
     for (hand_entity, grabbing) in &hands {
         let mut entity = hand_entity;
         while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
-            muscle.tense = grabbing.0;
+            muscle.tense = grabbing.grabbing;
 
             if let Ok(joint) = joints.get(entity) {
                 entity = joint.parent;
@@ -319,10 +329,10 @@ pub fn player_grabby_hands(
                 }
             }
 
-            grabbing.0 = true;
+            grabbing.grabbing = true;
             *collision_groups = GRAB_GROUPING;
         } else {
-            grabbing.0 = false;
+            grabbing.grabbing = false;
             *collision_groups = REST_GROUPING;
         }
     }
