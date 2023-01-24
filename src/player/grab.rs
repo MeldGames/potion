@@ -219,7 +219,7 @@ pub fn grab_collider(
 pub struct Grabbing {
     pub grabbing: bool,
 
-    // Offset from the cameras target position 
+    // Offset from the cameras target position
     pub target_offset: Vec3,
 
     // Theoretical sphere of rotation for the arms.
@@ -268,7 +268,9 @@ pub fn tense_arms(
     for (hand_entity, grabbing) in &hands {
         let mut entity = hand_entity;
         while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
-            muscle.tense = grabbing.grabbing;
+            if muscle.tense != grabbing.grabbing {
+                muscle.tense = grabbing.grabbing;
+            }
 
             if let Ok(joint) = joints.get(entity) {
                 entity = joint.parent;
@@ -318,15 +320,20 @@ pub fn player_grabby_hands(
             continue;
         };
 
+        let camera_global = if let Ok(global) = globals.get(cam.0) {
+            global
+        } else {
+            panic!("Camera doesn't have global");
+            continue;
+        };
+
+        let direction = (global.translation() - camera_global.translation()).normalize_or_zero();
+        grabbing.center = global.translation() - camera_global.translation();
+        grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
+
         if input.grabby_hands(arm_id.0) {
             if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
-                if let Ok(base) = ik_base.get(muscle_ik_target.0) {
-                    if let Ok([shoulder, camera]) = globals.get_many([base.0, cam.0]) {
-                        let direction =
-                            (camera.translation() - shoulder.translation()).normalize_or_zero();
-                        target_position.translation = shoulder.translation() - direction * 1.5;
-                    }
-                }
+                target_position.translation = global.translation() + direction * 1.5;
             }
 
             grabbing.grabbing = true;

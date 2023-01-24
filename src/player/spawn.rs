@@ -313,14 +313,9 @@ pub fn attach_arm(
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let upperarm_target = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
-                ..default()
-            })),
-            transform: Transform::from_translation(at),
-            ..default()
-        })
+        .spawn(TransformBundle::from_transform(
+            Transform::from_translation(at),
+        ))
         .insert(DebugVisible)
         .insert(Name::new(format!("Upperarm Target {}", index)))
         .id();
@@ -328,7 +323,7 @@ pub fn attach_arm(
     let target = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
+                radius: 0.05,
                 ..default()
             })),
             transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
@@ -341,14 +336,9 @@ pub fn attach_arm(
         .id();
 
     let forearm_target = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
-                ..default()
-            })),
-            transform: Transform::from_translation(-forearm_height),
-            ..default()
-        })
+        .spawn(TransformBundle::from_transform(
+            Transform::from_translation(-forearm_height),
+        ))
         .insert(Name::new(format!("Forearm Target {}", index)))
         .insert(DebugVisible)
         .id();
@@ -367,16 +357,9 @@ pub fn attach_arm(
         .id();
 
     let hand_target = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
-                ..default()
-            })),
-            transform: Transform::from_translation(
-                -forearm_height - Vec3::new(0.0, arm_radius, 0.0),
-            ),
-            ..default()
-        })
+        .spawn(TransformBundle::from_transform(
+            Transform::from_translation(-forearm_height - Vec3::new(0.0, arm_radius, 0.0)),
+        ))
         .insert(IkConstraint {
             chain_length: 2,
             iterations: 20,

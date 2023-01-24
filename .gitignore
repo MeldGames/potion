@@ -2,6 +2,8 @@
 tracy/
 tracy/*
 
+Cargo.lock
+
 messages/
 
 # vim swap file

@@ -67,6 +67,9 @@
 		},
 		{
 			"path": "../bevy_mod_outline"
+		},
+		{
+			"path": "../bevy_mod_picking"
 		}
 	],
 	"settings": {

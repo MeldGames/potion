@@ -64,6 +64,12 @@ bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
 #bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
 bevy_editor_pls_default_windows = {path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows"}
 
+[patch."https://github.com/aevyrie/bevy_mod_raycast"]
+bevy_mod_raycast = { path = "../bevy_mod_raycast" }
+
+[patch."https://github.com/aevyrie/bevy_mod_picking"]
+bevy_mod_picking = { path = "../bevy_mod_picking" }
+
 [patch.crates-io]
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
 #renet = { git = "https://github.com/lucaspoffo/renet" }
@@ -74,7 +80,8 @@ bevy_editor_pls_default_windows = {path = "../bevy_editor_pls/crates/bevy_editor
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
-bevy-inspector-egui = {git = "https://github.com/jakobhellermann/bevy-inspector-egui"}
+bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }
+#bevy_mod_raycast = { path = "../bevy_mod_raycast" }
 
 bevy = {git = "https://github.com/bevyengine/bevy"}
 bevy_animation = {git = "https://github.com/bevyengine/bevy"}
