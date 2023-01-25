@@ -70,6 +70,12 @@
 		},
 		{
 			"path": "../bevy_mod_picking"
+		},
+		{
+			"path": "../mugshot"
+		},
+		{
+			"path": "../bevy_framepace"
 		}
 	],
 	"settings": {

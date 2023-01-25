@@ -213,11 +213,11 @@ pub fn pull_up(
 }
 
 pub fn player_swivel_and_tilt(
-    mut inputs: Query<(&mut LookTransform, &PlayerInput)>,
+    mut inputs: Query<(&mut LookTransform, &PlayerInput, &PlayerNeck)>,
     mut necks: Query<(&mut Transform, &Attach), (With<Neck>, Without<Player>)>,
 ) {
-    for (mut neck_transform, follow) in &mut necks {
-        if let Ok((mut look_transform, input)) = inputs.get_mut(follow.get()) {
+    for (mut look_transform, input, neck) in &mut inputs {
+        if let Ok((mut neck_transform, follow)) = necks.get_mut(neck.0) {
             let rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
                 * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
             .into();

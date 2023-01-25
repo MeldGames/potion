@@ -96,6 +96,10 @@ pub fn setup_app(app: &mut App) {
                 ..default()
             }),
     );
+
+    app.insert_resource(bevy_framepace::FramepaceSettings {
+        limiter: bevy_framepace::Limiter::Manual(sabi::prelude::tick_hz(60)),
+    });
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 8 });
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);

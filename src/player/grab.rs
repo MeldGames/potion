@@ -289,6 +289,7 @@ pub fn player_grabby_hands(
         &LookTransform,
         &PlayerInput,
         &PlayerCamera,
+        &PlayerNeck,
         &Velocity,
     )>,
     ik_base: Query<&IKBase>,
@@ -313,7 +314,7 @@ pub fn player_grabby_hands(
     for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
-        let (global, look, input, cam, velocity) = if let Some(input) = input {
+        let (global, look, input, cam, neck, velocity) = if let Some(input) = input {
             input
         } else {
             warn!("couldn't find parent input for hand entity");
@@ -323,19 +324,24 @@ pub fn player_grabby_hands(
         let camera_global = if let Ok(global) = globals.get(cam.0) {
             global
         } else {
-            panic!("Camera doesn't have global");
             continue;
         };
 
-        let direction = (global.translation() - camera_global.translation()).normalize_or_zero();
-        grabbing.center = global.translation() - camera_global.translation();
+        let neck_global = if let Ok(global) = globals.get(neck.0) {
+            global
+        } else {
+            continue;
+        };
+
+        let direction = (neck_global.translation() - camera_global.translation()).normalize_or_zero();
+        grabbing.center = neck_global.translation() - camera_global.translation();
         grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
 
-        if input.grabby_hands(arm_id.0) {
-            if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
-                target_position.translation = global.translation() + direction * 1.5;
-            }
+        if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
+            target_position.translation = neck_global.translation() + direction * 1.5;
+        }
 
+        if input.grabby_hands(arm_id.0) {
             grabbing.grabbing = true;
             *collision_groups = GRAB_GROUPING;
         } else {

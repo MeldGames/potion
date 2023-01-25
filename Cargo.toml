@@ -13,8 +13,8 @@ opt-level = 3
 [dependencies]
 bevy = "0.9"
 bevy_egui = "0.19"
-#sabi = { path = "../sabi/sabi", features = ["public"] }
-sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
+sabi = { path = "../sabi/sabi", features = ["public"] }
+#sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
 
@@ -29,8 +29,7 @@ bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlus
 bevy-inspector-egui = "0.17"
 #bevy_editor_pls = "0.1"
 bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
-#bevy_editor_pls = { path = "../bevy_editor_pls/crates/bevy_editor_pls" }
-#bevy_framepace = "0.9"
+bevy_framepace = "0.11"
 bevy_mod_inverse_kinematics = "0.2"
 bevy_prototype_debug_lines = {version = "0.9", features = ["3d"]}
 bevy_rapier3d = {version = "0.19", features = ["serde-serialize"]}
@@ -60,17 +59,24 @@ obj = "0.10.2"
 #] }
 
 [patch."https://github.com/jakobhellermann/bevy_editor_pls"]
-#bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
-#bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
-#bevy_editor_pls_default_windows = {path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows"}
+bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
+bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
+bevy_editor_pls_core = {path = "../bevy_editor_pls/crates/bevy_editor_pls_core"}
 
 [patch."https://github.com/aevyrie/bevy_mod_raycast"]
 #bevy_mod_raycast = { path = "../bevy_mod_raycast" }
 
 [patch."https://github.com/aevyrie/bevy_mod_picking"]
-#bevy_mod_picking = { path = "../bevy_mod_picking" }
+bevy_mod_picking = { path = "../bevy_mod_picking" }
+
+[patch."https://github.com/aevyrie/bevy_framepace"]
+bevy_framepace = { path = "../bevy_framepace" }
+
+[patch."https://github.com/PROMETHIA-27/bevy_mod_wanderlust"]
+bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 
 [patch.crates-io]
+bevy_framepace = { path = "../bevy_framepace" }
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }

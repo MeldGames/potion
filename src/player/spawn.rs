@@ -43,6 +43,9 @@ pub struct Neck;
 #[derive(Component, Debug)]
 pub struct PlayerCamera(pub Entity);
 
+#[derive(Component, Debug)]
+pub struct PlayerNeck(pub Entity);
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PlayerEvent {
     Spawn { id: u64 },
@@ -98,11 +101,11 @@ pub fn setup_player(
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 1.0,
                             float_spring: Spring {
-                                strength: 40.0,
+                                strength: 80.0,
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 40.0,
+                                strength: 500.0,
                                 damping: 0.7,
                             },
                             opposing_movement_impulse_scale: 0.0,
@@ -132,7 +135,7 @@ pub fn setup_player(
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
-                    .insert(ConnectedMass::default())
+                    //.insert(ConnectedMass::default())
                     .insert(Owned)
                     .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
@@ -209,17 +212,19 @@ pub fn setup_player(
                     .insert(Name::new("Player Camera"))
                     .id();
 
-                let neck = commands
+                let head = commands
                     .spawn((
-                        Transform {
-                            translation: Vec3::new(0., 1., 0.),
-                            ..Default::default()
-                        },
-                        GlobalTransform::default(),
-                        Neck,
-                        Name::new("Neck"),
+                        TransformBundle::from_transform(Transform::from_xyz(0., 1., 0.)),
+                        Name::new("Head"),
                     ))
-                    .insert(Attach::translation(player_entity))
+                    .insert(Velocity::default())
+                    .id();
+
+                commands.entity(player_entity).push_children(&[head]);
+
+                let neck = commands
+                    .spawn((TransformBundle::default(), Neck, Name::new("Neck")))
+                    .insert(Attach::translation(head))
                     /* .insert(AttachTranslation::Spring {
                         strength: 50.0,
                         damp_ratio: 0.9,
@@ -228,7 +233,10 @@ pub fn setup_player(
                     .id();
 
                 commands.entity(neck).push_children(&[camera]);
-                commands.entity(player_entity).insert(PlayerCamera(camera));
+                commands
+                    .entity(player_entity)
+                    .insert(PlayerCamera(camera))
+                    .insert(PlayerNeck(neck));
 
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
