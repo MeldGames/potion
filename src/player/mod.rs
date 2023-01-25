@@ -78,9 +78,14 @@ impl Plugin for PlayerPlugin {
                 .after("update_player_inputs")
                 .after("player_movement"),
         );
+
         app.add_system_to_network_stage(
             NetworkCoreStage::PostUpdate,
-            controller::avoid_intersecting.label("avoid_intersecting"),
+            bevy::transform::transform_propagate_system.label("tranform_propagate"),
+        );
+        app.add_system_to_network_stage(
+            NetworkCoreStage::PostUpdate,
+            controller::avoid_intersecting.label("avoid_intersecting").before("transform_propagate"),
         );
         app.add_network_system(
             controller::character_crouch
