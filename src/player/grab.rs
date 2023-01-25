@@ -338,7 +338,7 @@ pub fn player_grabby_hands(
         grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
 
         if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
-            target_position.translation = neck_global.translation() + direction * 1.5;
+            target_position.translation = neck_global.translation() + direction * 2.;
         }
 
         if input.grabby_hands(arm_id.0) {
