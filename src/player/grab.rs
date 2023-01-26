@@ -399,8 +399,26 @@ impl AutoAim {
             Self::Point(auto_point) => {
                 transform(global, auto_point)
             }
-            Self::Line { start, end } => {
-                transform(global, start)
+            Self::Line { start: a, end: b } => {
+                if (a - b).length() < 0.001 {
+                    return Vec3::ZERO;
+                }
+
+                let a = transform(global, a);
+                let b = transform(global, b);
+                
+                let ap = point - a;
+                let ab = b - a;
+
+                let distance = ab.dot(ap) / ab.length();
+
+                if distance < 0.0 {
+                    a
+                } else if distance > 1.0 {
+                    b
+                } else {
+                    a + ab * distance
+                }
             }
         }
     }
