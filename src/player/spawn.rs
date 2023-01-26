@@ -341,6 +341,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         .insert(IKBase::new(upperarm_target))
         .insert(DebugVisible)
+        .insert(PullOffset::default())
         .id();
 
     let forearm_target = commands

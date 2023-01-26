@@ -60,6 +60,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(AttachPlugin);
+        app.add_plugin(grab::GrabPlugin);
         app.register_type::<spawn::Player>();
 
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
@@ -85,7 +86,9 @@ impl Plugin for PlayerPlugin {
         );
         app.add_system_to_network_stage(
             NetworkCoreStage::PostUpdate,
-            controller::avoid_intersecting.label("avoid_intersecting").before("transform_propagate"),
+            controller::avoid_intersecting
+                .label("avoid_intersecting")
+                .before("transform_propagate"),
         );
         app.add_network_system(
             controller::character_crouch

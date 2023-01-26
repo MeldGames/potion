@@ -98,15 +98,15 @@ pub fn setup_app(app: &mut App) {
     );
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
-        limiter: bevy_framepace::Limiter::Manual(sabi::prelude::tick_hz(60)),
+        limiter: bevy_framepace::Limiter::Off,
+        //limiter: bevy_framepace::Limiter::Manual(sabi::prelude::tick_hz(60)),
     });
-    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 8 });
+    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
     app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
     app.add_plugin(crate::network::NetworkPlugin);
 
-    //app.insert_resource(bevy_framepace::FramepaceSettings { ..default() });
     //app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
@@ -513,6 +513,10 @@ pub fn setup_map(
                 ..default()
             },
             ..default()
+        })
+        .insert(player::grab::AutoAim::Line {
+            start: Vec3::new(0.0, 0.3, 0.0),
+            end: Vec3::new(0.0, 1.2, 0.0),
         })
         .insert((
             //Collider::cuboid(0.1, 0.2, 0.1),

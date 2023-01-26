@@ -20,6 +20,21 @@ use super::input::PlayerInput;
 use super::prelude::*;
 use crate::cauldron::NamedEntity;
 
+use sabi::prelude::*;
+
+pub struct GrabPlugin;
+
+impl Plugin for GrabPlugin {
+    fn build(&self, app: &mut App) {
+        use sabi::stage::NetworkSimulationAppExt;
+
+        app.register_type::<AutoAim>();
+
+        app.add_network_system(auto_aim_debug_lines);
+        app.add_network_system(auto_aim_pull);
+    }
+}
+
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GrabJoint;
 
@@ -86,7 +101,7 @@ pub fn grab_collider(
     mut hands: Query<
         (
             Entity,
-            &Grabbing,
+            &mut Grabbing,
             &GlobalTransform,
             Option<&Children>,
             &ConnectedEntities,
@@ -97,8 +112,8 @@ pub fn grab_collider(
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
-        if grabbing.grabbing {
+    for (hand, mut grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
+        if grabbing.trying_grab {
             let mut already_grabbing = false;
 
             if let Some(children) = children {
@@ -110,6 +125,8 @@ pub fn grab_collider(
                     }
                 }
             }
+
+            grabbing.grabbing = already_grabbing;
 
             if already_grabbing {
                 continue;
@@ -199,6 +216,8 @@ pub fn grab_collider(
                 }
             }
         } else {
+            grabbing.grabbing = false;
+
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
                 for child in children.iter() {
@@ -217,6 +236,8 @@ pub fn grab_collider(
 
 #[derive(Default, Debug, Component, Clone, Copy)]
 pub struct Grabbing {
+    pub trying_grab: bool,
+
     pub grabbing: bool,
 
     // Offset from the cameras target position
@@ -268,8 +289,8 @@ pub fn tense_arms(
     for (hand_entity, grabbing) in &hands {
         let mut entity = hand_entity;
         while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
-            if muscle.tense != grabbing.grabbing {
-                muscle.tense = grabbing.grabbing;
+            if muscle.tense != grabbing.trying_grab {
+                muscle.tense = grabbing.trying_grab;
             }
 
             if let Ok(joint) = joints.get(entity) {
@@ -283,7 +304,7 @@ pub fn tense_arms(
 
 pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
-    mut transforms: Query<&mut Transform>,
+    mut transforms: Query<(&mut Transform, &PullOffset)>,
     inputs: Query<(
         &GlobalTransform,
         &LookTransform,
@@ -303,15 +324,18 @@ pub fn player_grabby_hands(
             &mut CollisionGroups,
             &ArmId,
             &MuscleIKTarget,
+            Option<&Children>,
         ),
         With<Hand>,
     >,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
+
+    grab_joints: Query<&GrabJoint>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, children) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (global, look, input, cam, neck, velocity) = if let Some(input) = input {
@@ -333,20 +357,114 @@ pub fn player_grabby_hands(
             continue;
         };
 
-        let direction = (neck_global.translation() - camera_global.translation()).normalize_or_zero();
+        let direction =
+            (neck_global.translation() - camera_global.translation()).normalize_or_zero();
         grabbing.center = neck_global.translation() - camera_global.translation();
         grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
 
-        if let Ok(mut target_position) = transforms.get_mut(muscle_ik_target.0) {
-            target_position.translation = neck_global.translation() + direction * 2.;
-        }
-
         if input.grabby_hands(arm_id.0) {
-            grabbing.grabbing = true;
+            if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
+                target_position.translation = neck_global.translation() + direction * 2.;
+
+                if !grabbing.grabbing && pull_offset.0.length() > 0.0 {
+                    target_position.translation += pull_offset.0;
+                }
+            }
+
+            grabbing.trying_grab = true;
             *collision_groups = GRAB_GROUPING;
         } else {
-            grabbing.grabbing = false;
+            grabbing.trying_grab = false;
             *collision_groups = REST_GROUPING;
+        }
+    }
+}
+
+#[derive(Component, Reflect, FromReflect)]
+#[reflect(Component)]
+pub enum AutoAim {
+    Point(Vec3),
+    Line { start: Vec3, end: Vec3 },
+}
+
+impl Default for AutoAim {
+    fn default() -> Self {
+        Self::Point(Vec3::ZERO)
+    }
+}
+
+impl AutoAim {
+    pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Vec3 {
+        match *self {
+            Self::Point(auto_point) => {
+                transform(global, auto_point)
+            }
+            Self::Line { start, end } => {
+                transform(global, start)
+            }
+        }
+    }
+}
+
+fn transform(global: &GlobalTransform, point: Vec3) -> Vec3 {
+    global
+        .mul_transform(Transform::from_translation(point))
+        .translation()
+}
+
+pub fn auto_aim_debug_lines(
+    auto_aim: Query<(&GlobalTransform, &AutoAim)>,
+    mut lines: ResMut<DebugLines>,
+) {
+    for (global, auto) in &auto_aim {
+        match *auto {
+            AutoAim::Point(point) => {
+                let point = transform(global, point);
+            }
+            AutoAim::Line { start, end } => {
+                let start = transform(global, start);
+                let end = transform(global, end);
+
+                lines.line_colored(
+                    start,
+                    end,
+                    crate::TICK_RATE.as_secs_f32(),
+                    Color::LIME_GREEN,
+                );
+            }
+        }
+    }
+}
+
+#[derive(Default, Component, Reflect, FromReflect)]
+#[reflect(Component)]
+pub struct PullOffset(Vec3);
+
+pub fn auto_aim_pull(
+    pullers: Query<(&GlobalTransform, &AutoAim)>,
+    mut offsets: Query<(&GlobalTransform, &mut PullOffset)>,
+
+) {
+    for (offset_global, mut offset) in &mut offsets {
+
+        let mut pulls = Vec::new();
+        for (puller_global, auto_aim) in &pullers {
+            let offset_point = offset_global.translation() - offset.0;
+            let closest = auto_aim.closest_point(puller_global, offset_point);
+
+            let difference = closest - offset_point;
+            let distance = difference.length();
+
+            if distance < 1.5 {
+                pulls.push(difference);
+            }
+        }
+
+        pulls.sort_by(|a, b| a.length().total_cmp(&b.length()));
+        if let Some(pull) = pulls.get(0) {
+            offset.0 = *pull;
+        } else {
+            offset.0 = Vec3::ZERO;
         }
     }
 }
