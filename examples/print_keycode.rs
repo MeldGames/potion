@@ -1,10 +1,4 @@
-use bevy::{
-    diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-    window::{CursorGrabMode, WindowPlugin},
-};
-
-use bevy_editor_pls::EditorPlugin;
+use bevy::{prelude::*, window::WindowPlugin};
 
 fn main() {
     App::new()
@@ -20,7 +14,7 @@ fn main() {
         .run();
 }
 
-fn print_keycode(mut previous: Local<Vec<KeyCode>>, input: Res<Input<KeyCode>>)  {
+fn print_keycode(mut previous: Local<Vec<KeyCode>>, input: Res<Input<KeyCode>>) {
     let pressed = input.get_pressed().cloned().collect::<Vec<_>>();
     if *previous != pressed {
         info!("pressed: {:?}", pressed);

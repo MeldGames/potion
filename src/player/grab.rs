@@ -335,7 +335,9 @@ pub fn player_grabby_hands(
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, children) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, children) in
+        &mut hands
+    {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (global, look, input, cam, neck, velocity) = if let Some(input) = input {
@@ -396,9 +398,7 @@ impl Default for AutoAim {
 impl AutoAim {
     pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Vec3 {
         match *self {
-            Self::Point(auto_point) => {
-                transform(global, auto_point)
-            }
+            Self::Point(auto_point) => transform(global, auto_point),
             Self::Line { start: a, end: b } => {
                 if (a - b).length() < 0.001 {
                     return Vec3::ZERO;
@@ -406,7 +406,7 @@ impl AutoAim {
 
                 let a = transform(global, a);
                 let b = transform(global, b);
-                
+
                 let ap = point - a;
                 let ab = b - a;
 
@@ -461,10 +461,8 @@ pub struct PullOffset(Vec3);
 pub fn auto_aim_pull(
     pullers: Query<(&GlobalTransform, &AutoAim)>,
     mut offsets: Query<(&GlobalTransform, &mut PullOffset)>,
-
 ) {
     for (offset_global, mut offset) in &mut offsets {
-
         let mut pulls = Vec::new();
         for (puller_global, auto_aim) in &pullers {
             let offset_point = offset_global.translation() - offset.0;
