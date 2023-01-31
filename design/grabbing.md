@@ -12,5 +12,8 @@ rotate the object in their hands currently along a pole that makes
 intuitive sense.
 
 ## Magnets
-Pull towards specific parts of objects?
-TBD
+Pull towards specific parts of objects, currently defined as 
+the simple points/lines so we can get the closest point on 
+the "magnet" and then pull the hand in that direction.
+
+Maybe should have an repulsion from the other hand on some objects for a better grip for twisting.
