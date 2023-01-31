@@ -1,7 +1,7 @@
 
 ## Design documents for Potion Cellar
 
-- [Storyboard](./storyboard.md)
-- [Brewing](./brewing.md)
-- [Grabbing](./grabbing.md)
-- [Storage](./storage.md)
+- [Storyboard](./storyboard.md?plain=1)
+- [Brewing](./brewing.md?plain=1)
+- [Grabbing](./grabbing.md?plain=1)
+- [Storage](./storage.md?plain=1)
