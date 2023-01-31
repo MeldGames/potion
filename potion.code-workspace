@@ -79,6 +79,12 @@
 		},
 		{
 			"path": "../meld-website"
+		},
+		{
+			"path": "../egui_dock"
+		},
+		{
+			"path": "../egui"
 		}
 	],
 	"settings": {

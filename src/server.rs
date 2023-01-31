@@ -1,5 +1,3 @@
-//use bevy_fly_camera::FlyCamera;
-use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::*;
 
 use bevy::prelude::*;

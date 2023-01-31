@@ -58,7 +58,7 @@ impl EditorWindow for NetworkWindow {
             *system_state = Some(SystemState::from_world(world));
         }
 
-        let mut system_state = system_state.as_mut().unwrap();
+        let system_state = system_state.as_mut().unwrap();
         {
             let query = system_state.get_mut(world);
             network_info(ui, state, query);

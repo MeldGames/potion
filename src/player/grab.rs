@@ -328,10 +328,8 @@ pub fn player_grabby_hands(
         ),
         With<Hand>,
     >,
-    names: Query<&Name>,
-    mut lines: ResMut<DebugLines>,
-
-    grab_joints: Query<&GrabJoint>,
+    //names: Query<&Name>,
+    //mut lines: ResMut<DebugLines>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
@@ -438,6 +436,13 @@ pub fn auto_aim_debug_lines(
         match *auto {
             AutoAim::Point(point) => {
                 let point = transform(global, point);
+
+                lines.line_colored(
+                    point,
+                    point,
+                    crate::TICK_RATE.as_secs_f32(),
+                    Color::LIME_GREEN,
+                );
             }
             AutoAim::Line { start, end } => {
                 let start = transform(global, start);

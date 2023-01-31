@@ -49,6 +49,7 @@ pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
     let default_res = (1728.0, 1117.0);
+    //let default_res = (800.0, 500.0);
     //let default_res = (1920.0, 1080.0);
     let half_width = ((default_res.0 / 2.0), default_res.1);
     let (title, (width, height), position) = match (
@@ -134,6 +135,8 @@ pub fn setup_app(app: &mut App) {
     //.add_plugin(AutoGenerateOutlineNormalsPlugin);
     app.add_system(outline_meshes);
 
+    //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
+
     app.add_event::<AssetEvent<Mesh>>();
 
     app.add_startup_system(fallback_camera);
@@ -145,26 +148,13 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
-fn update_outline_depth(mut query: Query<(&GlobalTransform, &mut SetOutlineDepth)>) {
-    for (global, mut set) in &mut query {
-        match *set {
-            SetOutlineDepth::Flat {
-                ref mut model_origin,
-            } => {
-                *model_origin = global.translation();
-            }
-            _ => {}
-        }
-    }
-}
-
 fn outline_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<OutlineVolume>)>,
 ) {
     for (entity, mesh) in &query {
-        if let Some(mut mesh) = meshes.get_mut(mesh) {
+        if let Some(mesh) = meshes.get_mut(mesh) {
             if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
                 let _ = mesh.generate_outline_normals();
 
@@ -184,27 +174,19 @@ fn outline_meshes(
     }
 }
 
-fn fallback_camera(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<StandardMaterial>>,
-    _assets: Res<AssetServer>,
-) {
-    /*
-       commands
-           .spawn(Camera3dBundle {
-               transform: Transform::from_translation(Vec3::new(0., 12., 10.))
-                   .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-               camera: Camera {
-                   priority: -50,
-                   is_active: true,
-                   ..default()
-               },
-               ..default()
-           })
-           .insert(Name::new("Fallback camera"));
-    */
+fn fallback_camera(mut commands: Commands) {
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_translation(Vec3::new(0., 12., 10.))
+                .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+            camera: Camera {
+                priority: -50,
+                is_active: false,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Name::new("Fallback camera"));
 }
 
 pub fn setup_map(
@@ -668,9 +650,9 @@ pub fn setup_map(
         ));
 }
 
-pub fn active_cameras(names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
+pub fn active_cameras(_names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
     let mut active = 0;
-    for (entity, camera) in &cameras {
+    for (_entity, camera) in &cameras {
         if camera.is_active {
             active += 1;
         }
@@ -681,43 +663,51 @@ pub fn active_cameras(names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
     }
 }
 
-#[derive(Debug, Component, Clone)]
+#[derive(Debug, Component, Clone, Reflect)]
+#[reflect(Component)]
 pub struct DecompLoad(String);
+
+impl Default for DecompLoad {
+    fn default() -> Self {
+        Self("".to_owned())
+    }
+}
 
 fn decomp_load(
     mut commands: Commands,
     mut replace: Query<(Option<&mut Collider>, &DecompLoad, Entity)>,
 ) {
     for (collider, decomp, entity) in &mut replace {
-        info!("running decomp load");
-        let decomp = Obj::load(&decomp.0).unwrap();
-        let mut colliders = Vec::new();
-        for object in decomp.data.objects {
-            let vertices = object
-                .groups
-                .iter()
-                .map(|group| {
-                    group
-                        .polys
-                        .iter()
-                        .map(|poly| poly.0.iter().map(|index| index.0))
-                })
-                .flatten()
-                .flatten()
-                .map(|index| decomp.data.position[index])
-                .map(|f| Vec3::from(f))
-                .collect::<Vec<_>>();
-            let collider = Collider::convex_hull(&vertices).unwrap();
-            colliders.push((Vec3::ZERO, Quat::IDENTITY, collider));
-        }
-
-        let new_collider = Collider::compound(colliders);
-        match collider {
-            Some(mut collider) => {
-                *collider = new_collider;
+        info!("running decomp load: {:?}", decomp);
+        if let Ok(decomp) = Obj::load(&decomp.0) {
+            let mut colliders = Vec::new();
+            for object in decomp.data.objects {
+                let vertices = object
+                    .groups
+                    .iter()
+                    .map(|group| {
+                        group
+                            .polys
+                            .iter()
+                            .map(|poly| poly.0.iter().map(|index| index.0))
+                    })
+                    .flatten()
+                    .flatten()
+                    .map(|index| decomp.data.position[index])
+                    .map(|f| Vec3::from(f))
+                    .collect::<Vec<_>>();
+                let collider = Collider::convex_hull(&vertices).unwrap();
+                colliders.push((Vec3::ZERO, Quat::IDENTITY, collider));
             }
-            None => {
-                commands.entity(entity).insert(new_collider);
+
+            let new_collider = Collider::compound(colliders);
+            match collider {
+                Some(mut collider) => {
+                    *collider = new_collider;
+                }
+                None => {
+                    commands.entity(entity).insert(new_collider);
+                }
             }
         }
 
@@ -818,64 +808,6 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
         /// Default: 1024
         max_convex_hulls: 1024,
     });
-
-fn setup_ik(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    added_query: Query<(Entity, &Parent), Added<AnimationPlayer>>,
-    children: Query<&Children>,
-    names: Query<&Name>,
-) {
-    // Use the presence of `AnimationPlayer` to determine the root entity of the skeleton.
-    for (entity, _parent) in added_query.iter() {
-        // Try to get the entity for the right hand joint.
-        let _right_hand = find_entity(
-            &EntityPath {
-                parts: vec![
-                    "Pelvis".into(),
-                    "Spine1".into(),
-                    "Spine2".into(),
-                    "Collar.R".into(),
-                    "UpperArm.R".into(),
-                    "ForeArm.R".into(),
-                    "Hand.R".into(),
-                ],
-            },
-            entity,
-            &children,
-            &names,
-        )
-        .unwrap();
-
-        let _target = commands
-            .spawn(PbrBundle {
-                transform: Transform::from_xyz(0.3, 0.8, 0.2),
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.05,
-                    subdivisions: 1,
-                })),
-                material: materials.add(StandardMaterial {
-                    base_color: Color::RED,
-                    ..default()
-                }),
-                ..default()
-            })
-            //.insert(ManuallyTarget(Vec4::new(0.0, 0.0, 1.0, 0.3)))
-            .id();
-
-        // Add an IK constraint to the right hand, using the targets that were created earlier.
-        /*
-               commands.entity(right_hand).insert(IkConstraint {
-                   chain_length: 2,
-                   iterations: 20,
-                   target,
-                   pole_target: Some(pole_target),
-                   pole_angle: -std::f32::consts::FRAC_PI_2,
-               });
-        */
-    }
-}
 
 fn find_entity(
     path: &EntityPath,

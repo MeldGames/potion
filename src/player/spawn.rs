@@ -55,10 +55,8 @@ pub enum PlayerEvent {
 pub fn setup_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
-    player_cameras: Query<&PlayerCamera>,
 
     mut lobby: ResMut<Lobby>,
     mut server: Option<ResMut<RenetServer>>,
@@ -68,6 +66,7 @@ pub fn setup_player(
         match event {
             &PlayerEvent::SetupLocal { id } => {
                 let player_entity = *lobby.players.get(&id).expect("Expected a player");
+                info!("setting up local entity: {:?}", player_entity);
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -317,7 +316,7 @@ pub fn attach_arm(
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
     let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
-    let arm_height = forearm_height + upperarm_height;
+    //let arm_height = forearm_height + upperarm_height;
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let upperarm_target = commands
@@ -604,12 +603,8 @@ pub fn connected_mass(
     }
 }
 
-pub fn contact_filter(
-    mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>,
-    masses: Query<&ReadMassProperties>,
-    //names: Query<&Name>,
-) {
-    for (entity, mut contact_filter, connected) in &mut connected {
+pub fn contact_filter(mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>) {
+    for (_entity, mut contact_filter, connected) in &mut connected {
         contact_filter.0 = connected.grabbed.clone();
     }
 }
@@ -813,43 +808,4 @@ fn find_entity(
     }
 
     Ok(current_entity)
-}
-
-#[derive(Component)]
-pub struct ManuallyTarget(Vec4);
-
-fn manually_target(
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    mut target_query: Query<(&ManuallyTarget, &mut Transform)>,
-    mut cursor: EventReader<CursorMoved>,
-) {
-    let (camera, transform) = camera_query.single();
-
-    if let Some(event) = cursor.iter().last() {
-        let view = transform.compute_matrix();
-        let (viewport_min, viewport_max) = camera.logical_viewport_rect().unwrap();
-        let screen_size = camera.logical_target_size().unwrap();
-        let viewport_size = viewport_max - viewport_min;
-        let adj_cursor_pos =
-            event.position - Vec2::new(viewport_min.x, screen_size.y - viewport_max.y);
-
-        let projection = camera.projection_matrix();
-        let far_ndc = projection.project_point3(Vec3::NEG_Z).z;
-        let near_ndc = projection.project_point3(Vec3::Z).z;
-        let cursor_ndc = (adj_cursor_pos / viewport_size) * 2.0 - Vec2::ONE;
-        let ndc_to_world: Mat4 = view * projection.inverse();
-        let near = ndc_to_world.project_point3(cursor_ndc.extend(near_ndc));
-        let far = ndc_to_world.project_point3(cursor_ndc.extend(far_ndc));
-        let ray_direction = far - near;
-
-        for (&ManuallyTarget(plane), mut transform) in target_query.iter_mut() {
-            let normal = plane.truncate();
-            let d = plane.w;
-            let denom = normal.dot(ray_direction);
-            if denom.abs() > 0.0001 {
-                let t = (normal * d - near).dot(normal) / denom;
-                transform.translation = near + ray_direction * t;
-            }
-        }
-    }
 }

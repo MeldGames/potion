@@ -49,6 +49,13 @@ rand = "0.8"
 ron = "0.8"
 vec-collections = "0.4"
 wgpu-types = "0.14"
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "554649a951689dce66d0d759839b326874e8826f", default-features = false, features = [
+    "backend_raycast",
+    "backend_egui",
+    "backend_sprite",
+    "backend_bevy_ui",
+    "debug",
+] }
 
 #bevy_renet = "0.0.5"
 bevy_renet = {git = "https://github.com/lucaspoffo/renet"}
@@ -59,24 +66,27 @@ obj = "0.10.2"
 #] }
 
 [patch."https://github.com/jakobhellermann/bevy_editor_pls"]
-bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
-bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
-bevy_editor_pls_core = {path = "../bevy_editor_pls/crates/bevy_editor_pls_core"}
+#bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
+#bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
+#bevy_editor_pls_core = {path = "../bevy_editor_pls/crates/bevy_editor_pls_core"}
 
 [patch."https://github.com/aevyrie/bevy_mod_raycast"]
 #bevy_mod_raycast = { path = "../bevy_mod_raycast" }
 
 [patch."https://github.com/aevyrie/bevy_mod_picking"]
-bevy_mod_picking = { path = "../bevy_mod_picking" }
+#bevy_mod_picking = { path = "../bevy_mod_picking" }
+#bevy_mod_picking = { git = "https://github.com/aceeri/bevy_mod_picking", branch = "bump_egui"}
 
 [patch."https://github.com/aevyrie/bevy_framepace"]
-bevy_framepace = { path = "../bevy_framepace" }
+#bevy_framepace = { path = "../bevy_framepace" }
 
 [patch."https://github.com/PROMETHIA-27/bevy_mod_wanderlust"]
-bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
+#bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 
 [patch.crates-io]
-bevy_framepace = { path = "../bevy_framepace" }
+#egui = { path = "../egui/crates/egui" }
+#egui_dock = { path = "../egui_dock" }
+#bevy_framepace = { path = "../bevy_framepace" }
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
