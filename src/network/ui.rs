@@ -6,8 +6,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
-use bevy_egui::EguiContext;
-use bevy_renet::renet::{RenetClient, RenetServer, ServerEvent};
+use bevy_renet::renet::{RenetClient, RenetServer};
 //use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
 use sabi::{prelude::ServerEntities, protocol::update::UpdateMessages, tick::NetworkTick};
 
@@ -139,7 +138,7 @@ pub struct NetworkInfoQuery<'w, 's> {
     //server_visualizer: Option<ResMut<'w, RenetServerVisualizer<DATA_POINTS>>>,
 }
 
-pub fn network_info(ui: &mut egui::Ui, ui_state: &mut NetworkWindow, mut query: NetworkInfoQuery) {
+pub fn network_info(ui: &mut egui::Ui, ui_state: &mut NetworkWindow, query: NetworkInfoQuery) {
     let NetworkInfoQuery {
         mut commands,
         entities,

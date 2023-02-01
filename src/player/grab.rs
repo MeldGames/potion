@@ -9,18 +9,14 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
-use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
 use crate::physics::{Muscle, GRAB_GROUPING, REST_GROUPING};
 
-use super::controller::{ConnectedEntities, LookTransform};
+use super::controller::ConnectedEntities;
 use super::input::PlayerInput;
 use super::prelude::*;
-use crate::cauldron::NamedEntity;
-
-use sabi::prelude::*;
 
 pub struct GrabPlugin;
 
@@ -73,26 +69,6 @@ pub fn joint_children(
     }
 }
 
-pub fn twist_arms(
-    name: Query<&Name>,
-    rapier_context: Res<RapierContext>,
-    globals: Query<&GlobalTransform>,
-    mut hands: Query<
-        (
-            Entity,
-            &Grabbing,
-            &GlobalTransform,
-            Option<&Children>,
-            &ConnectedEntities,
-            &ConnectedMass,
-            &mut GrabbedEntities,
-        ),
-        With<Hand>,
-    >,
-    grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
-) {
-}
-
 pub fn grab_collider(
     mut commands: Commands,
     name: Query<&Name>,
@@ -105,14 +81,13 @@ pub fn grab_collider(
             &GlobalTransform,
             Option<&Children>,
             &ConnectedEntities,
-            &ConnectedMass,
             &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, mut grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
+    for (hand, mut grabbing, global, children, connected, mut grabbed) in &mut hands {
         if grabbing.trying_grab {
             let mut already_grabbing = false;
 
@@ -209,10 +184,6 @@ pub fn grab_collider(
                     });
 
                     grabbed.insert(other_collider);
-
-                    let extended = springy::rapier::ExtendedMass(mass.0);
-                    //info!("extended mass: {:?}", extended);
-                    //commands.entity(other_collider).insert(extended);
                 }
             }
         } else {
@@ -281,14 +252,12 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 
 pub fn tense_arms(
     hands: Query<(Entity, &Grabbing), With<Hand>>,
-    mut muscles: Query<(Entity, &mut Muscle)>,
-    parents: Query<&Parent>,
+    mut muscles: Query<&mut Muscle>,
     joints: Query<&ImpulseJoint>,
-    names: Query<&Name>,
 ) {
     for (hand_entity, grabbing) in &hands {
         let mut entity = hand_entity;
-        while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
+        while let Ok(mut muscle) = muscles.get_mut(entity) {
             if muscle.tense != grabbing.trying_grab {
                 muscle.tense = grabbing.trying_grab;
             }
@@ -305,18 +274,11 @@ pub fn tense_arms(
 pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
-    inputs: Query<(
-        &GlobalTransform,
-        &LookTransform,
-        &PlayerInput,
-        &PlayerCamera,
-        &PlayerNeck,
-        &Velocity,
-    )>,
-    ik_base: Query<&IKBase>,
+    inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
+    //ik_base: Query<&IKBase>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    ctx: Res<RapierContext>,
+    //ctx: Res<RapierContext>,
     mut hands: Query<
         (
             Entity,
@@ -324,21 +286,14 @@ pub fn player_grabby_hands(
             &mut CollisionGroups,
             &ArmId,
             &MuscleIKTarget,
-            Option<&Children>,
         ),
         With<Hand>,
     >,
-    //names: Query<&Name>,
-    //mut lines: ResMut<DebugLines>,
 ) {
-    let dt = ctx.integration_parameters.dt;
-
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, children) in
-        &mut hands
-    {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
-        let (global, look, input, cam, neck, velocity) = if let Some(input) = input {
+        let (input, cam, neck) = if let Some(input) = input {
             input
         } else {
             warn!("couldn't find parent input for hand entity");
