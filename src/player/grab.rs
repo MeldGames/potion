@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use bevy::ecs::{
+use bevy::{ecs::{
     entity::Entities,
     query::{ReadOnlyWorldQuery, WorldQuery},
-};
+}, input::mouse::MouseMotion};
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -28,6 +28,7 @@ impl Plugin for GrabPlugin {
 
         app.add_network_system(auto_aim_debug_lines);
         app.add_network_system(auto_aim_pull);
+        app.add_network_system(twist_grab);
     }
 }
 
@@ -214,10 +215,8 @@ pub struct Grabbing {
     // Offset from the cameras target position
     pub target_offset: Vec3,
 
-    // Theoretical sphere of rotation for the arms.
-    // By default this is centered slightly infront of the player
-    // and at the midpoint between the two arm's elbows.
-    pub center: Vec3,
+    pub pitch: f32,
+    pub yaw: f32,
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -271,6 +270,26 @@ pub fn tense_arms(
     }
 }
 
+pub fn twist_grab(
+    kb: Res<Input<KeyCode>>,
+    mut mouse_motion: EventReader<MouseMotion>,
+    mut grabbing: Query<&mut Grabbing>
+) {
+    if !kb.pressed(KeyCode::RControl) {
+        return;
+    }
+
+    let mut cumulative_delta = Vec2::ZERO;
+    for motion in mouse_motion.iter() {
+        cumulative_delta += motion.delta;
+    }
+
+    for mut grabbing in &mut grabbing {
+        grabbing.pitch -= cumulative_delta.y / 20.0;
+        grabbing.yaw -= cumulative_delta.x / 80.0;
+    }
+}
+
 pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
@@ -314,12 +333,17 @@ pub fn player_grabby_hands(
 
         let direction =
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
-        grabbing.center = neck_global.translation() - camera_global.translation();
-        grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
 
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
-                target_position.translation = neck_global.translation() + direction * 2.;
+                let (_, neck_rotation, _) = neck_global.to_scale_rotation_translation();
+
+
+                let grab_rotation = Quat::from_axis_angle(Vec3::Y, grabbing.yaw as f32)
+                    * Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
+                let relative_offset = neck_rotation * grab_rotation * grabbing.target_offset;
+                target_position.translation =
+                    neck_global.translation() + direction * 2.0 + relative_offset;
 
                 if !grabbing.grabbing && pull_offset.0.length() > 0.0 {
                     target_position.translation += pull_offset.0;

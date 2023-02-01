@@ -481,7 +481,10 @@ pub fn attach_arm(
         .insert(ConnectedEntities::default())
         .insert(ConnectedMass::default())
         .insert(GrabbedEntities::default())
-        .insert(Grabbing::default())
+        .insert(Grabbing {
+            target_offset: at,
+            ..default()
+        })
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
         .insert(ReadMassProperties::default())
