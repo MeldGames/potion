@@ -6,7 +6,6 @@
 #import bevy_pbr::utils
 
 struct CustomMaterial {
-    time: f32,
     // color: vec4<f32>,
     // base_color: vec4<f32>;
     // emissive: vec4<f32>;
@@ -66,8 +65,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     // higher is shorter
     let how_long_to_stay_in_opposite_state = 30.0;
     let frequency = 2.0;
-    // let position_diff = pow(sin(2.0 * material.time), 1.0);
-    let position_diff = 1.0 - pow(thickness * sin(frequency * material.time + vertex.position.y + vertex.position.z), how_long_to_stay_in_opposite_state);
+    let position_diff = 1.0 - pow(thickness * sin(frequency * globals.time + vertex.position.y + vertex.position.z), how_long_to_stay_in_opposite_state);
 
     // let smooth_diff = smoothstep(0.0, 1.0, position_diff);
     let position = (vertex.normal * (smoothstep(0.0, 1.0, position_diff)) * 0.02) + vertex.position;

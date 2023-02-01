@@ -9,19 +9,13 @@ use bevy::{
         },
     },
 };
-use bevy_shader_utils::ShaderUtilsPlugin;
 
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::hex("071f3c").unwrap()))
         .add_plugins(DefaultPlugins)
-        .add_plugin(ShaderUtilsPlugin)
         .add_plugin(MaterialPlugin::<CustomMaterial>::default())
         .add_startup_system(setup)
-        .add_system(update_time_for_custom_material)
-        // for the time to update in the shader,
-        // this mod_scene must run before we try to update the time
-        // TODO: figure out why in more detail.
         .add_system(mod_scene)
         .run();
 }
@@ -73,12 +67,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         transform: Transform::from_xyz(-2.0, 15.5, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
-}
-
-fn update_time_for_custom_material(mut materials: ResMut<Assets<CustomMaterial>>, time: Res<Time>) {
-    for material in materials.iter_mut() {
-        material.1.time = time.seconds_since_startup() as f32;
-    }
 }
 
 /// The Material trait is very configurable, but comes with sensible defaults for all methods.
