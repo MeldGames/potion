@@ -338,7 +338,6 @@ pub fn player_mouse_inputs(
     }
 
     player_input.pitch -= sensitivity.0 * cumulative_delta.y / 180.0;
-
     player_input.pitch = player_input.pitch.clamp(-PI / 2.0, PI / 2.0);
 
     player_input.yaw -= sensitivity.0 * cumulative_delta.x / 180.0;

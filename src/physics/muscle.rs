@@ -1,19 +1,11 @@
 use std::fmt::Debug;
 
-use bevy::ecs::entity::Entities;
-
 use sabi::stage::NetworkSimulationAppExt;
 
 use bevy::prelude::*;
-use bevy::utils::HashSet;
-use bevy_prototype_debug_lines::DebugLines;
 
 use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-
-use crate::cauldron::NamedEntity;
-use crate::physics::{GRAB_GROUPING, REST_GROUPING};
 
 pub struct MusclePlugin;
 impl Plugin for MusclePlugin {

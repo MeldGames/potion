@@ -1,26 +1,22 @@
 use std::fmt::Debug;
 
-use bevy::ecs::{
+use bevy::{ecs::{
     entity::Entities,
     query::{ReadOnlyWorldQuery, WorldQuery},
-};
+}, input::mouse::MouseMotion};
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
-use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
 use crate::physics::{Muscle, GRAB_GROUPING, REST_GROUPING};
 
-use super::controller::{ConnectedEntities, LookTransform};
+use super::controller::ConnectedEntities;
 use super::input::PlayerInput;
 use super::prelude::*;
-use crate::cauldron::NamedEntity;
-
-use sabi::prelude::*;
 
 pub struct GrabPlugin;
 
@@ -32,6 +28,7 @@ impl Plugin for GrabPlugin {
 
         app.add_network_system(auto_aim_debug_lines);
         app.add_network_system(auto_aim_pull);
+        app.add_network_system(twist_grab);
     }
 }
 
@@ -73,26 +70,6 @@ pub fn joint_children(
     }
 }
 
-pub fn twist_arms(
-    name: Query<&Name>,
-    rapier_context: Res<RapierContext>,
-    globals: Query<&GlobalTransform>,
-    mut hands: Query<
-        (
-            Entity,
-            &Grabbing,
-            &GlobalTransform,
-            Option<&Children>,
-            &ConnectedEntities,
-            &ConnectedMass,
-            &mut GrabbedEntities,
-        ),
-        With<Hand>,
-    >,
-    grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
-) {
-}
-
 pub fn grab_collider(
     mut commands: Commands,
     name: Query<&Name>,
@@ -105,14 +82,13 @@ pub fn grab_collider(
             &GlobalTransform,
             Option<&Children>,
             &ConnectedEntities,
-            &ConnectedMass,
             &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, mut grabbing, global, children, connected, mass, mut grabbed) in &mut hands {
+    for (hand, mut grabbing, global, children, connected, mut grabbed) in &mut hands {
         if grabbing.trying_grab {
             let mut already_grabbing = false;
 
@@ -209,10 +185,6 @@ pub fn grab_collider(
                     });
 
                     grabbed.insert(other_collider);
-
-                    let extended = springy::rapier::ExtendedMass(mass.0);
-                    //info!("extended mass: {:?}", extended);
-                    //commands.entity(other_collider).insert(extended);
                 }
             }
         } else {
@@ -243,10 +215,8 @@ pub struct Grabbing {
     // Offset from the cameras target position
     pub target_offset: Vec3,
 
-    // Theoretical sphere of rotation for the arms.
-    // By default this is centered slightly infront of the player
-    // and at the midpoint between the two arm's elbows.
-    pub center: Vec3,
+    pub pitch: f32,
+    pub yaw: f32,
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -281,14 +251,12 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 
 pub fn tense_arms(
     hands: Query<(Entity, &Grabbing), With<Hand>>,
-    mut muscles: Query<(Entity, &mut Muscle)>,
-    parents: Query<&Parent>,
+    mut muscles: Query<&mut Muscle>,
     joints: Query<&ImpulseJoint>,
-    names: Query<&Name>,
 ) {
     for (hand_entity, grabbing) in &hands {
         let mut entity = hand_entity;
-        while let Ok((muscle_entity, mut muscle)) = muscles.get_mut(entity) {
+        while let Ok(mut muscle) = muscles.get_mut(entity) {
             if muscle.tense != grabbing.trying_grab {
                 muscle.tense = grabbing.trying_grab;
             }
@@ -302,21 +270,34 @@ pub fn tense_arms(
     }
 }
 
+pub fn twist_grab(
+    kb: Res<Input<KeyCode>>,
+    mut mouse_motion: EventReader<MouseMotion>,
+    mut grabbing: Query<&mut Grabbing>
+) {
+    if !kb.pressed(KeyCode::RControl) {
+        return;
+    }
+
+    let mut cumulative_delta = Vec2::ZERO;
+    for motion in mouse_motion.iter() {
+        cumulative_delta += motion.delta;
+    }
+
+    for mut grabbing in &mut grabbing {
+        grabbing.pitch -= cumulative_delta.y / 20.0;
+        grabbing.yaw -= cumulative_delta.x / 80.0;
+    }
+}
+
 pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
-    inputs: Query<(
-        &GlobalTransform,
-        &LookTransform,
-        &PlayerInput,
-        &PlayerCamera,
-        &PlayerNeck,
-        &Velocity,
-    )>,
-    ik_base: Query<&IKBase>,
+    inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
+    //ik_base: Query<&IKBase>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    ctx: Res<RapierContext>,
+    //ctx: Res<RapierContext>,
     mut hands: Query<
         (
             Entity,
@@ -324,21 +305,14 @@ pub fn player_grabby_hands(
             &mut CollisionGroups,
             &ArmId,
             &MuscleIKTarget,
-            Option<&Children>,
         ),
         With<Hand>,
     >,
-    //names: Query<&Name>,
-    //mut lines: ResMut<DebugLines>,
 ) {
-    let dt = ctx.integration_parameters.dt;
-
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, children) in
-        &mut hands
-    {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
-        let (global, look, input, cam, neck, velocity) = if let Some(input) = input {
+        let (input, cam, neck) = if let Some(input) = input {
             input
         } else {
             warn!("couldn't find parent input for hand entity");
@@ -359,12 +333,17 @@ pub fn player_grabby_hands(
 
         let direction =
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
-        grabbing.center = neck_global.translation() - camera_global.translation();
-        grabbing.target_offset = Vec3::new(0.0, 0.0, 0.0);
 
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
-                target_position.translation = neck_global.translation() + direction * 2.;
+                let (_, neck_rotation, _) = neck_global.to_scale_rotation_translation();
+
+
+                let grab_rotation = Quat::from_axis_angle(Vec3::Y, grabbing.yaw as f32)
+                    * Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
+                let relative_offset = neck_rotation * grab_rotation * grabbing.target_offset;
+                target_position.translation =
+                    neck_global.translation() + direction * 2.0 + relative_offset;
 
                 if !grabbing.grabbing && pull_offset.0.length() > 0.0 {
                     target_position.translation += pull_offset.0;

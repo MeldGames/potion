@@ -8,8 +8,6 @@ use std::f32::consts::PI;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
-use crate::attach::Attach;
-
 use super::grab::GrabJoint;
 use super::input::PlayerInput;
 use super::prelude::*;
@@ -214,10 +212,10 @@ pub fn pull_up(
 
 pub fn player_swivel_and_tilt(
     mut inputs: Query<(&mut LookTransform, &PlayerInput, &PlayerNeck)>,
-    mut necks: Query<(&mut Transform, &Attach), (With<Neck>, Without<Player>)>,
+    mut necks: Query<&mut Transform, (With<Neck>, Without<Player>)>,
 ) {
     for (mut look_transform, input, neck) in &mut inputs {
-        if let Ok((mut neck_transform, follow)) = necks.get_mut(neck.0) {
+        if let Ok(mut neck_transform) = necks.get_mut(neck.0) {
             let rotation = (Quat::from_axis_angle(Vec3::Y, input.yaw as f32)
                 * Quat::from_axis_angle(Vec3::X, input.pitch as f32))
             .into();
