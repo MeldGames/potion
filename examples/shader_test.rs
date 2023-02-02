@@ -12,7 +12,7 @@ use bevy::{
         Extract, RenderApp, RenderStage,
     },
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle, RenderMaterials2d},
-    window::PresentMode,
+    window::{PresentMode, CursorGrabMode},
 };
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
@@ -21,16 +21,26 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 fn main() {
     let mut app = App::new();
-    app.insert_resource(ClearColor(CLEAR))
-        .insert_resource(WindowDescriptor {
-            width: HEIGHT * RESOLUTION,
-            height: HEIGHT,
-            title: "Bevy Material Tutorial".to_string(),
-            present_mode: PresentMode::Fifo,
-            resizable: false,
-            ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                window: WindowDescriptor {
+                    title: "Shader Test".to_owned(),
+                    width: 500.,
+                    height: 400.,
+                    cursor_visible: true,
+                    position: WindowPosition::Automatic,
+                    cursor_grab_mode: CursorGrabMode::None,
+                    present_mode: bevy::window::PresentMode::Immediate,
+                    ..default()
+                },
+                ..default()
+            })
+            .set(AssetPlugin {
+                watch_for_changes: true,
+                ..default()
+            }),
+    )
         .add_plugin(Material2dPlugin::<DopeMaterial>::default())
         .add_startup_system(spawn_camera)
         .add_plugin(ExtractResourcePlugin::<ExtractedTime>::default())
@@ -142,6 +152,7 @@ struct DopeMaterialUniformData {
     time: f32,
 }
 
+#[derive(Resource)]
 struct ExtractedTime {
     seconds_since_startup: f32,
 }
@@ -151,7 +162,7 @@ impl ExtractResource for ExtractedTime {
 
     fn extract_resource(time: &Self::Source) -> Self {
         ExtractedTime {
-            seconds_since_startup: time.seconds_since_startup() as f32,
+            seconds_since_startup: time.elapsed_seconds() as f32,
         }
     }
 }

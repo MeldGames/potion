@@ -1,18 +1,32 @@
 use bevy::{
-    asset::AssetServerSettings,
     prelude::*,
     reflect::TypeUuid,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::render_resource::{AsBindGroup, ShaderRef}, window::CursorGrabMode,
 };
 
 fn main() {
     let mut app = App::new();
-    app.insert_resource(AssetServerSettings {
-        watch_for_changes: true,
-        ..default()
-    })
-    .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-    .add_plugins(DefaultPlugins)
+    
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                window: WindowDescriptor {
+                    title: "Shader Test".to_owned(),
+                    width: 500.,
+                    height: 400.,
+                    cursor_visible: true,
+                    position: WindowPosition::Automatic,
+                    cursor_grab_mode: CursorGrabMode::None,
+                    present_mode: bevy::window::PresentMode::Immediate,
+                    ..default()
+                },
+                ..default()
+            })
+            .set(AssetPlugin {
+                watch_for_changes: true,
+                ..default()
+            }),
+    )
     .add_plugin(MaterialPlugin::<GlowyMaterial>::default())
     .add_startup_system(setup);
 
