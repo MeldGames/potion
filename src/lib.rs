@@ -148,10 +148,13 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
+#[derive(Component)]
+pub struct NoOutline;
+
 fn outline_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<OutlineVolume>)>,
+    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<OutlineVolume>, Without<NotShadowReceiver>)>,
 ) {
     for (entity, mesh) in &query {
         if let Some(mesh) = meshes.get_mut(mesh) {
@@ -197,13 +200,15 @@ pub fn setup_map(
     _assets: Res<AssetServer>,
 ) {
     commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/ground.gltf#Scene0"),
-            ..default()
-        })
-        .insert(NotShadowCaster)
-        .insert(NotShadowReceiver)
-        .add_children(|children| {
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/map.gltf#Scene0"),
+                ..default()
+            },
+            NotShadowCaster,
+            NotShadowReceiver,
+            Name::new("Ground")
+        )).add_children(|children| {
             children
                 .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, -10.0, 0.0,
@@ -214,6 +219,7 @@ pub fn setup_map(
                     Name::new("Plane"),
                     crate::physics::TERRAIN_GROUPING,
                     DEFAULT_FRICTION,
+                    NotShadowReceiver,
                 ));
         });
 
@@ -240,7 +246,7 @@ pub fn setup_map(
         },
         transform: Transform {
             translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            rotation: Quat::from_rotation_x(-0.5),
             ..default()
         },
         ..default()
@@ -290,9 +296,9 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(Ingredient)
-        .insert(crate::deposit::Value::new(1))
         .insert((
+            Ingredient,
+            crate::deposit::Value::new(1),
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
@@ -307,16 +313,17 @@ pub fn setup_map(
 
     let _sky = commands
         .spawn(SceneBundle {
-            scene: asset_server.load("models/sky.glb#Scene0"),
+            scene: asset_server.load("models/skybox.gltf#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-1.5, 1.3, 1.075),
                 ..default()
             },
             ..default()
         })
-        .insert(NotShadowCaster)
-        .insert(NotShadowReceiver)
-        .id();
+        .insert((
+            NotShadowCaster,
+            NotShadowReceiver,
+        )).id();
 
     let _sky_clouds = commands
         .spawn(SceneBundle {
@@ -327,9 +334,10 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(NotShadowCaster)
-        .insert(NotShadowReceiver)
-        .id();
+        .insert((
+            NotShadowCaster,
+            NotShadowReceiver,
+        )).id();
 
     let _donut = commands
         .spawn(PbrBundle {
@@ -341,9 +349,9 @@ pub fn setup_map(
             transform: Transform::from_xyz(1.0, 2.0, -2.0),
             ..default()
         })
-        .insert(crate::deposit::Value::new(5))
-        .insert(Ingredient)
         .insert((
+            Ingredient,
+            crate::deposit::Value::new(5),
             Collider::round_cylinder(0.025, 0.4, 0.2),
             RigidBody::Dynamic,
             Name::new("Donut"),
@@ -365,9 +373,9 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(Ingredient)
-        .insert(crate::deposit::Value::new(1))
         .insert((
+            Ingredient,
+            crate::deposit::Value::new(1),
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             Name::new("Prallet"),
@@ -389,9 +397,9 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(Ingredient)
-        .insert(crate::deposit::Value::new(1))
         .insert((
+            Ingredient,
+            crate::deposit::Value::new(1),
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
@@ -413,10 +421,10 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(Ingredient)
-        .insert(Slottable)
-        .insert(crate::deposit::Value::new(1))
         .insert((
+            Ingredient,
+            Slottable,
+            crate::deposit::Value::new(1),
             Collider::ball(0.2),
             RigidBody::Dynamic,
             Name::new("Weltberry"),
@@ -437,36 +445,38 @@ pub fn setup_map(
             })),
             ..default()
         })
-        .insert(TransformBundle::from_transform(Transform {
-            translation: Vec3::new(-2.5, 2.3, -0.075),
-            ..default()
-        }))
-        .insert(Velocity::default())
-        .insert(Name::new("Welt slot"))
-        .insert(ReadMassProperties::default())
-        .insert(Damping {
-            linear_damping: 5.0,
-            angular_damping: 5.0,
-        })
-        .insert(Slot {
-            containing: Some(welt),
-        })
-        .insert(SlotGracePeriod::default())
-        .insert(SlotSettings(springy::SpringState {
-            spring: springy::Spring {
-                strength: 1.0,
-                damp_ratio: 1.0,
-                rest_distance: 0.0,
-                limp_distance: 0.0,
-            },
-            breaking: Some(springy::SpringBreak {
-                tear_force: 4.0,
-                tear_step: 0.02,
-                heal_step: 0.05,
+        .insert((
+            TransformBundle::from_transform(Transform {
+                translation: Vec3::new(-2.5, 2.3, -0.075),
                 ..default()
             }),
-            ..default()
-        }));
+            Velocity::default(),
+            Name::new("Welt slot"),
+            ReadMassProperties::default(),
+            Damping {
+                linear_damping: 5.0,
+                angular_damping: 5.0,
+            },
+            Slot {
+                containing: Some(welt),
+            },
+            SlotGracePeriod::default(),
+            SlotSettings(springy::SpringState {
+                spring: springy::Spring {
+                    strength: 1.0,
+                    damp_ratio: 1.0,
+                    rest_distance: 0.0,
+                    limp_distance: 0.0,
+                },
+                breaking: Some(springy::SpringBreak {
+                    tear_force: 4.0,
+                    tear_step: 0.02,
+                    heal_step: 0.05,
+                    ..default()
+                }),
+                ..default()
+            })
+        ));
 
     let level_collision_mesh3: Handle<Mesh> =
         asset_server.load("models/cauldron_stirrer.glb#Mesh0/Primitive0");
@@ -515,9 +525,9 @@ pub fn setup_map(
             ReadMassProperties::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
+            DecompLoad("assets/models/stirrer_decomp.obj".to_owned()),
+            level_collision_mesh3,
         ))
-        .insert(DecompLoad("assets/models/stirrer_decomp.obj".to_owned()))
-        .insert(level_collision_mesh3)
         .id();
 
     let level_collision_mesh: Handle<Mesh> =
@@ -539,11 +549,11 @@ pub fn setup_map(
             RigidBody::Fixed,
             Name::new("Walls Shop"),
             Velocity::default(),
+            DecompLoad(
+                "assets/models/walls_shop1_decomp.obj".to_owned(),
+            ),
+            level_collision_mesh,
         ))
-        .insert(DecompLoad(
-            "assets/models/walls_shop1_decomp.obj".to_owned(),
-        ))
-        .insert(level_collision_mesh)
         .id();
 
     let security_check = commands
@@ -594,10 +604,10 @@ pub fn setup_map(
             Name::new("Door"),
             Velocity::default(),
             DEFAULT_FRICTION,
+            ImpulseJoint::new(walls, hinge_joint),
+            ColliderLoad,
+            level_collision_mesh2
         ))
-        .insert(ColliderLoad)
-        .insert(level_collision_mesh2)
-        .insert(ImpulseJoint::new(walls, hinge_joint))
         /*
                .insert(BreakableJoint {
                    impulse: Vec3::splat(100.0),
