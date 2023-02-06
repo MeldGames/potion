@@ -496,6 +496,22 @@ pub fn setup_map(
         .insert(Name::new("Mock spring location"))
         .id();
 
+    let mortar = commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("models/mortar.gltf#Scene0"),
+            transform: Transform {
+                // translation: Vec3::new(5., 10., -0.075),
+                translation: Vec3::new(20.0, 5.0, -3.0),
+                scale: Vec3::splat(2.),
+                ..default()
+            },
+            ..default()
+        },
+        Collider::cylinder(0.35, 0.5),
+        RigidBody::Dynamic,
+        crate::physics::TERRAIN_GROUPING,
+    )).id();
+    
     let _stirrer = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
