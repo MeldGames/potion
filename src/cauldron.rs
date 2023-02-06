@@ -52,7 +52,7 @@ pub fn spawn_cauldron(
             ..default()
         })
         .insert((
-            ColliderMassProperties::Density(1.0),
+            ColliderMassProperties::Density(5.0),
             ReadMassProperties::default(),
             RigidBody::Dynamic,
             Velocity::default(),
