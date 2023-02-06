@@ -42,12 +42,12 @@ pub fn spawn_cauldron(
     meshes: &mut ResMut<Assets<Mesh>>,
 ) -> Entity {
     let level_collision_mesh: Handle<Mesh> =
-        asset_server.load("models/cauldron.glb#Mesh0/Primitive0");
+        asset_server.load("models/cauldron.gltf#Mesh0/Primitive0");
 
     let mut slots = Vec::new();
     let cauldron = commands
         .spawn(SceneBundle {
-            scene: asset_server.load("models/cauldron.glb#Scene0"),
+            scene: asset_server.load("models/cauldron.gltf#Scene0"),
             transform: position,
             ..default()
         })
@@ -63,7 +63,7 @@ pub fn spawn_cauldron(
             crate::physics::TERRAIN_GROUPING,
         ))
         .insert(crate::DecompLoad(
-            "assets/models/cauldron_decomp.obj".to_owned(),
+            "assets/models/cauldron_decomp2.obj".to_owned(),
         ))
         .insert(level_collision_mesh)
         .with_children(|builder| {

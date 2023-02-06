@@ -267,7 +267,7 @@ pub fn setup_map(
         &mut commands,
         &*asset_server,
         Transform {
-            translation: Vec3::new(5.0, 4.0, 0.0),
+            translation: Vec3::new(5.0, 6.0, 0.0),
             scale: Vec3::splat(2.),
             ..default()
         },
@@ -325,6 +325,7 @@ pub fn setup_map(
             NotShadowReceiver,
         )).id();
 
+    
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
