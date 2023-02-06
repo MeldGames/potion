@@ -58,17 +58,17 @@ pub fn setup_app(app: &mut App) {
         app.world.contains_resource::<sabi::Server>(),
     ) {
         (true, _, _) => (
-            "Brewalized Local".to_owned(),
+            "Potion Cellar Local".to_owned(),
             default_res,
             WindowPosition::Automatic,
         ),
         (_, true, _) => (
-            "Brewalized Client".to_owned(),
+            "Potion Cellar Client".to_owned(),
             half_width,
             WindowPosition::At(Vec2::new(half_width.0, 0.0)),
         ),
         (_, _, true) => (
-            "Brewalized Server".to_owned(),
+            "Potion Cellar Server".to_owned(),
             half_width,
             WindowPosition::At(Vec2::new(0.0, 0.0)),
         ),
