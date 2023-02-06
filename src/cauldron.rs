@@ -52,13 +52,13 @@ pub fn spawn_cauldron(
             ..default()
         })
         .insert((
-            ColliderMassProperties::Density(100.0),
+            ColliderMassProperties::Density(1.0),
             ReadMassProperties::default(),
             RigidBody::Dynamic,
             Velocity::default(),
             ExternalImpulse::default(),
             crate::store::StoreItem,
-            Collider::cylinder(0.4, 0.75),
+            Collider::cylinder(0.5, 0.75),
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
         ))
@@ -67,7 +67,7 @@ pub fn spawn_cauldron(
         ))
         .insert(level_collision_mesh)
         .with_children(|builder| {
-            let center = Vec3::new(0.0, 0.35, 0.0);
+            let center = Vec3::new(0.0, 0.5, 0.0);
             let radius = 0.2;
             let slot_count = 3;
 
@@ -83,7 +83,7 @@ pub fn spawn_cauldron(
                                 ..default()
                             })),
                             transform: Transform::from_translation(
-                                center + Vec3::new(x, 0.0, z) * radius,
+                                center + Vec3::new(x, 1.5, z) * radius,
                             ),
                             ..default()
                         })
@@ -123,10 +123,10 @@ pub fn spawn_cauldron(
         .with_children(|children| {
             children
                 .spawn(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, 0.25, 0.0,
+                    0.0, 0.6, 0.0,
                 )))
                 .insert(ActiveEvents::COLLISION_EVENTS)
-                .insert(Collider::cylinder(0.4, 0.55))
+                .insert(Collider::cylinder(0.2, 0.45))
                 .insert(Cauldron)
                 .insert(SlotDeposit::new(slots))
                 .insert(Sensor);
