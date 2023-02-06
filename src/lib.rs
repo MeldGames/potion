@@ -497,6 +497,9 @@ pub fn setup_map(
         .insert(Name::new("Mock spring location"))
         .id();
 
+    let col_mesh_mortar: Handle<Mesh> =
+    asset_server.load("models/mortar.gltf#Mesh0/Primitive0");
+
     let mortar = commands.spawn((
         SceneBundle {
             scene: asset_server.load("models/mortar.gltf#Scene0"),
@@ -508,7 +511,9 @@ pub fn setup_map(
             },
             ..default()
         },
-        Collider::cylinder(0.35, 0.5),
+        ColliderLoad,
+        Name::new("Mortar & Pestle"),
+        col_mesh_mortar,
         RigidBody::Dynamic,
         crate::physics::TERRAIN_GROUPING,
     )).id();
