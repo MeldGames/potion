@@ -11,7 +11,7 @@ pub mod physics;
 pub mod player;
 pub mod slot;
 pub mod store;
-//pub mod trees;
+pub mod trees;
 
 use std::f32::consts::PI;
 
@@ -22,7 +22,7 @@ use deposit::DepositPlugin;
 use joint_break::BreakJointPlugin;
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
-//use trees::TreesPlugin;
+use trees::TreesPlugin;
 
 use bevy_mod_outline::*;
 
@@ -38,7 +38,7 @@ use crate::player::PlayerPlugin;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
-    window::{CursorGrabMode, WindowPlugin},
+    window::{CursorGrabMode, WindowPlugin}, scene::SceneInstance,
 };
 
 use bevy_prototype_debug_lines::*;
@@ -119,7 +119,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
         .add_plugin(crate::debug::DebugPlugin)
-        //.add_plugin(TreesPlugin)
+        .add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(crate::physics::MusclePlugin)
         .add_plugin(RapierDebugRenderPlugin {
@@ -144,6 +144,7 @@ pub fn setup_app(app: &mut App) {
     app.add_system(update_level_collision);
     app.add_system(active_cameras);
     app.add_system(decomp_load);
+    //app.add_system(prepare_scene);
 
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
@@ -154,7 +155,7 @@ pub struct NoOutline;
 fn outline_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    query: Query<(Entity, &Handle<Mesh>), (With<Handle<Mesh>>, Without<OutlineVolume>, Without<NotShadowReceiver>)>,
+    query: Query<(Entity, &Handle<Mesh>), (Added<Handle<Mesh>>, Without<OutlineVolume>, Without<NotShadowReceiver>)>,
 ) {
     for (entity, mesh) in &query {
         if let Some(mesh) = meshes.get_mut(mesh) {
@@ -285,7 +286,7 @@ pub fn setup_map(
         },
     );
 
-    //crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
         .spawn(SceneBundle {
@@ -311,6 +312,57 @@ pub fn setup_map(
         ))
         .id();
 
+    let _cellar = commands.spawn((
+        SceneBundle{
+            scene: asset_server.load("models/cellar.gltf#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-16.5, -3.0, 1.075),
+                ..default()
+            },
+            ..default()
+        },
+        SpawnedScene
+    )).id();
+
+    let _cart = commands.spawn((
+        SpatialBundle{
+            transform: Transform {
+                translation: Vec3::new(-10.5, 7.3, -10.),
+                rotation: Quat::from_axis_angle(Vec3::Z, PI/2.),
+                ..default()
+            },
+            ..default()
+        },
+
+        Collider::cylinder(1.8, 1.3),
+        RigidBody::Dynamic,
+        Name::new("cart collider"),
+        ColliderMassProperties::Density(2.0),
+        crate::physics::TERRAIN_GROUPING,
+        DEFAULT_FRICTION,
+    )).add_children(|commands| {
+        commands.spawn(SceneBundle{            
+            scene: asset_server.load("models/cart.gltf#Scene0"),
+            transform: Transform {
+                rotation: Quat::from_axis_angle(Vec3::Z, -PI/2.),
+                scale: Vec3::splat(2.),
+                ..default()
+            },
+            ..default()
+        });
+        commands.spawn((
+            SpatialBundle{
+                transform: Transform {
+                    translation: Vec3::new(-0.1, 0., -0.5),
+                    ..default()
+                },
+                ..default()
+            },            
+            Collider::cuboid(0.1, 1.2, 2.9),
+        ));
+    });
+    
+
     let _sky = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/skybox.gltf#Scene0"),
@@ -325,7 +377,7 @@ pub fn setup_map(
             NotShadowReceiver,
         )).id();
 
-    
+    /* 
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
@@ -340,7 +392,7 @@ pub fn setup_map(
             NotShadowCaster,
             NotShadowReceiver,
         )).id();
-
+    */
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {
@@ -364,6 +416,8 @@ pub fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
+
+    
 
     let _prallet = commands
         .spawn(SceneBundle {
@@ -497,10 +551,11 @@ pub fn setup_map(
         .insert(Name::new("Mock spring location"))
         .id();
 
+
     let col_mesh_mortar: Handle<Mesh> =
     asset_server.load("models/mortar.gltf#Mesh0/Primitive0");
 
-    let mortar = commands.spawn((
+    let _mortar = commands.spawn((
         SceneBundle {
             scene: asset_server.load("models/mortar.gltf#Scene0"),
             transform: Transform {
@@ -695,6 +750,46 @@ pub fn active_cameras(_names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
         warn!("More than 1 active camera");
     }
 }
+
+#[derive(Component)]
+pub struct SpawnedScene;
+
+fn prepare_scene(
+    mut commands: Commands,
+    mut ev_asset: EventReader<AssetEvent<Scene>>,
+    scene_root_nodes: Query<&Children>,
+    objects: Query<(Entity, &Name)>,
+    scenes: Query<&Children, With<SceneInstance>>,
+) {
+    for _event in ev_asset.iter() {
+        for scene_root in scenes.iter() {
+            info!("finished loading scene");
+            for &root_node in scene_root.iter() {
+                dbg!(root_node);
+                for &scene_objects in scene_root_nodes.get(root_node).unwrap() {
+                    if let Ok((e, name)) = objects.get(scene_objects) {
+                        if name.contains("Light") {
+                            let point_light = commands
+                                .spawn(PointLightBundle {
+                                    point_light: PointLight {
+                                        range: 2000.,
+                                        intensity: 800.0,
+                                        color: Color::rgb(0.9, 0.4, 0.1),
+                                        shadows_enabled: true,
+                                        ..default()
+                                    },
+                                    ..default()
+                                })
+                                .id();
+                            commands.entity(e).add_child(point_light);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 #[derive(Debug, Component, Clone, Reflect)]
 #[reflect(Component)]

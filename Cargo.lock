@@ -1092,6 +1092,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_shader_utils"
+version = "0.3.0"
+source = "git+https://github.com/Sjael/bevy_shader_utils#f9d7a94a028e5b41eb74460e993d14e9f9c99f60"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_sprite"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3561,6 +3569,7 @@ dependencies = [
  "bevy_prototype_debug_lines",
  "bevy_rapier3d",
  "bevy_renet",
+ "bevy_shader_utils",
  "bincode",
  "bitflags",
  "derive_more",

@@ -1,5 +1,5 @@
 use bevy::{
-    pbr::{MaterialPipeline, MaterialPipelineKey},
+    pbr::{MaterialPipeline, MaterialPipelineKey, NotShadowReceiver},
     prelude::*,
     reflect::TypeUuid,
     render::{
@@ -9,21 +9,18 @@ use bevy::{
         },
     },
 };
+use bevy_mod_outline::{OutlineStencil, OutlineVolume};
 use bevy_rapier3d::prelude::*;
 use bevy_shader_utils::ShaderUtilsPlugin;
 
 pub struct TreesPlugin;
 impl Plugin for TreesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(MaterialPlugin::<CustomMaterial>::default())
+        app.add_plugin(MaterialPlugin::<LeafMaterial>::default())
             .add_plugin(ShaderUtilsPlugin)
-            //.add_system(update_time_for_custom_material)
-            .add_system(mod_scene);
+            .add_system_to_stage(CoreStage::PostUpdate, mod_scene);
     }
 }
-
-#[derive(Component)]
-struct GLTFScene;
 
 #[derive(Component)]
 struct Inserted;
@@ -33,11 +30,11 @@ pub fn spawn_trees(
     asset_server: &AssetServer,
     _meshes: &mut Assets<Mesh>,
 ) {
-    let tree_positions = vec![Vec3::new(12.5, 0., -0.075)];
+    let tree_positions = vec![Vec3::new(15., 0., -2.), Vec3::new(43., 0., 20.)];
     for i in tree_positions {
         let _tree = commands
             .spawn(SceneBundle {
-                scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
+                scene: asset_server.load("models/tree.gltf#Scene0"),
                 transform: Transform {
                     translation: i.clone(),
                     scale: Vec3::splat(1.),
@@ -56,15 +53,10 @@ pub fn spawn_trees(
     }
 }
 
-fn update_time_for_custom_material(mut materials: ResMut<Assets<CustomMaterial>>, time: Res<Time>) {
-    for material in materials.iter_mut() {
-        material.1.time = time.elapsed().as_secs_f32();
-    }
-}
 
 /// The Material trait is very configurable, but comes with sensible defaults for all methods.
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
-impl Material for CustomMaterial {
+impl Material for LeafMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material.wgsl".into()
     }
@@ -73,15 +65,12 @@ impl Material for CustomMaterial {
         self.alpha_mode
     }
     fn specialize(
-        _pipeline: &MaterialPipeline<Self>,
-        descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayout,
-        _key: MaterialPipelineKey<Self>,
-    ) -> Result<(), SpecializedMeshPipelineError> {
+            _pipeline: &MaterialPipeline<Self>,
+            descriptor: &mut RenderPipelineDescriptor,
+            _layout: &MeshVertexBufferLayout,
+            _key: MaterialPipelineKey<Self>,
+        ) -> Result<(), SpecializedMeshPipelineError> {
         descriptor.primitive.cull_mode = None;
-        if let Some(label) = &mut descriptor.label {
-            *label = format!("shield_{}", *label).into();
-        }
         Ok(())
     }
 }
@@ -89,9 +78,7 @@ impl Material for CustomMaterial {
 // This is the struct that will be passed to your shader
 #[derive(AsBindGroup, TypeUuid, Debug, Clone)]
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
-pub struct CustomMaterial {
-    #[uniform(0)]
-    time: f32,
+pub struct LeafMaterial {
     #[uniform(0)]
     color: Color,
     #[texture(1)]
@@ -104,11 +91,11 @@ fn mod_scene(
     mut commands: Commands,
     spheres: Query<(Entity, &Handle<Mesh>, &Name), Without<Inserted>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut custom_materials: ResMut<Assets<LeafMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
-        if name.as_str().contains("Plane") {
+        if name.as_str().contains("leaves") {
             let mesh = meshes.get_mut(hand).unwrap();
             if let Some(VertexAttributeValues::Float32x3(positions)) =
                 mesh.attribute(Mesh::ATTRIBUTE_POSITION)
@@ -119,15 +106,19 @@ fn mod_scene(
                     .collect();
                 mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
             }
-            let custom_material = custom_materials.add(CustomMaterial {
-                color: Color::BLUE,
-                color_texture: Some(asset_server.load("shaders/leaf.png")),
+            let custom_material = custom_materials.add(LeafMaterial {
+                color: Color::GREEN,
+                color_texture: Some(asset_server.load("shaders/leaves.png")),
                 alpha_mode: AlphaMode::Blend,
-                time: 0.5,
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
-            commands.entity(e).insert(custom_material);
-            commands.entity(e).insert(Inserted);
+            commands.entity(e).remove::<OutlineStencil>();
+            commands.entity(e).remove::<OutlineVolume>();
+            commands.entity(e).insert((
+                custom_material,
+                NotShadowReceiver,
+                Inserted
+            ));
         }
     }
 }

@@ -58,7 +58,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     commands
         .spawn(SceneBundle {
-            scene: asset_server.load("models/tree_stylized.gltf#Scene0"),
+            scene: asset_server.load("models/tree.gltf#Scene0"),
             ..default()
         })
         .insert(GLTFScene);

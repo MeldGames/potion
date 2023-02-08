@@ -25,6 +25,7 @@ bevy_mod_outline = "0.3"
 bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust", features = [
   "debug_lines",
 ]}
+bevy_shader_utils = {git = "https://github.com/Sjael/bevy_shader_utils"}
 
 bevy-inspector-egui = "0.17"
 #bevy_editor_pls = "0.1"
