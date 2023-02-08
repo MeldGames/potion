@@ -1,7 +1,7 @@
  - Config
-	Input Path:                        crate_lid.obj
-	Output Path:                       crate_lid_decomp.obj
-	Log Path:                          crate_lid_decomp_log.txt
+	Input Path:                        ../models/crate_lid.obj
+	Output Path:                       ./obj/crate_lid/obj.obj
+	Log Path:                          ./obj/crate_lid/log.txt
 	Terminal Threshold:                0.05
 	MCTS Node Number:                  20
 	MCTS Iteration:                    150
@@ -12,10 +12,10 @@
 	PCA (ON/OFF):                      0
 	k for Rv:                          0.3
 	Hausdorff Sampling Resolution:     2000
-	Random Seed:                       1664392312
+	Random Seed:                       1675897430
  - Pre-processing (manifold)
 	resolution: 10000
-Manifold time: 0.064309s
+Manifold time: 0.062513s
 #Points: 11694
 #Triangles: 23384
  - Decomposition (MCTS)
@@ -25,5 +25,5 @@ iter 2 ---- waiting pool: 4
 iter 3 ---- waiting pool: 6
 iter 4 ---- waiting pool: 4
 iter 5 ---- waiting pool: 4
-Compute Time: 14.4406s
+Compute Time: 14.3262s
 #Convex After Merge: 11

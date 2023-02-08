@@ -1,7 +1,7 @@
  - Config
-	Input Path:                        cauldron.obj
-	Output Path:                       cauldron_decomp.obj
-	Log Path:                          cauldron_decomp_log.txt
+	Input Path:                        ../models/crate.obj
+	Output Path:                       ./obj/crate/obj.obj
+	Log Path:                          ./obj/crate/log.txt
 	Terminal Threshold:                0.05
 	MCTS Node Number:                  20
 	MCTS Iteration:                    150
@@ -12,22 +12,19 @@
 	PCA (ON/OFF):                      0
 	k for Rv:                          0.3
 	Hausdorff Sampling Resolution:     2000
-	Random Seed:                       1663189326
+	Random Seed:                       1675897050
  - Pre-processing (manifold)
 	resolution: 10000
-Manifold time: 0.277024s
-#Points: 58758
-#Triangles: 117512
+Manifold time: 0.204767s
+#Points: 33092
+#Triangles: 66180
  - Decomposition (MCTS)
 iter 0 ---- waiting pool: 1
 iter 1 ---- waiting pool: 2
 iter 2 ---- waiting pool: 4
 iter 3 ---- waiting pool: 8
 iter 4 ---- waiting pool: 16
-iter 5 ---- waiting pool: 32
-iter 6 ---- waiting pool: 56
-iter 7 ---- waiting pool: 64
-iter 8 ---- waiting pool: 22
-iter 9 ---- waiting pool: 8
-Compute Time: 120.688s
-#Convex After Merge: 101
+iter 5 ---- waiting pool: 14
+iter 6 ---- waiting pool: 6
+Compute Time: 34.6547s
+#Convex After Merge: 21

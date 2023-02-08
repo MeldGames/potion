@@ -1,7 +1,7 @@
  - Config
-	Input Path:                        crate.obj
-	Output Path:                       crate_decomp.obj
-	Log Path:                          crate_decomp_log.txt
+	Input Path:                        ../models/walls_shop1.obj
+	Output Path:                       ./obj/walls_shop1/obj.obj
+	Log Path:                          ./obj/walls_shop1/log.txt
 	Terminal Threshold:                0.05
 	MCTS Node Number:                  20
 	MCTS Iteration:                    150
@@ -12,19 +12,19 @@
 	PCA (ON/OFF):                      0
 	k for Rv:                          0.3
 	Hausdorff Sampling Resolution:     2000
-	Random Seed:                       1664392185
+	Random Seed:                       1675897450
  - Pre-processing (manifold)
 	resolution: 10000
-Manifold time: 0.215664s
-#Points: 33092
-#Triangles: 66180
+Manifold time: 0.070578s
+#Points: 20498
+#Triangles: 40996
  - Decomposition (MCTS)
 iter 0 ---- waiting pool: 1
 iter 1 ---- waiting pool: 2
 iter 2 ---- waiting pool: 4
 iter 3 ---- waiting pool: 8
-iter 4 ---- waiting pool: 16
-iter 5 ---- waiting pool: 14
-iter 6 ---- waiting pool: 6
-Compute Time: 34.8207s
-#Convex After Merge: 21
+iter 4 ---- waiting pool: 4
+iter 5 ---- waiting pool: 4
+iter 6 ---- waiting pool: 2
+Compute Time: 17.8204s
+#Convex After Merge: 11

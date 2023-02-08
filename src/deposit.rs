@@ -148,9 +148,7 @@ pub fn spawn_deposit_box(
             Name::new("Crate"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(crate::DecompLoad(
-            "assets/models/crate_decomp.obj".to_owned(),
-        ))
+        .insert(crate::DecompLoad( "crate".to_owned(),))
         .insert(VisibilityBundle::default())
         .add_child(crate_model)
         .id();
@@ -171,9 +169,7 @@ pub fn spawn_deposit_box(
             Name::new("Lid"),
             crate::physics::TERRAIN_GROUPING,
         ))
-        .insert(crate::DecompLoad(
-            "assets/models/crate_lid_decomp.obj".to_owned(),
-        ))
+        .insert(crate::DecompLoad( "crate_lid".to_owned(),))
         .insert(VisibilityBundle::default())
         .insert(ImpulseJoint::new(deposit, lid_hinge))
         .add_child(lid_model)

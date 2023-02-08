@@ -603,7 +603,7 @@ pub fn setup_map(
             ReadMassProperties::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
-            DecompLoad("assets/models/stirrer_decomp.obj".to_owned()),
+            DecompLoad("stirrer".to_owned()),
             level_collision_mesh3,
         ))
         .id();
@@ -628,7 +628,7 @@ pub fn setup_map(
             Name::new("Walls Shop"),
             Velocity::default(),
             DecompLoad(
-                "assets/models/walls_shop1_decomp.obj".to_owned(),
+                "walls_shop1".to_owned(),
             ),
             level_collision_mesh,
         ))
@@ -805,11 +805,12 @@ impl Default for DecompLoad {
 
 fn decomp_load(
     mut commands: Commands,
-    mut replace: Query<(Option<&mut Collider>, &DecompLoad, Entity)>,
+    mut replace: Query<(Option<&mut Collider>, &DecompLoad, Entity), Changed<DecompLoad>>,
 ) {
     for (collider, decomp, entity) in &mut replace {
-        info!("running decomp load: {:?}", decomp);
-        if let Ok(decomp) = Obj::load(&decomp.0) {
+        let path = format!("assets/decomp/obj/{}/obj.obj", decomp.0);
+        info!("running decomp load: {:?}", path);
+        if let Ok(decomp) = Obj::load(&path) {
             let mut colliders = Vec::new();
             for object in decomp.data.objects {
                 let vertices = object
@@ -840,8 +841,6 @@ fn decomp_load(
                 }
             }
         }
-
-        commands.entity(entity).remove::<DecompLoad>();
     }
 }
 
