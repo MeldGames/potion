@@ -30,7 +30,12 @@ pub fn spawn_trees(
     asset_server: &AssetServer,
     _meshes: &mut Assets<Mesh>,
 ) {
-    let tree_positions = vec![Vec3::new(15., 0., -2.), Vec3::new(43., 0., 20.)];
+    let tree_positions = vec![
+        Vec3::new(15., 0., -2.), 
+        Vec3::new(-15., -2., -30.), 
+        Vec3::new(-6., -2.5, 100.), 
+        Vec3::new(43., 0., 20.)
+    ];
     for i in tree_positions {
         let _tree = commands
             .spawn(SceneBundle {
