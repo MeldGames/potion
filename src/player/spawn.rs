@@ -149,6 +149,7 @@ pub fn setup_player(
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(distance_from_body, player_height, 0.0),
+                    Vec3::new(1.0, 0.0, 0.0),
                     0,
                 );
                 attach_arm(
@@ -157,6 +158,7 @@ pub fn setup_player(
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(-distance_from_body, player_height, 0.0),
+                    Vec3::new(-1.0, 0.0, 0.0),
                     1,
                 );
 
@@ -305,6 +307,7 @@ pub fn attach_arm(
     to: Entity,
     to_transform: Transform,
     at: Vec3,
+    grab_offset: Vec3,
     index: usize,
 ) {
     let max_force = 100.0;
@@ -485,7 +488,7 @@ pub fn attach_arm(
         .insert(ConnectedMass::default())
         .insert(GrabbedEntities::default())
         .insert(Grabbing {
-            target_offset: at,
+            target_offset: grab_offset,
             ..default()
         })
         .insert(ExternalImpulse::default())

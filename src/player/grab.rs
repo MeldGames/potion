@@ -205,7 +205,7 @@ pub fn grab_collider(
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
                 for child in children.iter() {
-                    if let Ok((impulse_joint, _joint)) = grab_joints.get(*child) {
+                    if let Ok((_impulse_joint, _joint)) = grab_joints.get(*child) {
                         commands.entity(*child).despawn_recursive();
                         grabbed.remove(&*child);
                     }
@@ -352,7 +352,7 @@ pub fn player_grabby_hands(
                     //* Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
                 let relative_offset = neck_rotation * grab_rotation * grabbing.target_offset;
                 target_position.translation =
-                    neck_global.translation() + direction * 1.5 + relative_offset;
+                    neck_global.translation() + direction * 2.5 + relative_offset;
 
                 if !grabbing.grabbing && pull_offset.0.length() > 0.0 {
                     target_position.translation += pull_offset.0;
