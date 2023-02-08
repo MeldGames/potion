@@ -70,13 +70,16 @@ obj = "0.10.2"
 #bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
 #bevy_editor_pls_default_windows = { path = "../bevy_editor_pls/crates/bevy_editor_pls_default_windows" }
 #bevy_editor_pls_core = {path = "../bevy_editor_pls/crates/bevy_editor_pls_core"}
+bevy_editor_pls = {git = "https://github.com/aceeri/bevy_editor_pls", branch = "viewport"}
+bevy_editor_pls_default_windows = {git = "https://github.com/aceeri/bevy_editor_pls", branch = "viewport"}
+bevy_editor_pls_core = {git = "https://github.com/aceeri/bevy_editor_pls", branch = "viewport"}
 
 [patch."https://github.com/aevyrie/bevy_mod_raycast"]
 #bevy_mod_raycast = { path = "../bevy_mod_raycast" }
 
 [patch."https://github.com/aevyrie/bevy_mod_picking"]
-#bevy_mod_picking = { path = "../bevy_mod_picking" }
-#bevy_mod_picking = { git = "https://github.com/aceeri/bevy_mod_picking", branch = "bump_egui"}
+bevy_mod_picking = { path = "../bevy_mod_picking" }
+#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "beta"}
 
 [patch."https://github.com/aevyrie/bevy_framepace"]
 #bevy_framepace = { path = "../bevy_framepace" }
