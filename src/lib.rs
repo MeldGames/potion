@@ -400,7 +400,7 @@ pub fn setup_map(
                 ring_radius: 0.2,
                 ..default()
             })),
-            transform: Transform::from_xyz(1.0, 2.0, -2.0),
+            transform: Transform::from_xyz(1.0, 6.0, -2.0),
             ..default()
         })
         .insert((
@@ -423,7 +423,7 @@ pub fn setup_map(
         .spawn(SceneBundle {
             scene: asset_server.load("models/prallet.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-2.5, 1.3, -0.075),
+                translation: Vec3::new(-12.5, 3.3, -0.075),
                 scale: Vec3::splat(1.),
                 ..default()
             },
@@ -447,7 +447,7 @@ pub fn setup_map(
         .spawn(SceneBundle {
             scene: asset_server.load("models/thorns.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-1.5, 2.3, -0.075),
+                translation: Vec3::new(-1.5, 8.3, -0.075),
                 scale: Vec3::splat(1.),
                 ..default()
             },

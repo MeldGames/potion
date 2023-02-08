@@ -83,7 +83,7 @@ pub fn spawn_cauldron(
                                 ..default()
                             })),
                             transform: Transform::from_translation(
-                                center + Vec3::new(x, 1.5, z) * radius,
+                                center + Vec3::new(x, 2.5, z) * radius,
                             ),
                             ..default()
                         })

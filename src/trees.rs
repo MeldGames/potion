@@ -50,7 +50,6 @@ pub fn spawn_trees(
             .insert((
                 ColliderMassProperties::Density(5.0),
                 RigidBody::Fixed,
-                Collider::cylinder(3.4, 0.2),
                 Name::new("Tree"),
                 crate::physics::TERRAIN_GROUPING,
             ))
