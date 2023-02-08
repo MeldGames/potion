@@ -162,22 +162,25 @@ pub fn setup_player(
 
                 // for some body horror
                 /*
-                               attach_arm(
-                                   &mut commands,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(0.0, 0.5, distance_from_body),
-                                   2,
-                               );
+                attach_arm(
+                    &mut commands,
+                    &mut meshes,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(0.0, player_height, distance_from_body),
+                    2,
+                );
 
-                               attach_arm(
-                                   &mut commands,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(0.0, 0.5, -distance_from_body),
-                                   2,
-                               );
+                attach_arm(
+                    &mut commands,
+                    &mut meshes,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(0.0, player_height, -distance_from_body),
+                    3,
+                );
                 */
+
                 let camera = commands
                     .spawn(TransformBundle::from_transform(
                         Transform::from_translation(Vec3::new(0., 0., 4.))

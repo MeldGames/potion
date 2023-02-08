@@ -331,10 +331,15 @@ pub fn player_mouse_inputs(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
     mut player_input: ResMut<PlayerInput>,
+    kb: Res<Input<KeyCode>>,
 ) {
     let mut cumulative_delta = Vec2::ZERO;
     for ev in ev_mouse.iter() {
         cumulative_delta += ev.delta;
+    }
+
+    if kb.pressed(KeyCode::RControl) {
+        return;
     }
 
     player_input.pitch -= sensitivity.0 * cumulative_delta.y / 180.0;

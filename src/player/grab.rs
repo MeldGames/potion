@@ -1,9 +1,12 @@
 use std::fmt::Debug;
 
-use bevy::{ecs::{
-    entity::Entities,
-    query::{ReadOnlyWorldQuery, WorldQuery},
-}, input::mouse::MouseMotion};
+use bevy::{
+    ecs::{
+        entity::Entities,
+        query::{ReadOnlyWorldQuery, WorldQuery},
+    },
+    input::mouse::MouseMotion,
+};
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -273,7 +276,7 @@ pub fn tense_arms(
 pub fn twist_grab(
     kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
-    mut grabbing: Query<&mut Grabbing>
+    mut grabbing: Query<&mut Grabbing>,
 ) {
     if !kb.pressed(KeyCode::RControl) {
         return;
@@ -286,7 +289,7 @@ pub fn twist_grab(
 
     for mut grabbing in &mut grabbing {
         grabbing.pitch -= cumulative_delta.y / 20.0;
-        grabbing.yaw -= cumulative_delta.x / 80.0;
+        grabbing.yaw -= cumulative_delta.x / 20.0;
     }
 }
 
@@ -337,7 +340,6 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let (_, neck_rotation, _) = neck_global.to_scale_rotation_translation();
-
 
                 let grab_rotation = Quat::from_axis_angle(Vec3::Y, grabbing.yaw as f32)
                     * Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
