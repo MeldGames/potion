@@ -55,7 +55,7 @@ bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = 
     "backend_egui",
     "backend_sprite",
     "backend_bevy_ui",
-    "debug",
+    #"debug",
 ] }
 
 #bevy_renet = "0.0.5"
@@ -78,7 +78,7 @@ bevy_editor_pls_core = {git = "https://github.com/aceeri/bevy_editor_pls", branc
 #bevy_mod_raycast = { path = "../bevy_mod_raycast" }
 
 [patch."https://github.com/aevyrie/bevy_mod_picking"]
-bevy_mod_picking = { path = "../bevy_mod_picking" }
+#bevy_mod_picking = { path = "../bevy_mod_picking" }
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "beta"}
 
 [patch."https://github.com/aevyrie/bevy_framepace"]
