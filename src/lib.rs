@@ -695,6 +695,7 @@ pub fn setup_map(
         .id();
 
     // Bounds
+    /*
     commands
         .spawn(TransformBundle::from_transform(Transform::from_xyz(
             0.0, 10.0, 50.0,
@@ -736,6 +737,7 @@ pub fn setup_map(
             Name::new("Bound Wall"),
             crate::physics::TERRAIN_GROUPING,
         ));
+    */
 }
 
 pub fn active_cameras(_names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {

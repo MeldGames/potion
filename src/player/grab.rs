@@ -78,6 +78,9 @@ pub fn grab_collider(
     name: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
+    rigid_bodies: Query<Entity, With<RigidBody>>,
+    parents: Query<&Parent>,
+    joints: Query<&ImpulseJoint>,
     mut hands: Query<
         (
             Entity,
@@ -118,7 +121,13 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                if connected.contains(&other_collider) {
+                let other_rigidbody = if let Some(entity) = find_parent_with(&rigid_bodies, &parents, &joints, other_collider) {
+                    entity
+                } else {
+                    continue;
+                };
+
+                if connected.contains(&other_rigidbody) {
                     continue;
                 }
 
@@ -146,7 +155,7 @@ pub fn grab_collider(
                     }
                 }
 
-                if let Ok(other_global) = globals.get(other_collider) {
+                if let Ok(other_global) = globals.get(other_rigidbody) {
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
                     let other_matrix = other_global.compute_matrix();
@@ -156,10 +165,10 @@ pub fn grab_collider(
                     let matrix = global.compute_matrix();
                     let anchor2 = matrix.inverse().project_point3(closest_point) * transform.scale;
 
-                    if let Ok(name) = name.get(other_collider) {
+                    if let Ok(name) = name.get(other_rigidbody) {
                         info!("grabbing {:?}", name.as_str());
                     } else {
-                        info!("grabbing entity {:?}", other_collider);
+                        info!("grabbing entity {:?}", other_rigidbody);
                     }
 
                     let motor_model = MotorModel::ForceBased;
@@ -183,11 +192,11 @@ pub fn grab_collider(
 
                     commands.entity(hand).add_children(|children| {
                         children
-                            .spawn(ImpulseJoint::new(other_collider, grab_joint))
+                            .spawn(ImpulseJoint::new(other_rigidbody, grab_joint))
                             .insert(GrabJoint);
                     });
 
-                    grabbed.insert(other_collider);
+                    grabbed.insert(other_rigidbody);
                 }
             }
         } else {
@@ -197,9 +206,6 @@ pub fn grab_collider(
             if let Some(children) = children {
                 for child in children.iter() {
                     if let Ok((impulse_joint, _joint)) = grab_joints.get(*child) {
-                        commands
-                            .entity(impulse_joint.parent)
-                            .remove::<springy::rapier::ExtendedMass>();
                         commands.entity(*child).despawn_recursive();
                         grabbed.remove(&*child);
                     }
