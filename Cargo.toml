@@ -18,8 +18,6 @@ sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
 
-#bevy_embedded_assets = "0.6"
-#bevy_fly_camera = { git = "https://github.com/Aceeri/bevy_fly_camera", branch = "bevy-0.8" }
 #bevy_mod_outline = { git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313" }
 bevy_mod_outline = "0.3"
 bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust", features = [

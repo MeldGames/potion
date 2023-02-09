@@ -27,6 +27,11 @@ fn fragment(
     var noise = simplexNoise3(vec3<f32>(world_normal.xyz * 10.0));
     var alpha = (noise + 2.0) / 2.0;
     var cutout = textureSample(base_color_texture, base_color_sampler, uv);
+
+    if (alpha < 0.01) {
+        discard;
+    }
+
     //return material.color * textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
     //return vec4<f32>(0.0, 0.6, 0.2, cutout.a * alpha);
     return cutout * vec4<f32>(1.0, 1.0, 1.0, alpha);

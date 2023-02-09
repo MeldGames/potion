@@ -12,6 +12,7 @@ pub mod player;
 pub mod slot;
 pub mod store;
 pub mod trees;
+//pub mod edge_detection;
 
 use std::f32::consts::PI;
 
@@ -132,7 +133,9 @@ pub fn setup_app(app: &mut App) {
         //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    app.add_plugin(OutlinePlugin);
+    //app.add_plugin(OutlinePlugin);
+    //app.add_plugin(edge_detection::EdgeDetectionPlugin)
+    //   .init_resource::<edge_detection::EdgeDetectionConfig>();
     //.add_plugin(AutoGenerateOutlineNormalsPlugin);
     app.add_system(outline_meshes);
 
@@ -387,7 +390,7 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
-    /*
+        /*
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
@@ -402,7 +405,7 @@ pub fn setup_map(
             NotShadowCaster,
             NotShadowReceiver,
         )).id();
-    */
+ */
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {

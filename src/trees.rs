@@ -73,7 +73,7 @@ impl Material for LeafMaterial {
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
+        //descriptor.primitive.cull_mode = None;
         Ok(())
     }
 }
@@ -110,7 +110,7 @@ fn mod_scene(
                 mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
             }
             let custom_material = custom_materials.add(LeafMaterial {
-                color: Color::GREEN,
+                color: Color::DARK_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
                 alpha_mode: AlphaMode::Blend,
             });
