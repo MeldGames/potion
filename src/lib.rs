@@ -379,6 +379,7 @@ pub fn setup_map(
             scene: asset_server.load("models/skybox.gltf#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-1.5, 1.3, 1.075),
+                scale: Vec3::splat(3.0),
                 ..default()
             },
             ..default()
