@@ -31,10 +31,10 @@ pub fn spawn_trees(
     _meshes: &mut Assets<Mesh>,
 ) {
     let tree_positions = vec![
-        Vec3::new(15., 0., -2.), 
-        Vec3::new(-15., -2., -30.), 
-        Vec3::new(-6., -2.5, 100.), 
-        Vec3::new(43., 0., 20.)
+        Vec3::new(15., 0., -2.),
+        Vec3::new(-15., -2., -30.),
+        Vec3::new(-6., -2.5, 100.),
+        Vec3::new(43., 0., 20.),
     ];
     for i in tree_positions {
         let _tree = commands
@@ -57,7 +57,6 @@ pub fn spawn_trees(
     }
 }
 
-
 /// The Material trait is very configurable, but comes with sensible defaults for all methods.
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
 impl Material for LeafMaterial {
@@ -69,11 +68,11 @@ impl Material for LeafMaterial {
         self.alpha_mode
     }
     fn specialize(
-            _pipeline: &MaterialPipeline<Self>,
-            descriptor: &mut RenderPipelineDescriptor,
-            _layout: &MeshVertexBufferLayout,
-            _key: MaterialPipelineKey<Self>,
-        ) -> Result<(), SpecializedMeshPipelineError> {
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayout,
+        _key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
         descriptor.primitive.cull_mode = None;
         Ok(())
     }
@@ -118,11 +117,9 @@ fn mod_scene(
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands.entity(e).remove::<OutlineStencil>();
             commands.entity(e).remove::<OutlineVolume>();
-            commands.entity(e).insert((
-                custom_material,
-                NotShadowReceiver,
-                Inserted
-            ));
+            commands
+                .entity(e)
+                .insert((custom_material, NotShadowReceiver, Inserted));
         }
     }
 }

@@ -1,12 +1,13 @@
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
-    render::render_resource::{AsBindGroup, ShaderRef}, window::CursorGrabMode,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    window::CursorGrabMode,
 };
 
 fn main() {
     let mut app = App::new();
-    
+
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {

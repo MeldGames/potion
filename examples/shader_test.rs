@@ -12,7 +12,7 @@ use bevy::{
         Extract, RenderApp, RenderStage,
     },
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle, RenderMaterials2d},
-    window::{PresentMode, CursorGrabMode},
+    window::{CursorGrabMode, PresentMode},
 };
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
@@ -41,10 +41,10 @@ fn main() {
                 ..default()
             }),
     )
-        .add_plugin(Material2dPlugin::<DopeMaterial>::default())
-        .add_startup_system(spawn_camera)
-        .add_plugin(ExtractResourcePlugin::<ExtractedTime>::default())
-        .add_startup_system(setup);
+    .add_plugin(Material2dPlugin::<DopeMaterial>::default())
+    .add_startup_system(spawn_camera)
+    .add_plugin(ExtractResourcePlugin::<ExtractedTime>::default())
+    .add_startup_system(setup);
 
     app.sub_app_mut(RenderApp)
         .add_system_to_stage(RenderStage::Extract, extract_health)

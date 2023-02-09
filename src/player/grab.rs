@@ -96,21 +96,23 @@ pub fn grab_collider(
 ) {
     for (hand, mut grabbing, global, children, connected, mut grabbed) in &mut hands {
         if grabbing.trying_grab {
-            let mut already_grabbing = false;
+            /*
+            let mut already_grabbing = None;
 
             if let Some(children) = children {
                 for child in children.iter() {
                     if grab_joints.contains(*child) {
                         // We are already grabbing something so just skip this hand.
-                        already_grabbing = true;
+                        already_grabbing = Some();
                         break;
                     }
                 }
             }
 
             grabbing.grabbing = already_grabbing;
+            */
 
-            if already_grabbing {
+            if grabbing.grabbing.is_some() {
                 continue;
             }
 
@@ -121,7 +123,9 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                let other_rigidbody = if let Some(entity) = find_parent_with(&rigid_bodies, &parents, &joints, other_collider) {
+                let other_rigidbody = if let Some(entity) =
+                    find_parent_with(&rigid_bodies, &parents, &joints, other_collider)
+                {
                     entity
                 } else {
                     continue;
@@ -197,10 +201,11 @@ pub fn grab_collider(
                     });
 
                     grabbed.insert(other_rigidbody);
+                    grabbing.grabbing = Some(other_rigidbody);
                 }
             }
         } else {
-            grabbing.grabbing = false;
+            grabbing.grabbing = None;
 
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
@@ -218,12 +223,7 @@ pub fn grab_collider(
 #[derive(Default, Debug, Component, Clone, Copy)]
 pub struct Grabbing {
     pub trying_grab: bool,
-
-    pub grabbing: bool,
-
-    // Offset from the cameras target position
-    pub target_offset: Vec3,
-
+    pub grabbing: Option<Entity>,
     pub pitch: f32,
     pub yaw: f32,
 }
@@ -288,10 +288,7 @@ pub fn twist_grab(
         return;
     }
 
-    let mut cumulative_delta = Vec2::ZERO;
-    for motion in mouse_motion.iter() {
-        cumulative_delta += motion.delta;
-    }
+    let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
 
     for mut grabbing in &mut grabbing {
         grabbing.pitch -= cumulative_delta.y / 20.0;
@@ -300,6 +297,7 @@ pub fn twist_grab(
 }
 
 pub fn player_grabby_hands(
+    kb: Res<Input<KeyCode>>,
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
     inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
@@ -312,13 +310,22 @@ pub fn player_grabby_hands(
             Entity,
             &mut Grabbing,
             &mut CollisionGroups,
+            &mut ExternalImpulse,
             &ArmId,
             &MuscleIKTarget,
         ),
         With<Hand>,
     >,
 ) {
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
+    for (
+        hand_entity,
+        mut grabbing,
+        mut collision_groups,
+        mut hand_impulse,
+        arm_id,
+        muscle_ik_target,
+    ) in &mut hands
+    {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {
@@ -345,16 +352,17 @@ pub fn player_grabby_hands(
 
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
-                //let (_, neck_rotation, _) = neck_global.to_scale_rotation_translation();
                 let neck_rotation = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
-
                 let grab_rotation = Quat::from_axis_angle(Vec3::Z, grabbing.yaw as f32);
-                    //* Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
-                let relative_offset = neck_rotation * grab_rotation * grabbing.target_offset;
-                target_position.translation =
-                    neck_global.translation() + direction * 2.5 + relative_offset;
+                //* Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
+                let relative_offset = neck_rotation * grab_rotation;
+                target_position.translation = neck_global.translation() + direction * 2.5;
 
-                if !grabbing.grabbing && pull_offset.0.length() > 0.0 {
+                if kb.pressed(KeyCode::RControl) {
+                    hand_impulse.torque_impulse += Vec3::new(0.0, 0.5, 0.0);
+                }
+
+                if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;
                 }
             }

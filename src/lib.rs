@@ -38,7 +38,8 @@ use crate::player::PlayerPlugin;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
-    window::{CursorGrabMode, WindowPlugin}, scene::SceneInstance,
+    scene::SceneInstance,
+    window::{CursorGrabMode, WindowPlugin},
 };
 
 use bevy_prototype_debug_lines::*;
@@ -155,7 +156,14 @@ pub struct NoOutline;
 fn outline_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    query: Query<(Entity, &Handle<Mesh>), (Added<Handle<Mesh>>, Without<OutlineVolume>, Without<NotShadowReceiver>)>,
+    query: Query<
+        (Entity, &Handle<Mesh>),
+        (
+            Added<Handle<Mesh>>,
+            Without<OutlineVolume>,
+            Without<NotShadowReceiver>,
+        ),
+    >,
 ) {
     for (entity, mesh) in &query {
         if let Some(mesh) = meshes.get_mut(mesh) {
@@ -208,8 +216,9 @@ pub fn setup_map(
             },
             NotShadowCaster,
             NotShadowReceiver,
-            Name::new("Ground")
-        )).add_children(|children| {
+            Name::new("Ground"),
+        ))
+        .add_children(|children| {
             children
                 .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, -10.0, 0.0,
@@ -312,56 +321,58 @@ pub fn setup_map(
         ))
         .id();
 
-    let _cellar = commands.spawn((
-        SceneBundle{
-            scene: asset_server.load("models/cellar.gltf#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-16.5, -3.0, 1.075),
-                ..default()
-            },
-            ..default()
-        },
-        SpawnedScene
-    )).id();
-
-    let _cart = commands.spawn((
-        SpatialBundle{
-            transform: Transform {
-                translation: Vec3::new(-10.5, 7.3, -10.),
-                rotation: Quat::from_axis_angle(Vec3::Z, PI/2.),
-                ..default()
-            },
-            ..default()
-        },
-
-        Collider::cylinder(1.8, 1.3),
-        RigidBody::Dynamic,
-        Name::new("cart collider"),
-        ColliderMassProperties::Density(2.0),
-        crate::physics::TERRAIN_GROUPING,
-        DEFAULT_FRICTION,
-    )).add_children(|commands| {
-        commands.spawn(SceneBundle{            
-            scene: asset_server.load("models/cart.gltf#Scene0"),
-            transform: Transform {
-                rotation: Quat::from_axis_angle(Vec3::Z, -PI/2.),
-                scale: Vec3::splat(2.),
-                ..default()
-            },
-            ..default()
-        });
-        commands.spawn((
-            SpatialBundle{
+    let _cellar = commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/cellar.gltf#Scene0"),
                 transform: Transform {
-                    translation: Vec3::new(-0.1, 0., -0.5),
+                    translation: Vec3::new(-16.5, -3.0, 1.075),
                     ..default()
                 },
                 ..default()
-            },            
-            Collider::cuboid(0.1, 1.2, 2.9),
-        ));
-    });
-    
+            },
+            SpawnedScene,
+        ))
+        .id();
+
+    let _cart = commands
+        .spawn((
+            SpatialBundle {
+                transform: Transform {
+                    translation: Vec3::new(-10.5, 7.3, -10.),
+                    rotation: Quat::from_axis_angle(Vec3::Z, PI / 2.),
+                    ..default()
+                },
+                ..default()
+            },
+            Collider::cylinder(1.8, 1.3),
+            RigidBody::Dynamic,
+            Name::new("cart collider"),
+            ColliderMassProperties::Density(2.0),
+            crate::physics::TERRAIN_GROUPING,
+            DEFAULT_FRICTION,
+        ))
+        .add_children(|commands| {
+            commands.spawn(SceneBundle {
+                scene: asset_server.load("models/cart.gltf#Scene0"),
+                transform: Transform {
+                    rotation: Quat::from_axis_angle(Vec3::Z, -PI / 2.),
+                    scale: Vec3::splat(2.),
+                    ..default()
+                },
+                ..default()
+            });
+            commands.spawn((
+                SpatialBundle {
+                    transform: Transform {
+                        translation: Vec3::new(-0.1, 0., -0.5),
+                        ..default()
+                    },
+                    ..default()
+                },
+                Collider::cuboid(0.1, 1.2, 2.9),
+            ));
+        });
 
     let _sky = commands
         .spawn(SceneBundle {
@@ -372,12 +383,10 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert((
-            NotShadowCaster,
-            NotShadowReceiver,
-        )).id();
+        .insert((NotShadowCaster, NotShadowReceiver))
+        .id();
 
-    /* 
+    /*
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
@@ -416,8 +425,6 @@ pub fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
-
-    
 
     let _prallet = commands
         .spawn(SceneBundle {
@@ -531,7 +538,7 @@ pub fn setup_map(
                     ..default()
                 }),
                 ..default()
-            })
+            }),
         ));
 
     let level_collision_mesh3: Handle<Mesh> =
@@ -551,28 +558,28 @@ pub fn setup_map(
         .insert(Name::new("Mock spring location"))
         .id();
 
+    let col_mesh_mortar: Handle<Mesh> = asset_server.load("models/mortar.gltf#Mesh0/Primitive0");
 
-    let col_mesh_mortar: Handle<Mesh> =
-    asset_server.load("models/mortar.gltf#Mesh0/Primitive0");
-
-    let _mortar = commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("models/mortar.gltf#Scene0"),
-            transform: Transform {
-                // translation: Vec3::new(5., 10., -0.075),
-                translation: Vec3::new(20.0, 5.0, -3.0),
-                scale: Vec3::splat(2.),
+    let _mortar = commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/mortar.gltf#Scene0"),
+                transform: Transform {
+                    // translation: Vec3::new(5., 10., -0.075),
+                    translation: Vec3::new(20.0, 5.0, -3.0),
+                    scale: Vec3::splat(2.),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },
-        ColliderLoad,
-        Name::new("Mortar & Pestle"),
-        col_mesh_mortar,
-        RigidBody::Dynamic,
-        crate::physics::TERRAIN_GROUPING,
-    )).id();
-    
+            ColliderLoad,
+            Name::new("Mortar & Pestle"),
+            col_mesh_mortar,
+            RigidBody::Dynamic,
+            crate::physics::TERRAIN_GROUPING,
+        ))
+        .id();
+
     let _stirrer = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
@@ -627,9 +634,7 @@ pub fn setup_map(
             RigidBody::Fixed,
             Name::new("Walls Shop"),
             Velocity::default(),
-            DecompLoad(
-                "walls_shop1".to_owned(),
-            ),
+            DecompLoad("walls_shop1".to_owned()),
             level_collision_mesh,
         ))
         .id();
@@ -684,7 +689,7 @@ pub fn setup_map(
             DEFAULT_FRICTION,
             ImpulseJoint::new(walls, hinge_joint),
             ColliderLoad,
-            level_collision_mesh2
+            level_collision_mesh2,
         ))
         /*
                .insert(BreakableJoint {
@@ -791,7 +796,6 @@ fn prepare_scene(
         }
     }
 }
-
 
 #[derive(Debug, Component, Clone, Reflect)]
 #[reflect(Component)]
