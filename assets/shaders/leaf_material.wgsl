@@ -1,0 +1,55 @@
+#import bevy_shader_utils::simplex_noise_3d
+
+struct LeafMaterial {
+    color: vec4<f32>,
+};
+
+@group(1) @binding(0)
+var<uniform> material: LeafMaterial;
+@group(1) @binding(1)
+var base_color_texture: texture_2d<f32>;
+@group(1) @binding(2)
+var base_color_sampler: sampler;
+@group(1) @binding(3)
+var alpha_texture: texture_2d<f32>;
+@group(1) @binding(4)
+var alpha_sampler: sampler;
+
+
+@fragment
+fn fragment(
+    @builtin(front_facing) is_front: bool,
+    @builtin(position) frag_coord: vec4<f32>,
+    @location(0) world_position: vec4<f32>,
+    @location(1) world_normal: vec3<f32>,
+    @location(2) uv: vec2<f32>,
+    #ifdef VERTEX_COLORS
+    @location(4) color: vec4<f32>,
+    #endif
+) -> @location(0) vec4<f32> {
+    // return material.color * textureSample(base_color_texture, base_color_sampler, uv);
+    // var input: vec3<f32> = vec3<f32>(uv.x * 40.0, uv.y * 40.0, 1.);
+    var noise = simplexNoise3(vec3<f32>(world_normal.xyz * 10.0));
+    var alpha = (noise + 2.0) / 2.0;
+
+    var cutout = textureSample(alpha_texture, alpha_sampler, uv);
+    var normal = (world_normal.yyy ) * 2.0;
+
+    let green1 = vec4<f32>(0.1, 0.4, 0.6, 1.0);
+    let green2 = vec4<f32>(0.3, 1.0, 0.2, 1.0);
+
+    if (alpha < 0.01) {
+        discard;
+    }
+
+    let color = mix(green1, green2, normal.y);
+
+    //return textureSample(base_color_texture, base_color_sampler, uv) * vec4<f32>(1.0, 1.0, 1.0, alpha);
+    //return vec4<f32>(0.0, 0.6, 0.2, cutout.a * alpha);
+    return color * cutout ;
+    //return cutout;
+    // return vec4<f32>(uv.x, uv.y, 0.0, 1.0);
+    //return vec4<f32>(normal, 1.0);
+
+  
+}

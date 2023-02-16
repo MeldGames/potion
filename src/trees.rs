@@ -61,7 +61,7 @@ pub fn spawn_trees(
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
 impl Material for LeafMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/custom_material.wgsl".into()
+        "shaders/leaf_material.wgsl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {
@@ -73,7 +73,7 @@ impl Material for LeafMaterial {
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        //descriptor.primitive.cull_mode = None;
+        descriptor.primitive.cull_mode = None;
         Ok(())
     }
 }
@@ -87,6 +87,9 @@ pub struct LeafMaterial {
     #[texture(1)]
     #[sampler(2)]
     color_texture: Option<Handle<Image>>,
+    #[texture(3)]
+    #[sampler(4)]
+    alpha_texture: Option<Handle<Image>>,
     alpha_mode: AlphaMode,
 }
 
@@ -112,6 +115,7 @@ fn mod_scene(
             let custom_material = custom_materials.add(LeafMaterial {
                 color: Color::DARK_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
+                alpha_texture: Some(asset_server.load("shaders/leaves_mask.png")),
                 alpha_mode: AlphaMode::Blend,
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
