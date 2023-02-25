@@ -61,7 +61,10 @@ pub fn spawn_trees(
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
 impl Material for LeafMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/leaf_material.wgsl".into()
+        "shaders/leaf_material2.wgsl".into()
+    }
+    fn vertex_shader() -> ShaderRef {
+        "shaders/leaf_material2.wgsl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {
@@ -113,10 +116,10 @@ fn mod_scene(
                 mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
             }
             let custom_material = custom_materials.add(LeafMaterial {
-                color: Color::DARK_GREEN,
+                color: Color::YELLOW_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
                 alpha_texture: Some(asset_server.load("shaders/leaves_mask.png")),
-                alpha_mode: AlphaMode::Blend,
+                alpha_mode: AlphaMode::Mask(1.0),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands.entity(e).remove::<OutlineStencil>();

@@ -1,9 +1,13 @@
 #import bevy_pbr::mesh_view_bindings
 #import bevy_pbr::mesh_bindings
 #import bevy_pbr::mesh_functions
-#import bevy_pbr::utils
-#import bevy_shader_utils::perlin_noise_3d
 
+#import bevy_pbr::utils
+#import bevy_pbr::clustered_forward
+#import bevy_pbr::lighting
+#import bevy_pbr::shadows
+
+#import bevy_shader_utils::perlin_noise_3d
 
 // TODO Hook up own utils.wgsl and load_internal
 fn rgb2hsv(color: vec3<f32>) -> vec3<f32>{
@@ -134,9 +138,42 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
     let mixed = mix(mul.xyz, base, mask);
 
     let N = normalize(in.world_normal);
+    let V = normalize(view.world_position.xyz - in.frag_coord.xyz);
+    let R = reflect(-V, N);
+    let NdotV = max(dot(N, V), 0.0001);
+
+    let reflectance = 0.1;
+    let metallic = 0.01;
+    let F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + output_color.rgb * metallic;
+    let diffuse_color = output_color.rgb * (1.0 - metallic);
+    let perceptual_roughness = 0.089;
+    let roughness = perceptualRoughnessToRoughness(perceptual_roughness);
+
+    
+    // accumulate color
+    var light_accum: vec3<f32> = vec3<f32>(0.0);
+
+
+    let n_directional_lights = lights.n_directional_lights;
+    for (var i: u32 = 0u; i < n_directional_lights; i = i + 1u) {
+        let light = lights.directional_lights[i];
+        var shadow: f32 = 0.2;
+        if ((mesh.flags & MESH_FLAGS_SHADOW_RECEIVER_BIT) != 0u
+                && (light.flags & DIRECTIONAL_LIGHT_FLAGS_SHADOWS_ENABLED_BIT) != 0u) {
+            shadow = fetch_directional_shadow(i, in.world_position, in.world_normal);
+        }
+        let light_contrib = directional_light(light, roughness, NdotV, N, V, R, F0, diffuse_color);
+        light_accum = light_accum + light_contrib * shadow;
+    }
+
+    output_color = vec4<f32>(
+        light_accum
+            + (mixed) * lights.ambient_color.rgb,
+        output_color.a
+    );
     //let L = 
     if (cutout.a == 0.0) { discard; } else {
-        return vec4(mixed, 1.0);
+        return vec4(output_color);
     }
 
     //return vec4(under3 , 1.0);
