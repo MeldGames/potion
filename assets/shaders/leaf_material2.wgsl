@@ -124,23 +124,36 @@ struct FragmentInput {
 fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {    
     var cutout = textureSample(alpha_texture, alpha_sampler, in.uv);
 
+    // albedo
     var output_color: vec4<f32> = material.color;
     var base = output_color.xyz;
     let under_color = vec3(44.0, 222.0, 44.0) / 255.0;
     var under2 = rgb2hsv(under_color);
-    let under3 = hsv2rgb(under2.x + 0.1, under2.y, under2.z);
+    let under3 = hsv2rgb(under2.x + 0.15, under2.y, under2.z - 0.2);
     
     let mul = output_color * (vec4(under3 , 1.0) - 0.3);
     
     let world_pos_norm = normalize(in.world_position.xyz);
     let mask = saturate((world_pos_norm.x + world_pos_norm.y + world_pos_norm.z) /3.0);
+    let normal_mask = 1.0 - pow((in.normal.b + 0.0) * 0.5, 0.0);
 
-    let mixed = mix(mul.xyz, base, mask);
+    let mixed = mix(mul.xyz, base, normal_mask);
 
-    let N = normalize(in.world_normal);
+
+    // light
+    let N = normalize(in.normal);
     let V = normalize(view.world_position.xyz - in.frag_coord.xyz);
     let R = reflect(-V, N);
     let NdotV = max(dot(N, V), 0.0001);
+
+    // emission
+    let radius = 1.0;
+    let tint = vec4(0.4, 0.8, 0.5, 1.0);
+    let emission_str = 0.1;
+    var fresnel = clamp(1.0 - NdotV, 0.0, 1.0);
+    let emissive = saturate(pow(fresnel, radius)) * tint * emission_str;
+
+
 
     let reflectance = 0.1;
     let metallic = 0.01;
@@ -168,10 +181,13 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
 
     output_color = vec4<f32>(
         light_accum
-            + (mixed) * lights.ambient_color.rgb,
+            + (mixed) * lights.ambient_color.rgb
+            + emissive.rgb * output_color.a,
         output_color.a
     );
-    //let L = 
+
+
+    // mask and output
     if (cutout.a == 0.0) { discard; } else {
         return vec4(output_color);
     }

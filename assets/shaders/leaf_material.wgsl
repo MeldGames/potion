@@ -47,6 +47,8 @@ fn fragment(
     let mask = (world_pos_norm.x + world_pos_norm.y + world_pos_norm.z) /3.0;
 
 
+
+
     // Noise
     // var input1: vec2<f32> = vec2<f32>(world_position.x /5.0, globals.time);
     // var input2: vec2<f32> = vec2<f32>(world_position.y /5.0, globals.time);
