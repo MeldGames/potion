@@ -212,6 +212,11 @@ pub fn setup_map(
     _assets: Res<AssetServer>,
 ) {
     commands
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/tree2.gltf#Scene0"),
+            ..default()
+        });
+    commands
         .spawn((
             SceneBundle {
                 scene: asset_server.load("models/map.gltf#Scene0"),

@@ -37,17 +37,30 @@ fn main() {
         .add_plugin(CameraControllerPlugin)
         .add_startup_system(setup)
         .add_system_to_stage(CoreStage::PostUpdate, mod_scene)
+        .add_system(movement)
         .run();
 }
 
 #[derive(Component)]
-struct GLTFScene;
+struct Movable;
 
 #[derive(Component)]
 struct Inserted;
 
 /// set up a simple 3D scene
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>, 
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // plane
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(shape::Plane { size: 100.0 }.into()),
+        material: materials.add(Color::rgb(0.1, 0.1, 0.12).into()),
+        ..default()
+    });
+
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
         brightness: 0.72,
@@ -81,12 +94,42 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             scene: asset_server.load("models/tree2.gltf#Scene0"),
             ..default()
         })
-        .insert(GLTFScene);
+        .insert((
+            Movable
+        ));
     
+    commands.spawn((
+        PbrBundle{
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 2.00,
+                ..default()
+            })),
+            material: materials.add(Color::rgb(1.0, 1.0, 0.1).into()),
+            transform: Transform::from_xyz(
+                5.0, 2.0, -3.0,
+            ),
+            ..default()
+        },
+        Name::new("sphere"),
+    ));
+    commands.spawn((
+        PbrBundle{
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 2.00,
+                ..default()
+            })),
+            material: materials.add(Color::rgb(1.0, 1.0, 0.1).into()),
+            transform: Transform::from_xyz(
+                -5.0, 2.0, -3.0,
+            ),
+            ..default()
+        },
+    ));
+
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 8.0, 15.0)
+            transform: Transform::from_xyz(18.0, 16.0, 18.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
@@ -103,7 +146,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
 impl Material for LeafMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/leaf_material.wgsl".into()
+        "shaders/leaf_material2.wgsl".into()
+    }
+    fn vertex_shader() -> ShaderRef {
+        "shaders/leaf_material2.wgsl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {
@@ -146,7 +192,7 @@ fn mod_scene(
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
-        if name.as_str().contains("leaves") {
+        if name.as_str().contains("leaves") || name.as_str().contains("sphere"){
             let mesh = meshes.get_mut(hand).unwrap();
             if let Some(VertexAttributeValues::Float32x3(positions)) =
                 mesh.attribute(Mesh::ATTRIBUTE_POSITION)
@@ -158,16 +204,47 @@ fn mod_scene(
                 mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
             }
             let custom_material = custom_materials.add(LeafMaterial {
-                color: Color::DARK_GREEN,
+                color: Color::YELLOW_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
                 alpha_texture: Some(asset_server.load("shaders/leaves_mask.png")),
-                alpha_mode: AlphaMode::Blend,
+                alpha_mode: AlphaMode::Mask(1.0),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands
                 .entity(e)
                 .insert((custom_material, NotShadowReceiver, Inserted));
         }
+    }
+}
+
+
+fn movement (
+    mut movers: Query<(&mut Transform, &Movable)>,
+    input: Res<Input<KeyCode>>,
+    time: Res<Time>,
+) {
+    for (mut transform, _movable) in &mut movers{
+        let mut direction = Vec3::ZERO;
+        if input.pressed(KeyCode::W) {
+            direction.z -= 1.0;
+        }
+        if input.pressed(KeyCode::S) {
+            direction.z += 1.0;
+        }
+        if input.pressed(KeyCode::A) {
+            direction.x -= 1.0;
+        }
+        if input.pressed(KeyCode::D) {
+            direction.x += 1.0;
+        }
+        if input.pressed(KeyCode::V) {
+            direction.y -= 1.0;
+        }
+        if input.pressed(KeyCode::C) {
+            direction.y += 1.0;
+        }
+
+        transform.translation += time.delta_seconds() * 2.0 * direction;
     }
 }
 
