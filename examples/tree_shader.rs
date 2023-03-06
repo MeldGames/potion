@@ -33,6 +33,7 @@ fn main() {
         .add_plugin(potion::egui::SetupEguiPlugin)
         .add_plugin(bevy_editor_pls::EditorPlugin)
         .add_plugin(MaterialPlugin::<LeafMaterial>::default())
+        .add_plugin(MaterialPlugin::<WaterMaterial>::default())
         .add_plugin(ShaderUtilsPlugin)
         .add_plugin(CameraControllerPlugin)
         .add_startup_system(setup)
@@ -53,11 +54,24 @@ fn setup(
     asset_server: Res<AssetServer>, 
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut water: ResMut<Assets<WaterMaterial>>,
 ) {
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(shape::Plane { size: 100.0 }.into()),
         material: materials.add(Color::rgb(0.1, 0.1, 0.12).into()),
+        ..default()
+    });
+    // water
+    commands.spawn(MaterialMeshBundle {
+        mesh: meshes.add(shape::Plane { size: 5.0 }.into()),
+        material: water.add(WaterMaterial {
+            color: Color::CYAN,
+            color_texture: Some(asset_server.load("shaders/leaves.png")),
+        }),
+        transform: Transform::from_xyz(
+            5.0, 2.0, 6.0,
+        ),
         ..default()
     });
 
@@ -66,7 +80,7 @@ fn setup(
         brightness: 0.72,
     });
 
-    const HALF_SIZE: f32 = 10.0;
+    const HALF_SIZE: f32 = 100.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
@@ -76,7 +90,7 @@ fn setup(
                 bottom: -HALF_SIZE,
                 top: HALF_SIZE,
                 near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
+                far: 1000.0 * HALF_SIZE,
                 ..default()
             },
             shadows_enabled: true,
@@ -91,12 +105,9 @@ fn setup(
     });
     commands
         .spawn(SceneBundle {
-            scene: asset_server.load("models/tree2.gltf#Scene0"),
+            scene: asset_server.load("models/tree.gltf#Scene0"),
             ..default()
-        })
-        .insert((
-            Movable
-        ));
+        });
     
     commands.spawn((
         PbrBundle{
@@ -140,7 +151,40 @@ fn setup(
         },
     ));
 }
+/// The Material trait is very configurable, but comes with sensible defaults for all methods.
+/// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
+impl Material for WaterMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/water.wgsl".into()
+    }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 
+    fn specialize(
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayout,
+        _key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        descriptor.primitive.cull_mode = None;
+        if let Some(label) = &mut descriptor.label {
+            *label = format!("water__{}", *label).into();
+        }
+        Ok(())
+    }
+}
+
+// This is the struct that will be passed to your shader
+#[derive(AsBindGroup, TypeUuid, Debug, Clone)]
+#[uuid = "f690fdae-d598-45ab-8225-97e2a3f053e0"]
+pub struct WaterMaterial {
+    #[uniform(0)]
+    color: Color,
+    #[texture(1)]
+    #[sampler(2)]
+    color_texture: Option<Handle<Image>>,
+}
 
 /// The Material trait is very configurable, but comes with sensible defaults for all methods.
 /// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
@@ -152,9 +196,6 @@ impl Material for LeafMaterial {
         "shaders/leaf_material2.wgsl".into()
     }
 
-    fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
-    }
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
         descriptor: &mut RenderPipelineDescriptor,
@@ -171,17 +212,13 @@ impl Material for LeafMaterial {
 
 // This is the struct that will be passed to your shader
 #[derive(AsBindGroup, TypeUuid, Debug, Clone)]
-#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
+#[uuid = "dac0f52c-b570-11ed-afa1-0242ac120002"]
 pub struct LeafMaterial {
     #[uniform(0)]
     color: Color,
     #[texture(1)]
     #[sampler(2)]
     color_texture: Option<Handle<Image>>,
-    #[texture(3)]
-    #[sampler(4)]
-    alpha_texture: Option<Handle<Image>>,
-    alpha_mode: AlphaMode,
 }
 
 fn mod_scene(
@@ -206,8 +243,6 @@ fn mod_scene(
             let custom_material = custom_materials.add(LeafMaterial {
                 color: Color::YELLOW_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
-                alpha_texture: Some(asset_server.load("shaders/leaves_mask.png")),
-                alpha_mode: AlphaMode::Mask(1.0),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands

@@ -17,6 +17,7 @@ pub struct TreesPlugin;
 impl Plugin for TreesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(MaterialPlugin::<LeafMaterial>::default())
+            .add_plugin(MaterialPlugin::<BarkMaterial>::default())
             .add_plugin(ShaderUtilsPlugin)
             .add_system_to_stage(CoreStage::PostUpdate, mod_scene);
     }
@@ -39,7 +40,7 @@ pub fn spawn_trees(
     for i in tree_positions {
         let _tree = commands
             .spawn(SceneBundle {
-                scene: asset_server.load("models/tree.gltf#Scene0"),
+                scene: asset_server.load("models/tree3.gltf#Scene0"),
                 transform: Transform {
                     translation: i.clone(),
                     scale: Vec3::splat(1.),
@@ -83,17 +84,41 @@ impl Material for LeafMaterial {
 
 // This is the struct that will be passed to your shader
 #[derive(AsBindGroup, TypeUuid, Debug, Clone)]
-#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
+#[uuid = "dac0f52c-b570-11ed-afa1-0242ac120002"]
 pub struct LeafMaterial {
     #[uniform(0)]
     color: Color,
     #[texture(1)]
     #[sampler(2)]
     color_texture: Option<Handle<Image>>,
-    #[texture(3)]
-    #[sampler(4)]
-    alpha_texture: Option<Handle<Image>>,
     alpha_mode: AlphaMode,
+}
+
+impl Material for BarkMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/bark_material.wgsl".into()
+    }
+    fn vertex_shader() -> ShaderRef {
+        "shaders/bark_material.wgsl".into()
+    }
+
+    fn specialize(
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayout,
+        _key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        descriptor.primitive.cull_mode = None;
+        Ok(())
+    }
+}
+
+// This is the struct that will be passed to your shader
+#[derive(AsBindGroup, TypeUuid, Debug, Clone)]
+#[uuid = "dac0f52c-a570-11ed-afa1-0242ac120002"]
+pub struct BarkMaterial {
+    #[uniform(0)]
+    color: Color,
 }
 
 fn mod_scene(
@@ -101,25 +126,26 @@ fn mod_scene(
     spheres: Query<(Entity, &Handle<Mesh>, &Name), Without<Inserted>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<LeafMaterial>>,
+    mut bark_materials: ResMut<Assets<BarkMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
         if name.as_str().contains("leaves") {
-            let mesh = meshes.get_mut(hand).unwrap();
-            if let Some(VertexAttributeValues::Float32x3(positions)) =
-                mesh.attribute(Mesh::ATTRIBUTE_POSITION)
-            {
-                let colors: Vec<[f32; 4]> = positions
-                    .iter()
-                    .map(|[r, g, b]| [(1. - *r) / 2., (1. - *g) / 2., (1. - *b) / 2., 1.])
-                    .collect();
-                mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
-            }
             let custom_material = custom_materials.add(LeafMaterial {
                 color: Color::YELLOW_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
-                alpha_texture: Some(asset_server.load("shaders/leaves_mask.png")),
                 alpha_mode: AlphaMode::Mask(1.0),
+            });
+            commands.entity(e).remove::<Handle<StandardMaterial>>();
+            commands.entity(e).remove::<OutlineStencil>();
+            commands.entity(e).remove::<OutlineVolume>();
+            commands
+                .entity(e)
+                .insert((custom_material, NotShadowReceiver, Inserted));
+        }
+        if name.as_str().contains("bark") {
+            let custom_material = bark_materials.add(BarkMaterial {
+                color: Color::rgb(0.3, 0.2, 0.18),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands.entity(e).remove::<OutlineStencil>();

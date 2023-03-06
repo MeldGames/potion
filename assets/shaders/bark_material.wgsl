@@ -21,7 +21,7 @@ fn rgb2hsv(color: vec3<f32>) -> vec3<f32>{
 
 }
 
-struct LeafMaterial {
+struct BarkMaterial {
     color: vec4<f32>,
 };
 
@@ -71,9 +71,15 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let a = vec2(vertex.position.x, vertex.position.z);
     var noise = perlinNoise3(vertex.position + z);
     
-    let position = (  noise * windstrength) + vertex.position;
     
     var out: VertexOutput;
+    out.clip_position = mesh_position_world_to_clip(out.world_position);
+    var bend = 1.0;
+#ifdef VERTEX_COLORS
+    out.color = out.clip_position;
+    bend = vertex.color.g;
+#endif
+    let position = (  noise * windstrength * bend) + vertex.position;
 #ifdef SKINNED
     var model = skin_model(vertex.joint_indices, vertex.joint_weights);
     out.world_normal = skin_normals(model, vertex.normal);
@@ -89,10 +95,6 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 #ifdef VERTEX_TANGENTS
     out.world_tangent = mesh_tangent_local_to_world(model, vertex.tangent);
 #endif
-    out.clip_position = mesh_position_world_to_clip(out.world_position);
-#ifdef VERTEX_COLORS
-    out.color = out.clip_position;
-#endif
 
 
     out.normal = vertex.normal;
@@ -101,7 +103,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 }
 
 @group(1) @binding(0)
-var<uniform> material: LeafMaterial;
+var<uniform> material: BarkMaterial;
 @group(1) @binding(1)
 var base_color_texture: texture_2d<f32>;
 @group(1) @binding(2)
@@ -121,75 +123,13 @@ struct FragmentInput {
 
 @fragment
 fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {    
-    var cutout = textureSample(base_color_texture, base_color_sampler, in.uv);
 
     // albedo
     var output_color: vec4<f32> = material.color;
-    var base = output_color.xyz;
-    let under_color = vec3(44.0, 222.0, 44.0) / 255.0;
-    var under2 = rgb2hsv(under_color);
-    let under3 = hsv2rgb(under2.x + 0.15, under2.y, under2.z - 0.2);
     
-    let mul = output_color * (vec4(under3 , 1.0) - 0.3);
-    
-    let world_pos_norm = normalize(in.world_position.xyz);
-    let mask = saturate((world_pos_norm.x + world_pos_norm.y + world_pos_norm.z) /3.0);
-    let normal_mask = 1.0 - pow((in.normal.b + 0.0) * 0.5, 0.0);
-
-    let mixed = mix(mul.xyz, base, normal_mask);
-
-
-    // light
-    let N = normalize(in.normal);
-    let V = normalize(view.world_position.xyz - in.frag_coord.xyz);
-    let R = reflect(-V, N);
-    let NdotV = max(dot(N, V), 0.0001);
-
-    // emission
-    let radius = 2.0;
-    let tint = vec4(0.4, 0.8, 0.5, 1.0);
-    let emission_str = 0.2;
-    var fresnel = clamp(1.0 - NdotV, 0.0, 1.0);
-    let emissive = saturate(pow(fresnel, radius)) * tint * emission_str;
-
-
-
-    let reflectance = 0.1;
-    let metallic = 0.01;
-    let F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + output_color.rgb * metallic;
-    let diffuse_color = output_color.rgb * (1.0 - metallic);
-    let perceptual_roughness = 0.089;
-    let roughness = perceptualRoughnessToRoughness(perceptual_roughness);
-
-    
-    // accumulate color
-    var light_accum: vec3<f32> = vec3<f32>(0.0);
-
-
-    let n_directional_lights = lights.n_directional_lights;
-    for (var i: u32 = 0u; i < n_directional_lights; i = i + 1u) {
-        let light = lights.directional_lights[i];
-        var shadow: f32 = 0.2;
-        if ((mesh.flags & MESH_FLAGS_SHADOW_RECEIVER_BIT) != 0u
-                && (light.flags & DIRECTIONAL_LIGHT_FLAGS_SHADOWS_ENABLED_BIT) != 0u) {
-            shadow = fetch_directional_shadow(i, in.world_position, in.world_normal);
-        }
-        let light_contrib = directional_light(light, roughness, NdotV, N, V, R, F0, diffuse_color);
-        light_accum = light_accum + light_contrib * shadow;
-    }
-
-    output_color = vec4<f32>(
-        light_accum
-            + (mixed) * lights.ambient_color.rgb
-            + emissive.rgb * output_color.a,
-        output_color.a
-    );
-
 
     // mask and output
-    if (cutout.a == 0.0) { discard; } else {
         return vec4(output_color);
-    }
 
     //return vec4(under3 , 1.0);
     //return in.world_position * vec4(in.world_normal, 1.0);
