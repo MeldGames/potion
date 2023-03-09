@@ -26,9 +26,14 @@ pub struct SlotBundle {
 #[reflect(Component)]
 pub struct SlotSettings(pub springy::SpringState<Vec3>);
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Component, Reflect, FromReflect)]
 #[reflect(Component)]
-pub struct Slottable;
+pub enum Slottable {
+    #[default]
+    Free,
+
+    Slotted,
+}
 
 #[derive(Debug, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
@@ -87,7 +92,7 @@ pub fn pending_slot(
     mut collision_events: EventReader<CollisionEvent>,
 ) {
     for collision_event in collision_events.iter() {
-        let ((_slotter_entity, mut slotter), (ingredient_entity, _ingredient), colliding) =
+        let ((_slotter_entity, mut slotter), (ingredient_entity, slottable), colliding) =
             match collision_event {
                 &CollisionEvent::Started(collider1, collider2, _flags) => {
                     let (slotter, potential) = if let Ok(slotter) = slotters.get_mut(collider1) {
@@ -121,6 +126,10 @@ pub fn pending_slot(
                 }
             };
 
+        if *slottable == Slottable::Slotted {
+            continue;
+        }
+
         if colliding {
             slotter.attempt(ingredient_entity);
         } else {
@@ -145,6 +154,7 @@ pub fn tick_grace_period(mut slots: Query<&mut SlotGracePeriod>) {
 }
 
 pub fn insert_slot(
+    mut slotted: Query<&mut Slottable>,
     mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
     mut deposits: Query<&mut SlotDeposit>,
     names: Query<&Name>,
@@ -166,10 +176,16 @@ pub fn insert_slot(
 
             if let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) {
                 if slot.containing.is_none() {
-                    if let Some(next_item) = attempting.pop_front() {
-                        info!("slotting {:?}", names.named(next_item));
-                        slot.containing = Some(next_item);
-                        grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
+                    while let Some(next_item) = attempting.pop_front() {
+                        if let Ok(mut slottable) = slotted.get_mut(next_item) {
+                            if *slottable == Slottable::Free {
+                                info!("slotting {:?}", names.named(next_item));
+                                slot.containing = Some(next_item);
+                                grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
+                                *slottable = Slottable::Slotted;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -184,6 +200,7 @@ pub fn spring_slot(
     entities: &Entities,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
+    mut slottables: Query<&mut Slottable>,
     mut slots: Query<(Entity, &mut Slot, &mut SlotSettings, &SlotGracePeriod)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
@@ -225,13 +242,17 @@ pub fn spring_slot(
                 springy::SpringResult::Impulse(impulse) => impulse,
                 springy::SpringResult::Broke(impulse) => {
                     if grace_period.0.finished() {
-                        info!(
-                            "Removing from slot {:?}: {:?}",
-                            names.named(slot_entity),
-                            names.named(particle_entity)
-                        );
-                        slot.containing = None;
-                        continue;
+                        if let Ok(mut slottable) = slottables.get_mut(particle_entity) {
+                            *slottable = Slottable::Free;
+                        }
+
+                            info!(
+                                "Removing from slot {:?}: {:?}",
+                                names.named(slot_entity),
+                                names.named(particle_entity)
+                            );
+                            slot.containing = None;
+                            continue;
                     } else {
                         impulse
                     }

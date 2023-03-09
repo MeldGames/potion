@@ -315,7 +315,7 @@ pub fn setup_map(
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
-            Slottable,
+            Slottable::default(),
             ReadMassProperties::default(),
             ExternalImpulse::default(),
             Name::new("Stone"),
@@ -424,7 +424,7 @@ pub fn setup_map(
             Name::new("Donut"),
             Velocity::default(),
             ExternalImpulse::default(),
-            Slottable,
+            Slottable::default(),
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
@@ -448,7 +448,7 @@ pub fn setup_map(
             Name::new("Prallet"),
             Velocity::default(),
             ExternalImpulse::default(),
-            Slottable,
+            Slottable::default(),
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))
@@ -470,7 +470,7 @@ pub fn setup_map(
             Collider::cuboid(0.3, 0.3, 0.3),
             RigidBody::Dynamic,
             StoreItem,
-            Slottable,
+            Slottable::default(),
             ReadMassProperties::default(),
             ExternalImpulse::default(),
             Name::new("Thorns"),
@@ -490,7 +490,7 @@ pub fn setup_map(
         })
         .insert((
             Ingredient,
-            Slottable,
+            Slottable::default(),
             crate::deposit::Value::new(1),
             Collider::ball(0.2),
             RigidBody::Dynamic,
