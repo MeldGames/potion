@@ -19,6 +19,5 @@ fn main() {
 fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>, _asset_server: Res<AssetServer>) {
     spawn_player.send(PlayerEvent::Spawn { id: 1 });
     spawn_player.send(PlayerEvent::SetupLocal { id: 1 });
-    println!("yessir");
     info!("spawning new player");
 }

@@ -12,6 +12,8 @@ pub mod player;
 pub mod slot;
 pub mod store;
 pub mod trees;
+pub mod ui;
+pub mod ui_pieces;
 //pub mod edge_detection;
 
 use std::f32::consts::PI;
@@ -24,6 +26,7 @@ use joint_break::BreakJointPlugin;
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
+use ui::UiPlugin;
 
 use bevy_mod_outline::*;
 
@@ -50,7 +53,7 @@ pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
-    let default_res = (1728.0, 1117.0);
+    let default_res = (1000.0, 600.0);
     //let default_res = (800.0, 500.0);
     //let default_res = (1920.0, 1080.0);
     let half_width = ((default_res.0 / 2.0), default_res.1);
@@ -114,6 +117,7 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(Msaa { samples: 4 })
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
+        .add_plugin(UiPlugin)
         .add_plugin(CauldronPlugin)
         .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
