@@ -28,7 +28,6 @@ pub struct Item{
 pub struct UiPlugin;
 impl Plugin for UiPlugin{
     fn build(&self, app: &mut App) {
-        app.insert_resource(Events::<HoverEvent>::default());
         app
             .add_system(hover_tooltips)
             .add_system(add_player_ui);
@@ -119,28 +118,7 @@ fn add_player_ui(
     }
 }
 
-pub struct HoverEvent(TooltipInfo);
 
-fn change_tooltip(
-    mut query_tt: Query<(Entity, &mut Tooltip, &mut Hovering, &mut Style,  &Children, &mut Visibility), Without<TooltipInfo>>,
-    query_hover: Query<(&TooltipInfo, &Interaction), Changed<Interaction>>,
-    mut hoversend: EventWriter<HoverEvent>,
-){
-    let mut changed = false;
-    for ( info, inter) in query_hover.iter() {
-        match inter {
-            Interaction::Hovered | Interaction::Clicked => {
-                if let Ok((e, mut tt, mut hover, mut style,  children, mut vis)) = query_tt.get_single_mut() {
-                    hover.0 = changed;
-                    tt.0 = info.clone();
-                }
-                hoversend.send(HoverEvent(info.clone()));
-                changed = true;                        
-            }
-            Interaction::None => {}
-        }
-    }
-}
 
 
 fn hover_tooltips(
