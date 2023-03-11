@@ -117,7 +117,6 @@ struct FragmentInput {
     @builtin(front_facing) is_front: bool,
     @builtin(position) frag_coord: vec4<f32>,
     #import bevy_pbr::mesh_vertex_output
-    @location(5) normal : vec3<f32>,
 };
 
 

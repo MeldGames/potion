@@ -73,6 +73,17 @@ pub fn item_image(asset_server: &Res<AssetServer>, path: String) -> ImageBundle 
     }
 }
 
+pub fn item_icon(asset_server: &Res<AssetServer>, path: String) -> ImageBundle {
+    ImageBundle {
+        style: Style {
+            size: Size::new(Val::Px(16.), Val::Px(16.)),
+            ..default()
+        },
+        image: asset_server.load(&path).into(),
+        ..default()
+    }
+}
+
 
 // Tooltip 
 
@@ -156,12 +167,18 @@ pub enum TooltipChild {
     Image,
 }
 
+#[derive(Component)]
+pub struct TooltipStats;
+
 #[derive(Component, Debug, Default, Clone)]
 pub struct TooltipInfo {
     pub title: String,
     pub image: String,
     pub description: String,
 }
+
+#[derive(Component, Debug)]
+pub struct Hovering(pub bool);
 
 #[derive(Component, Debug)]
 pub struct Tooltip(pub TooltipInfo);
@@ -172,8 +189,8 @@ pub fn tooltip_image(asset_server: &Res<AssetServer>, path: String) -> ImageBund
             size: Size::new(Val::Px(64.), Val::Px(64.)),
             position_type: PositionType::Absolute,
             position: UiRect {
-                left: Val::Px(-74.),
-                top: Val::Px(0.),
+                right: Val::Px(24.),
+                top: Val::Px(-25.),
                 ..default()
             },
             ..default()

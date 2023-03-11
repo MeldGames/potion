@@ -95,12 +95,12 @@ pub struct LeafMaterial {
 }
 
 impl Material for BarkMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/bark_material.wgsl".into()
-    }
-    fn vertex_shader() -> ShaderRef {
-        "shaders/bark_material.wgsl".into()
-    }
+    // fn fragment_shader() -> ShaderRef {
+    //     "shaders/bark_material.wgsl".into()
+    // }
+    // fn vertex_shader() -> ShaderRef {
+    //     "shaders/bark_material.wgsl".into()
+    // }
 
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
