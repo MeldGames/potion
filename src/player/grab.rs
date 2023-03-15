@@ -224,8 +224,9 @@ pub fn grab_collider(
 pub struct Grabbing {
     pub trying_grab: bool,
     pub grabbing: Option<Entity>,
-    pub pitch: f32,
     pub yaw: f32,
+    pub pitch: f32,
+    pub rotation: Quat,
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -291,8 +292,8 @@ pub fn twist_grab(
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
 
     for mut grabbing in &mut grabbing {
-        grabbing.pitch -= cumulative_delta.y / 20.0;
         grabbing.yaw -= cumulative_delta.x / 20.0;
+        grabbing.pitch += cumulative_delta.y / 20.0;
     }
 }
 
@@ -353,13 +354,16 @@ pub fn player_grabby_hands(
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let neck_rotation = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
-                let grab_rotation = Quat::from_axis_angle(Vec3::Z, grabbing.yaw as f32);
+                //let grab_rotation = Quat::from_axis_angle(Vec3::Z, grabbing.yaw as f32);
                 //* Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
-                let relative_offset = neck_rotation * grab_rotation;
-                target_position.translation = neck_global.translation() + direction * 2.5;
+                //let relative_offset = grabbing.rotation * Vec3::Z;
+
+                let yaw = neck_rotation * Quat::from_axis_angle(Vec3::Z, grabbing.yaw) * Vec3::X;
+                let pitch = neck_rotation * Quat::from_axis_angle(Vec3::X, grabbing.pitch) * Vec3::Z;
+                target_position.translation = neck_global.translation() + direction * 2.5 + yaw + pitch;
 
                 if kb.pressed(KeyCode::RControl) {
-                    hand_impulse.torque_impulse += Vec3::new(0.0, 0.5, 0.0);
+                    //hand_impulse.torque_impulse += ;
                 }
 
                 if grabbing.grabbing.is_none() {

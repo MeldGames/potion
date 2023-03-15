@@ -85,6 +85,9 @@
 		},
 		{
 			"path": "../egui"
+		},
+		{
+			"path": "../bevy_xpbd"
 		}
 	],
 	"settings": {
