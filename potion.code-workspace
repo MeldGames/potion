@@ -76,6 +76,9 @@
 		},
 		{
 			"path": "../bevy_xpbd"
+		},
+		{
+			"path": "../bevy_polyline"
 		}
 	],
 	"settings": {

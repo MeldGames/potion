@@ -14,7 +14,7 @@ fn main() {
                 .set(WindowPlugin {
                     window: WindowDescriptor {
                         cursor_visible: false,
-                        cursor_grab_mode: CursorGrabMode::Locked,
+                        cursor_grab_mode: CursorGrabMode::None,
                         present_mode: bevy::window::PresentMode::Immediate,
                         ..default()
                     },
@@ -36,42 +36,64 @@ fn main() {
 }
 
 #[derive(Debug, Clone)]
-pub struct Twist {
-    pub yaw: f32,
-    pub pitch: f32,
+pub struct Arcball {
+    x: f32,
+    y: f32,
 }
 
-impl Default for Twist {
+impl Default for Arcball {
     fn default() -> Self {
         Self {
-            yaw: 0.0,
-            pitch: 0.0,
+            x: 0.0,
+            y: 0.0,
         }
     }
 }
 
-impl Twist {
-    pub fn rotation(&self) -> Quat {
-        Quat::from_axis_angle(Vec3::X, self.yaw) * Quat::from_axis_angle(Vec3::Z, self.pitch)
+impl Arcball {
+    pub fn spaced(n: f32) -> f32 {
+        (1.0 + n).rem_euclid(2.0) - 1.0
     }
 
-    pub fn extruded(&self) -> Vec3 {
-        self.rotation() * (Vec3::X * 1.01)
+    pub fn set(&mut self, x: f32, y: f32) {
+        self.x = Self::spaced(x);
+        self.y = Self::spaced(y);
+    }
+
+    pub fn z_projection(&self) -> f32 {
+        let x = self.x;
+        let y = self.y;
+        if x * x + y * y <= 0.5 {
+            (1.0 - x * x - y * y).sqrt()
+        } else {
+            0.5 / (x * x + y * y).sqrt()
+        }
+    }
+
+    pub fn projection(&self) -> Vec3 {
+        Vec3::new(self.x, -self.y, self.z_projection())
+    }
+
+    pub fn position(&self) -> Vec3 {
+        self.projection() * 1.01
     }
 }
 
 pub fn twist(
     kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
-    mut twist: Local<Twist>,
+    mut twist: Local<Arcball>,
     mut lines: ResMut<DebugLines>,
 ) {
     for delta in mouse_motion.iter().map(|event| event.delta) {
         let previous = twist.clone();
-        twist.yaw -= delta.x / 180.0;
-        twist.pitch += delta.y / 880.0;
 
-        lines.line_colored(previous.extruded(), twist.extruded(), 3.0, Color::RED);
+        let new_x = twist.x + (delta.x / 180.0);
+        let new_y = twist.y + (delta.y / 180.0);
+        twist.set( new_x, new_y);
+        println!("{}", twist.x);
+
+        lines.line_colored(previous.position(), twist.position(), 3.0, Color::RED);
     }
 }
 
