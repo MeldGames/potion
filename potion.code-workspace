@@ -33,18 +33,6 @@
 			"path": "../bevy-mesh-stl"
 		},
 		{
-			"name": "vhacd-rs",
-			"path": "../vhacd-rs"
-		},
-		{
-			"name": "fuck-vhacd-rs",
-			"path": "../fuck-vhacd-rs"
-		},
-		{
-			"name": "coacd",
-			"path": "../coacd"
-		},
-		{
 			"name": "rapier",
 			"path": "../rapier"
 		},

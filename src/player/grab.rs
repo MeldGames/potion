@@ -353,14 +353,10 @@ pub fn player_grabby_hands(
 
         if input.grabby_hands(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
-                let neck_rotation = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
-                //let grab_rotation = Quat::from_axis_angle(Vec3::Z, grabbing.yaw as f32);
-                //* Quat::from_axis_angle(Vec3::X, grabbing.pitch as f32);
-                //let relative_offset = grabbing.rotation * Vec3::Z;
+                let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
-                let yaw = neck_rotation * Quat::from_axis_angle(Vec3::Z, grabbing.yaw) * Vec3::X;
-                let pitch = neck_rotation * Quat::from_axis_angle(Vec3::X, grabbing.pitch) * Vec3::Z;
-                target_position.translation = neck_global.translation() + direction * 2.5 + yaw + pitch;
+                let grab_rotation = neck_yaw * Quat::from_axis_angle(Vec3::X, grabbing.pitch) * Quat::from_axis_angle(Vec3::Z, grabbing.yaw);
+                target_position.translation = neck_global.translation() + /*direction * 2.5 +*/ grab_rotation * Vec3::X;
 
                 if kb.pressed(KeyCode::RControl) {
                     //hand_impulse.torque_impulse += ;
