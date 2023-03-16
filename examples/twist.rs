@@ -63,10 +63,12 @@ impl Arcball {
     pub fn z_projection(&self) -> f32 {
         let x = self.x;
         let y = self.y;
-        if x * x + y * y <= 0.5 {
-            (1.0 - x * x - y * y).sqrt()
+        let square = x * x + y * y;
+
+        if square.sqrt() <= 1.0 / (2.0f32).sqrt() {
+            1.0 - square
         } else {
-            0.5 / (x * x + y * y).sqrt()
+            1.0 / 2.0 * square
         }
     }
 
@@ -82,18 +84,30 @@ impl Arcball {
 pub fn twist(
     kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
-    mut twist: Local<Arcball>,
+    mut twist: Local<Quat>,
     mut lines: ResMut<DebugLines>,
 ) {
     for delta in mouse_motion.iter().map(|event| event.delta) {
         let previous = twist.clone();
 
+/*
         let new_x = twist.x + (delta.x / 180.0);
         let new_y = twist.y + (delta.y / 180.0);
         twist.set( new_x, new_y);
         println!("{}", twist.x);
+ */
 
-        lines.line_colored(previous.position(), twist.position(), 3.0, Color::RED);
+        let axis1 = Vec3::X;
+        let axis2 = Vec3::Y;
+        let world1 = Quat::from_axis_angle(axis1, delta.y / 180.0);
+        let world2 = Quat::from_axis_angle(axis2, delta.x / 180.0);
+        lines.line_colored(-axis1, axis1 * 2.0, 3.0, Color::BLUE);
+        lines.line_colored(-axis2, axis2 * 2.0, 3.0, Color::GREEN);
+
+        *twist = world1 * *twist;
+        *twist = world2 * *twist;
+
+        lines.line_colored(previous * Vec3::X * 1.01, *twist * Vec3::X * 1.01, 3.0, Color::RED);
     }
 }
 
@@ -147,12 +161,12 @@ fn setup(
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(2.0, 2.0, 2.0)
+            transform: Transform::from_xyz(0.0, 0.0, 4.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
         CameraController {
-            orbit_mode: true,
+            orbit_mode: false,
             orbit_focus: Vec3::new(0.0, 0.0, 0.0),
             ..default()
         },
