@@ -1,3 +1,5 @@
+
+
 use std::fmt::Debug;
 
 use bevy::{
@@ -32,18 +34,12 @@ impl Plugin for GrabPlugin {
         app.add_network_system(auto_aim_debug_lines);
         app.add_network_system(auto_aim_pull);
         app.add_network_system(twist_grab);
+        app.add_network_system(update_grab_sphere);
     }
 }
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GrabJoint;
-
-/// Entities currently grabbed onto.
-#[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
-#[reflect(Component)]
-pub struct GrabbedEntities {
-    pub grabbed: HashSet<Entity>,
-}
 
 #[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
 #[reflect(Component)]
@@ -88,13 +84,13 @@ pub fn grab_collider(
             &GlobalTransform,
             Option<&Children>,
             &ConnectedEntities,
-            &mut GrabbedEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, mut grabbing, global, children, connected, mut grabbed) in &mut hands {
+    for (hand, mut grabbing, global, children, connected) in &mut hands {
+        
         if grabbing.trying_grab {
             /*
             let mut already_grabbing = None;
@@ -200,7 +196,6 @@ pub fn grab_collider(
                             .insert(GrabJoint);
                     });
 
-                    grabbed.insert(other_rigidbody);
                     grabbing.grabbing = Some(other_rigidbody);
                 }
             }
@@ -212,7 +207,6 @@ pub fn grab_collider(
                 for child in children.iter() {
                     if let Ok((_impulse_joint, _joint)) = grab_joints.get(*child) {
                         commands.entity(*child).despawn_recursive();
-                        grabbed.remove(&*child);
                     }
                 }
             }
@@ -225,6 +219,13 @@ pub struct Grabbing {
     pub trying_grab: bool,
     pub grabbing: Option<Entity>,
     pub rotation: Quat,
+    pub dir: Vec3,
+}
+
+#[derive(Default, Debug, Component, Clone, Copy)]
+pub struct GrabSphere {
+    pub center: Vec3,
+    pub radius: f32,
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -301,6 +302,110 @@ pub fn twist_grab(
     }
 }
 
+pub fn children_with_recursive<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
+    query: &'a Query<Q, F>,
+    children: &'a Query<&Children>,
+    joint_children: &'a Query<&JointChildren>,
+    base: Entity,
+) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
+    let mut results = Vec::new();
+    let mut possibilities = vec![base];
+
+    while let Some(possible) = possibilities.pop() {
+        if let Ok(result) = query.get(possible) {
+            results.push(result);
+        }
+
+        if let Ok(children) = children.get(possible) {
+            possibilities.extend(children);
+        }
+
+        if let Ok(children) = joint_children.get(possible) {
+            possibilities.extend(&children.0);
+        }
+    }
+
+    results
+}
+
+pub fn update_grab_sphere(
+    mut grab_spheres: Query<(Entity, &GlobalTransform, &mut GrabSphere)>,
+    mut grabbing: Query<&mut Grabbing>,
+    parents: Query<&Parent>,
+    children: Query<&Children>,
+    joint_children: Query<&JointChildren>,
+    grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
+    globals: Query<&GlobalTransform>,
+
+    mut lines: ResMut<DebugLines>,
+) {
+    for (entity, sphere_base, mut sphere) in &mut grab_spheres {
+        let mut anchors = Vec::new();
+
+        let results = children_with_recursive(&grab_joints, &children, &joint_children, entity);
+        for (joint_entity, joint) in &results {
+            //info!("grabbing: {:?}", joint.parent);
+            // we need to get translate from the joints local space to the spheres local space
+            let joint: &ImpulseJoint = joint;
+
+            //let entity1 = joint.parent;
+            let grabber = parents.get(*joint_entity).unwrap().get();
+            let global = if let Ok(global) = globals.get(grabber) {
+                global
+            } else {
+                continue;
+            };
+
+            let anchor = joint.data.local_anchor2();
+            let global_anchor = global.transform_point(anchor);
+
+            lines.line_colored(
+                sphere_base.translation(),
+                global_anchor,
+                crate::TICK_RATE.as_secs_f32(),
+                Color::RED,
+            );
+
+            anchors.push((grabber, sphere_base.compute_matrix().inverse().project_point3(global_anchor), ));
+        }
+
+        let (min, max) = 
+            if let Some(initial) = anchors.get(0) {
+                let min: Vec3 = anchors.iter().fold(initial.1, |a, b| a.min(b.1));
+                let max: Vec3 = anchors.iter().fold(initial.1, |a, b| a.max(b.1));
+                (min, max)
+            } else {
+                (Vec3::ZERO, Vec3::ZERO)
+            };
+
+        let diameter = min.distance(max);
+        let radius = diameter / 2.0;
+
+        let midpoint = min * 0.5 + max * 0.5;
+        sphere.center = midpoint;
+        sphere.radius = radius;
+
+        lines.line_colored(
+            sphere_base.transform_point(min),
+            sphere_base.transform_point(max),
+            crate::TICK_RATE.as_secs_f32(),
+            Color::RED,
+        );
+
+        for (grabber, anchor) in &anchors {
+            let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
+                grabbing
+            } else  {
+                continue;
+            };
+
+            grabbing.dir = (sphere.center - *anchor);
+        }
+    }
+
+
+}
+
 pub fn player_grabby_hands(
     kb: Res<Input<KeyCode>>,
     globals: Query<&GlobalTransform>,
@@ -360,11 +465,7 @@ pub fn player_grabby_hands(
                 let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let grab_rotation = neck_yaw * grabbing.rotation;
-                target_position.translation = neck_global.translation() + direction * 2.5 + grab_rotation * Vec3::X;
-
-                if kb.pressed(KeyCode::RControl) {
-                    //hand_impulse.torque_impulse += ;
-                }
+                target_position.translation = neck_global.translation() + direction * 2.5 + grab_rotation * grabbing.dir;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;

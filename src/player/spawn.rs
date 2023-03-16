@@ -1,3 +1,4 @@
+
 use std::fmt::Debug;
 
 use bevy::prelude::*;
@@ -125,7 +126,7 @@ pub fn setup_player(
                         ..default()
                     })
                     .insert(SceneBundle {
-                        scene: asset_server.load("models/skin.gltf#Scene0"),
+                        //scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
@@ -140,6 +141,7 @@ pub fn setup_player(
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
                     .insert(LookTransform::default())
+                    .insert(GrabSphere::default())
                     .id();
 
                 let distance_from_body = player_radius + 0.3;
@@ -483,7 +485,7 @@ pub fn attach_arm(
         .insert(Hand)
         .insert(ConnectedEntities::default())
         .insert(ConnectedMass::default())
-        .insert(GrabbedEntities::default())
+        //.insert(GrabbedEntities::default())
         .insert(Grabbing { ..default() })
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())

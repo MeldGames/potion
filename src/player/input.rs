@@ -209,9 +209,20 @@ pub struct InitialClick;
 
 pub fn initial_mouse_click(
     mut commands: Commands,
+    windows: Res<Windows>,
     mouse_input: Res<Input<MouseButton>>,
+    mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
+    let primary_focused = windows
+                .get_primary()
+                .and_then(|window| Some(window.is_focused()))
+                .unwrap_or(false);
+    if !primary_focused {
+        toggle.0 = true;
+        commands.remove_resource::<InitialClick>();
+    }
+
     if let None = initial_click {
         if mouse_input.any_pressed([MouseButton::Left, MouseButton::Right]) {
             info!("initial click");
@@ -232,11 +243,13 @@ pub fn toggle_mouse_lock(
         toggle.0 = !toggle.0;
     }
 
+    let primary_focused = windows
+                .get_primary()
+                .and_then(|window| Some(window.is_focused()))
+                .unwrap_or(false);
+
     let should_lock = (kb.pressed(KeyCode::LAlt) || toggle.0)
-        && windows
-            .get_primary()
-            .and_then(|window| Some(window.is_focused()))
-            .unwrap_or(false)
+        && primary_focused
         && initial_click.is_some();
 
     match &state.0 {

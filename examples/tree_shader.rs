@@ -7,7 +7,8 @@ use bevy::{
         render_resource::{
             AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
         },
-    }, window::CursorGrabMode,
+    },
+    window::CursorGrabMode,
 };
 use bevy_shader_utils::ShaderUtilsPlugin;
 
@@ -50,8 +51,8 @@ struct Inserted;
 
 /// set up a simple 3D scene
 fn setup(
-    mut commands: Commands, 
-    asset_server: Res<AssetServer>, 
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut water: ResMut<Assets<WaterMaterial>>,
@@ -69,9 +70,7 @@ fn setup(
             color: Color::CYAN,
             color_texture: Some(asset_server.load("shaders/leaves.png")),
         }),
-        transform: Transform::from_xyz(
-            5.0, 2.0, 6.0,
-        ),
+        transform: Transform::from_xyz(5.0, 2.0, 6.0),
         ..default()
     });
 
@@ -103,45 +102,37 @@ fn setup(
         },
         ..default()
     });
-    commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/tree.gltf#Scene0"),
-            ..default()
-        });
-    
+    commands.spawn(SceneBundle {
+        scene: asset_server.load("models/tree.gltf#Scene0"),
+        ..default()
+    });
+
     commands.spawn((
-        PbrBundle{
+        PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 2.00,
                 ..default()
             })),
             material: materials.add(Color::rgb(1.0, 1.0, 0.1).into()),
-            transform: Transform::from_xyz(
-                5.0, 2.0, -3.0,
-            ),
+            transform: Transform::from_xyz(5.0, 2.0, -3.0),
             ..default()
         },
         Name::new("sphere"),
     ));
-    commands.spawn((
-        PbrBundle{
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 2.00,
-                ..default()
-            })),
-            material: materials.add(Color::rgb(1.0, 1.0, 0.1).into()),
-            transform: Transform::from_xyz(
-                -5.0, 2.0, -3.0,
-            ),
+    commands.spawn((PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::UVSphere {
+            radius: 2.00,
             ..default()
-        },
-    ));
+        })),
+        material: materials.add(Color::rgb(1.0, 1.0, 0.1).into()),
+        transform: Transform::from_xyz(-5.0, 2.0, -3.0),
+        ..default()
+    },));
 
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(18.0, 16.0, 18.0)
-                .looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(18.0, 16.0, 18.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
         CameraController {
@@ -229,7 +220,7 @@ fn mod_scene(
     asset_server: Res<AssetServer>,
 ) {
     for (e, hand, name) in spheres.iter() {
-        if name.as_str().contains("leaves") || name.as_str().contains("sphere"){
+        if name.as_str().contains("leaves") || name.as_str().contains("sphere") {
             let mesh = meshes.get_mut(hand).unwrap();
             if let Some(VertexAttributeValues::Float32x3(positions)) =
                 mesh.attribute(Mesh::ATTRIBUTE_POSITION)
@@ -252,13 +243,12 @@ fn mod_scene(
     }
 }
 
-
-fn movement (
+fn movement(
     mut movers: Query<(&mut Transform, &Movable)>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    for (mut transform, _movable) in &mut movers{
+    for (mut transform, _movable) in &mut movers {
         let mut direction = Vec3::ZERO;
         if input.pressed(KeyCode::W) {
             direction.z -= 1.0;
@@ -283,12 +273,7 @@ fn movement (
     }
 }
 
-
-use bevy::{
-    input::mouse::{
-        MouseMotion, MouseScrollUnit, MouseWheel,
-    },
-};
+use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 
 /// Provides basic movement functionality to the attached camera
 #[derive(Component)]
@@ -351,19 +336,13 @@ pub fn camera_controller(
     mut scroll_evr: EventReader<MouseWheel>,
     key_input: Res<Input<KeyCode>>,
     mut move_toggled: Local<bool>,
-    mut query: Query<
-        (&mut Transform, &mut CameraController),
-        With<Camera>,
-    >,
+    mut query: Query<(&mut Transform, &mut CameraController), With<Camera>>,
 ) {
     let dt = time.delta_seconds();
 
-    if let Ok((mut transform, mut options)) =
-        query.get_single_mut()
-    {
+    if let Ok((mut transform, mut options)) = query.get_single_mut() {
         if !options.initialized {
-            let (_roll, yaw, pitch) =
-                transform.rotation.to_euler(EulerRot::ZYX);
+            let (_roll, yaw, pitch) = transform.rotation.to_euler(EulerRot::ZYX);
             options.yaw = yaw;
             options.pitch = pitch;
             options.initialized = true;
@@ -404,22 +383,18 @@ pub fn camera_controller(
         if key_input.pressed(options.key_down) {
             axis_input.y -= 1.0;
         }
-        if key_input
-            .just_pressed(options.keyboard_key_enable_mouse)
-        {
+        if key_input.just_pressed(options.keyboard_key_enable_mouse) {
             *move_toggled = !*move_toggled;
         }
 
         // Apply movement update
         if axis_input != Vec3::ZERO {
-            let max_speed =
-                if key_input.pressed(options.key_run) {
-                    options.run_speed
-                } else {
-                    options.walk_speed
-                };
-            options.velocity =
-                axis_input.normalize() * max_speed;
+            let max_speed = if key_input.pressed(options.key_run) {
+                options.run_speed
+            } else {
+                options.walk_speed
+            };
+            options.velocity = axis_input.normalize() * max_speed;
         } else {
             let friction = options.friction.clamp(0.0, 1.0);
             options.velocity *= 1.0 - friction;
@@ -429,31 +404,22 @@ pub fn camera_controller(
         }
         let forward = transform.forward();
         let right = transform.right();
-        let translation_delta =
-            options.velocity.x * dt * right
-                + options.velocity.y * dt * Vec3::Y
-                + options.velocity.z * dt * forward;
+        let translation_delta = options.velocity.x * dt * right
+            + options.velocity.y * dt * Vec3::Y
+            + options.velocity.z * dt * forward;
         let mut scroll_translation = Vec3::ZERO;
-        if options.orbit_mode
-            && options.scroll_wheel_speed > 0.0
-        {
+        if options.orbit_mode && options.scroll_wheel_speed > 0.0 {
             scroll_translation = scroll_distance
-                * transform
-                    .translation
-                    .distance(options.orbit_focus)
+                * transform.translation.distance(options.orbit_focus)
                 * options.scroll_wheel_speed
                 * forward;
         }
-        transform.translation +=
-            translation_delta + scroll_translation;
+        transform.translation += translation_delta + scroll_translation;
         options.orbit_focus += translation_delta;
 
         // Handle mouse input
         let mut mouse_delta = Vec2::ZERO;
-        if mouse_button_input
-            .pressed(options.mouse_key_enable_mouse)
-            || *move_toggled
-        {
+        if mouse_button_input.pressed(options.mouse_key_enable_mouse) || *move_toggled {
             for mouse_event in mouse_events.iter() {
                 mouse_delta += mouse_event.delta;
             }
@@ -466,39 +432,25 @@ pub fn camera_controller(
                 options.sensitivity
             };
             let (pitch, yaw) = (
-                (options.pitch
-                    - mouse_delta.y
-                        * 0.5
-                        * sensitivity
-                        * dt)
-                    .clamp(
-                        -0.99 * std::f32::consts::FRAC_PI_2,
-                        0.99 * std::f32::consts::FRAC_PI_2,
-                    ),
-                options.yaw
-                    - mouse_delta.x * sensitivity * dt,
+                (options.pitch - mouse_delta.y * 0.5 * sensitivity * dt).clamp(
+                    -0.99 * std::f32::consts::FRAC_PI_2,
+                    0.99 * std::f32::consts::FRAC_PI_2,
+                ),
+                options.yaw - mouse_delta.x * sensitivity * dt,
             );
 
             // Apply look update
-            transform.rotation = Quat::from_euler(
-                EulerRot::ZYX,
-                0.0,
-                yaw,
-                pitch,
-            );
+            transform.rotation = Quat::from_euler(EulerRot::ZYX, 0.0, yaw, pitch);
             options.pitch = pitch;
             options.yaw = yaw;
 
             if options.orbit_mode {
-                let rot_matrix =
-                    Mat3::from_quat(transform.rotation);
+                let rot_matrix = Mat3::from_quat(transform.rotation);
                 transform.translation = options.orbit_focus
                     + rot_matrix.mul_vec3(Vec3::new(
                         0.0,
                         0.0,
-                        options.orbit_focus.distance(
-                            transform.translation,
-                        ),
+                        options.orbit_focus.distance(transform.translation),
                     ));
             }
         }
