@@ -63,7 +63,7 @@ impl Plugin for PlayerPlugin {
 
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
 
-        //app.configure_set(ControllerSet.in_schedule(CoreSchedule::FixedUpdate));
+        app.configure_set(ControllerSet.in_base_set(CoreSet::FixedUpdate));
         app.add_system(grab::player_grabby_hands.in_set(ControllerSet));
         app.add_system(grab::joint_children.in_set(ControllerSet));
         app.add_system(grab::tense_arms.in_set(ControllerSet));

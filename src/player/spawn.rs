@@ -116,8 +116,6 @@ pub fn setup_player(
                                 Vec3::new(0.0, player_height, 0.0),
                                 player_radius,
                             ),
-                            //collider: Collider::ball(player_radius),
-                            //rigidbody: RigidBody::KinematicPositionBased,
                             ..default()
                         },
                         transform: global_transform.compute_transform(),
@@ -125,7 +123,7 @@ pub fn setup_player(
                         ..default()
                     })
                     .insert(SceneBundle {
-                        //scene: asset_server.load("models/skin.gltf#Scene0"),
+                        scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
