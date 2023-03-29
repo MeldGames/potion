@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use bevy::core_pipeline::fxaa::{Fxaa, Sensitivity};
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
@@ -203,6 +204,11 @@ pub fn setup_player(
                         DepthPrepass,
                         NormalPrepass,
                     ))
+                    .insert(Fxaa {
+                        enabled: true,
+                        edge_threshold_min: Sensitivity::Extreme,
+                        edge_threshold: Sensitivity::Extreme,
+                    })
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,
