@@ -85,6 +85,7 @@ pub fn setup_app(app: &mut App) {
         limiter: bevy_framepace::Limiter::Auto,
         //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
     });
+    app.insert_resource(FixedTime::new(crate::TICK_RATE));
     app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
@@ -131,9 +132,19 @@ pub fn setup_app(app: &mut App) {
     app.add_system(update_level_collision);
     app.add_system(active_cameras);
     app.add_system(decomp_load);
+    app.add_system(edge_detect_swap);
     //app.add_system(prepare_scene);
 
     app.add_plugin(crate::player::CustomWanderlustPlugin);
+}
+
+fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionConfig>) {
+    if key.just_pressed(KeyCode::T) {
+        config.debug = match config.debug {
+            0 => 1,
+            _ => 0,
+        };
+    }
 }
 
 fn fallback_camera(mut commands: Commands) {

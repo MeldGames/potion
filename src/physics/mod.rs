@@ -107,15 +107,15 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(RapierConfiguration {
-            /*
             timestep_mode: TimestepMode::Fixed {
                 dt: crate::TICK_RATE.as_secs_f32(),
                 substeps: 1,
             },
- */
             ..Default::default()
         });
 
+
+        type PhysicsPlugin = RapierPhysicsPlugin::<HookData>;
         /*
                app.insert_resource(PhysicsHooksWithQueryResource::<HookData>(Box::new(
                    ContactFilterHook,
@@ -123,9 +123,40 @@ impl Plugin for PhysicsPlugin {
 
         */
         let physics_plugin =
-            RapierPhysicsPlugin::<HookData>::default().with_default_system_setup(true);
+            PhysicsPlugin::default().with_default_system_setup(true);
         app.add_plugin(physics_plugin);
 
+
+/*
+        app.world
+            .resource_mut::<Schedules>()
+            .get_mut(&CoreSchedule::FixedUpdate)
+            .unwrap()
+            .configure_sets(
+                (
+                    PhysicsSet::SyncBackend,
+                    PhysicsSet::SyncBackendFlush,
+                    PhysicsSet::StepSimulation,
+                    PhysicsSet::Writeback,
+                )
+                    .chain()
+            );
+
+        app.add_systems(
+            PhysicsPlugin::get_systems(PhysicsSet::SyncBackend).in_base_set(PhysicsSet::SyncBackend),
+        );
+        app.add_systems(
+            PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)
+                .in_base_set(PhysicsSet::SyncBackendFlush),
+        );
+        app.add_systems(
+            PhysicsPlugin::get_systems(PhysicsSet::StepSimulation)
+                .in_base_set(PhysicsSet::StepSimulation),
+        );
+        app.add_systems(
+            PhysicsPlugin::get_systems(PhysicsSet::Writeback).in_base_set(PhysicsSet::Writeback),
+        );
+ */
         app.add_system(cap_velocity);
         app.add_startup_system(modify_rapier_context);
     }
