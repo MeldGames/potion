@@ -76,14 +76,12 @@ impl Plugin for PlayerPlugin {
         app.add_system(controller::player_swivel_and_tilt.in_set(ControllerSet));
         app.add_system(controller::teleport_player_back.in_set(ControllerSet));
 
-        /*
-               app.add_systems( spawn::connected_entities);
-               app.add_systems(spawn::contact_filter);
-               app.add_systems(spawn::connected_mass);
-               app.add_systems(spawn::extended_mass);
-               app.add_systems(spawn::setup_player);
-               app.add_systems(spawn::setup_ik);
-        */
+        app.add_system(spawn::connected_entities);
+        app.add_system(spawn::contact_filter);
+        app.add_system(spawn::connected_mass);
+        app.add_system(spawn::extended_mass);
+        app.add_system(spawn::setup_player);
+        app.add_system(spawn::setup_ik);
         app.add_system(Events::<spawn::PlayerEvent>::update_system);
     }
 }

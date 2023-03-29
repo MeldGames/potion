@@ -23,6 +23,7 @@ springy = {path = "../springy", features = ["rapier3d"]}
 #  "debug_lines",
 #]}
 bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
+bevy_mod_edge_detection = {path = "../bevy_mod_edge_detection"}
 #bevy_shader_utils = {git = "https://github.com/Sjael/bevy_shader_utils"}
 
 bevy-inspector-egui = "0.18"

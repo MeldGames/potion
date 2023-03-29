@@ -19,6 +19,7 @@ pub mod ui_pieces;
 use std::f32::consts::PI;
 
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
+use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
@@ -88,8 +89,13 @@ pub fn setup_app(app: &mut App) {
     //app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
 
+    app.add_plugin(EdgeDetectionPlugin);
+    app.insert_resource(EdgeDetectionConfig {
+        ..default()
+    });
+
     //app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(Msaa::Sample8)
+    app.insert_resource(Msaa::Off)
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
         .add_plugin(UiPlugin)
@@ -100,7 +106,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
         .add_plugin(crate::debug::DebugPlugin)
-        .add_plugin(TreesPlugin)
+        //.add_plugin(TreesPlugin)
         .add_plugin(crate::physics::PhysicsPlugin)
         .add_plugin(crate::physics::MusclePlugin)
         .add_plugin(RapierDebugRenderPlugin {

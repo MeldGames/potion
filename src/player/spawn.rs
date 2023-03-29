@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_mod_inverse_kinematics::IkConstraint;
@@ -198,6 +199,10 @@ pub fn setup_player(
                         },
                         ..default()
                     })
+                    .insert((
+                        DepthPrepass,
+                        NormalPrepass,
+                    ))
                     .insert(AvoidIntersecting {
                         dir: Vec3::Z,
                         max_toi: 4.0,

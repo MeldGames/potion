@@ -79,6 +79,12 @@
 		},
 		{
 			"path": "../bevy_polyline"
+		},
+		{
+			"path": "../birdylook"
+		},
+		{
+			"path": "../bevy_mod_edge_detection"
 		}
 	],
 	"settings": {
