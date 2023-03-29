@@ -81,9 +81,11 @@ pub fn setup_app(app: &mut App) {
     );
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
-        limiter: bevy_framepace::Limiter::Off,
-        //limiter: bevy_framepace::Limiter::Manual(sabi::prelude::tick_hz(60)),
+        //limiter: bevy_framepace::Limiter::Off,
+        limiter: bevy_framepace::Limiter::Auto,
+        //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
     });
+    app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
     //app.add_plugin(crate::egui::SetupEguiPlugin);
@@ -112,7 +114,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::physics::MusclePlugin)
         .add_plugin(RapierDebugRenderPlugin {
             always_on_top: false,
-            enabled: true,
+            enabled: false,
             style: Default::default(),
             mode: DebugRenderMode::COLLIDER_SHAPES,
         })
