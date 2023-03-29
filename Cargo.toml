@@ -78,6 +78,7 @@ obj = "0.10.2"
 [patch."https://github.com/aevyrie/bevy_framepace"]
 #bevy_framepace = { path = "../bevy_framepace" }
 
+
 [patch."https://github.com/PROMETHIA-27/bevy_mod_wanderlust"]
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
 
@@ -88,7 +89,7 @@ obj = "0.10.2"
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
-#bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "4013d7d"}
+bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "e480225"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}

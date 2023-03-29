@@ -396,15 +396,13 @@ impl Plugin for PlayerInputPlugin {
                                  //.run_if(not(editor_active))
         )
         .add_system(
-            player_mouse_inputs.run_if(in_state(MouseState::Locked)), //.run_if(window_focused)
-                                                                      //.run_if(not(editor_active))
+            player_mouse_inputs
         )
         .add_system(initial_mouse_click)
         .add_system(
-            toggle_mouse_lock.run_if(in_state(MouseState::Locked)), //.run_if(window_focused)
-                                                                    //.run_if_not(editor_active)
-                                                                    //.label("toggle_mouse_lock"),
+            toggle_mouse_lock
         )
-        .add_system(mouse_lock);
+        .add_system(mouse_lock)
+        .add_system(update_local_player_inputs);
     }
 }
