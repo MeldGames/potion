@@ -11,52 +11,45 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = "0.9"
-bevy_egui = "0.19"
+bevy = "0.10"
+bevy_egui = "0.20"
 #sabi = { path = "../sabi/sabi", features = ["public"] }
-sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
+#sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
-springy = {git = "https://github.com/aceeri/springy", rev = "ae09e5910a2", features = ["rapier3d"]}
+#springy = {git = "https://github.com/aceeri/springy", rev = "ae09e5910a2", features = ["rapier3d"]}
+springy = {path = "../springy", features = ["rapier3d"]}
 
-#bevy_mod_outline = { git = "https://github.com/komadori/bevy_mod_outline", rev = "4627eaa093e0bc0f292ca19e5af631507840d313" }
-bevy_mod_outline = "0.3"
-bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust", rev = "372b6ed408f626e1949fbc78296a23c67929a2a6", features = [
-  "debug_lines",
-]}
-bevy_shader_utils = {git = "https://github.com/Sjael/bevy_shader_utils"}
+#bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust", features = [
+#  "debug_lines",
+#]}
+bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
+#bevy_shader_utils = {git = "https://github.com/Sjael/bevy_shader_utils"}
 
-bevy-inspector-egui = "0.17"
-#bevy_editor_pls = "0.1"
-bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls", rev = "7dd58ba1f24031385166c8bba88c1c84537aa278"}
-bevy_framepace = "0.11"
-bevy_mod_inverse_kinematics = "0.2"
-bevy_rapier3d = {version = "0.19", features = ["serde-serialize"]}
+bevy-inspector-egui = "0.18"
+bevy_editor_pls = "0.3"
+#bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
+bevy_framepace = "0.12"
+bevy_mod_inverse_kinematics = "0.3"
+bevy_rapier3d = {version = "0.21", features = ["serde-serialize"]}
 bincode = "1.3"
 bitflags = "1.3"
 derive_more = "0.99"
-egui = "0.20"
+egui = "0.21"
 fixed = {version = "1.11", features = ["serde", "std", "serde-str"]}
 fxhash = "0.2"
 #igd = "0.12"
-iyes_loopless = {version = "0.9", features = ["states"]}
 lazy_static = "1.4"
-leafwing-input-manager = "0.8"
+leafwing-input-manager = "0.9"
 #my_internet_ip = "0.1"
 num-traits = "0.2"
 rand = "0.8"
 ron = "0.8"
 vec-collections = "0.4"
-wgpu-types = "0.14"
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "554649a951689dce66d0d759839b326874e8826f", default-features = false, features = [
-    "backend_raycast",
-    "backend_egui",
-    "backend_sprite",
-    "backend_bevy_ui",
-    #"debug",
-] }
-
-bevy_prototype_debug_lines = {version = "0.9", features = ["3d"]}
-bevy_polyline = {version = "0.4"}
+wgpu-types = "0.15"
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
+    
+bevy_prototype_debug_lines = {version = "0.10", features = ["3d"]}
+bevy_polyline = {version = "0.6"}
 
 #bevy_renet = "0.0.5"
 bevy_renet = {git = "https://github.com/lucaspoffo/renet"}

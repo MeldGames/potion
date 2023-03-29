@@ -1,7 +1,5 @@
 use std::fmt::Debug;
 
-use sabi::stage::NetworkSimulationAppExt;
-
 use bevy::prelude::*;
 
 use bevy_mod_wanderlust::Spring;
@@ -11,7 +9,7 @@ pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Muscle>();
-        app.add_network_system(muscle_target);
+        app.add_system(muscle_target);
     }
 }
 

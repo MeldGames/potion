@@ -133,8 +133,7 @@ pub fn buy_item(
 pub struct StorePlugin;
 impl Plugin for StorePlugin {
     fn build(&self, app: &mut App) {
-        use sabi::stage::NetworkSimulationAppExt;
-        app.add_network_system(push_item_back);
-        app.add_network_system(buy_item);
+        //app.add_network_system(push_item_back);
+        //app.add_network_system(buy_item);
     }
 }

@@ -4,8 +4,8 @@ use std::{
 };
 
 use bevy::prelude::*;
+use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
-use sabi::stage::NetworkSimulationAppExt;
 
 use crate::attach::Attach;
 
@@ -74,7 +74,7 @@ impl Plugin for DepositPlugin {
 
         //app.add_system(display_money);
 
-        app.add_network_system(deposit);
+        app.add_system(deposit);
     }
 }
 
@@ -108,7 +108,7 @@ pub fn deposit(
     }
 }
 
-pub fn display_money(mut egui_context: ResMut<bevy_egui::EguiContext>, value: Res<Value>) {
+pub fn display_money(mut egui_context: EguiContexts, value: Res<Value>) {
     egui::Window::new("Value")
         .min_width(0.0)
         .default_width(1.0)

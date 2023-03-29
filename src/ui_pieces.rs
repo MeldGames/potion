@@ -13,7 +13,7 @@ pub fn player_root() -> NodeBundle {
                 right: Val::Auto,
                 ..default()
             },
-            border: UiRect{
+            border: UiRect {
                 left: Val::Px(2.0),
                 top: Val::Px(2.0),
                 ..default()
@@ -24,7 +24,6 @@ pub fn player_root() -> NodeBundle {
         ..default()
     }
 }
-
 
 pub fn player_bottom_container() -> NodeBundle {
     NodeBundle {
@@ -84,8 +83,7 @@ pub fn item_icon(asset_server: &Res<AssetServer>, path: String) -> ImageBundle {
     }
 }
 
-
-// Tooltip 
+// Tooltip
 
 pub fn tooltip() -> NodeBundle {
     NodeBundle {
@@ -106,9 +104,7 @@ pub fn tooltip() -> NodeBundle {
             translation: Vec3::new(0., 0., 1.),
             ..default()
         },
-        visibility: Visibility{
-            is_visible: false
-        },
+        //visibility: Visibility { is_visible: false },
         z_index: ZIndex::Global(2),
         ..default()
     }
@@ -117,9 +113,7 @@ pub fn tooltip() -> NodeBundle {
 pub fn tooltip_title(asset_server: &Res<AssetServer>) -> TextBundle {
     TextBundle {
         style: Style {
-            position: UiRect {
-                ..default()
-            },
+            position: UiRect { ..default() },
             ..default()
         },
         text: Text::from_section(
@@ -142,9 +136,7 @@ pub fn tooltip_desc(asset_server: &Res<AssetServer>) -> TextBundle {
                 left: Val::Px(0.),
                 ..default()
             },
-            position: UiRect {
-                ..default()
-            },
+            position: UiRect { ..default() },
             max_size: Size::new(Val::Px(320.), Val::Auto),
             ..default()
         },

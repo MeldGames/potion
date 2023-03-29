@@ -1,10 +1,8 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
 use bevy_editor_pls::EditorState;
-use iyes_loopless::{condition::IntoConditionalSystem, prelude::*};
-use sabi::stage::NetworkSimulationAppExt;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::PI;
 
@@ -189,9 +187,10 @@ impl PlayerInput {
     }
 }
 
-#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(States, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum MouseState {
     Free,
+    #[default]
     Locked,
 }
 
@@ -209,15 +208,15 @@ pub struct InitialClick;
 
 pub fn initial_mouse_click(
     mut commands: Commands,
-    windows: Res<Windows>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
     mouse_input: Res<Input<MouseButton>>,
     mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
-    let primary_focused = windows
-                .get_primary()
-                .and_then(|window| Some(window.is_focused()))
-                .unwrap_or(false);
+    let primary_focused = primary_window
+        .get_single()
+        .and_then(|window| Ok(window.focused))
+        .unwrap_or(false);
     if !primary_focused {
         toggle.0 = true;
         commands.remove_resource::<InitialClick>();
@@ -233,9 +232,10 @@ pub fn initial_mouse_click(
 
 pub fn toggle_mouse_lock(
     mut commands: Commands,
-    windows: Res<Windows>,
+    windows: Query<&Window, With<PrimaryWindow>>,
     kb: Res<Input<KeyCode>>,
-    state: Res<CurrentState<MouseState>>,
+    state: Res<State<MouseState>>,
+    mut next_state: ResMut<NextState<MouseState>>,
     mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
@@ -244,35 +244,35 @@ pub fn toggle_mouse_lock(
     }
 
     let primary_focused = windows
-                .get_primary()
-                .and_then(|window| Some(window.is_focused()))
-                .unwrap_or(false);
+        .get_single()
+        .and_then(|window| Ok(window.focused))
+        .unwrap_or(false);
 
-    let should_lock = (kb.pressed(KeyCode::LAlt) || toggle.0)
-        && primary_focused
-        && initial_click.is_some();
+    let should_lock =
+        (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused && initial_click.is_some();
 
     match &state.0 {
-        MouseState::Free if should_lock => commands.insert_resource(NextState(MouseState::Locked)),
-        MouseState::Locked if !should_lock => commands.insert_resource(NextState(MouseState::Free)),
+        MouseState::Free if should_lock => next_state.set(MouseState::Locked),
+        MouseState::Locked if !should_lock => next_state.set(MouseState::Free),
         _ => {}
     }
 }
 
 pub fn mouse_lock(
-    mut windows: ResMut<Windows>,
+    mut windows: Query<&mut Window, With<PrimaryWindow>>,
     editor: Option<Res<EditorState>>,
-    state: Res<CurrentState<MouseState>>,
+    state: Res<State<MouseState>>,
 ) {
     let editor_active = editor.map(|state| state.active).unwrap_or(false);
     let locked = state.0 == MouseState::Locked && !editor_active;
 
-    if let Some(window) = windows.get_primary_mut() {
-        window.set_cursor_visibility(!locked);
+    if let Ok(mut window) = windows.get_single_mut() {
+        window.cursor.visible = !locked;
+
         if locked {
-            window.set_cursor_grab_mode(bevy::window::CursorGrabMode::Locked);
+            window.cursor.grab_mode = bevy::window::CursorGrabMode::Locked;
         } else {
-            window.set_cursor_grab_mode(bevy::window::CursorGrabMode::None);
+            window.cursor.grab_mode = bevy::window::CursorGrabMode::None;
         }
     }
 }
@@ -378,51 +378,33 @@ pub fn update_local_player_inputs(
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loopless_state(MouseState::Locked);
-
+        app.add_state::<MouseState>();
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
         app.add_system(
-            player_binary_inputs
-                .run_if(window_focused)
-                .run_if_not(editor_active)
-                .label("binary_inputs"),
+            player_binary_inputs, //.run_if(window_focused)
+                                  //.run_if(not(editor_active))
         )
         .add_system(
-            zoom_on_scroll
-                .run_in_state(MouseState::Locked)
-                .run_if(window_focused)
-                .run_if_not(editor_active)
-                .label("zoom_scroll"),
+            zoom_on_scroll, //.in_state(MouseState::Locked)
+                            //.run_if(window_focused)
+                            //.run_if(not(editor_active))
         )
         .add_system(
-            zoom_scroll_for_toi
-                .run_if(window_focused)
-                .run_if_not(editor_active)
-                .label("zoom_scroll_for_toi")
-                .after("zoom_scroll"),
+            zoom_scroll_for_toi, //.run_if(window_focused)
+                                 //.run_if(not(editor_active))
         )
         .add_system(
-            player_mouse_inputs
-                .run_in_state(MouseState::Locked)
-                .run_if(window_focused)
-                .run_if_not(editor_active)
-                .label("player_mouse_input"),
+            player_mouse_inputs.run_if(in_state(MouseState::Locked)), //.run_if(window_focused)
+                                                                      //.run_if(not(editor_active))
         )
-        .add_system(initial_mouse_click.label("initial_mouse_click"))
+        .add_system(initial_mouse_click)
         .add_system(
-            toggle_mouse_lock
-                .run_if(window_focused)
-                .run_if_not(editor_active)
-                .label("toggle_mouse_lock"),
+            toggle_mouse_lock.run_if(in_state(MouseState::Locked)), //.run_if(window_focused)
+                                                                    //.run_if_not(editor_active)
+                                                                    //.label("toggle_mouse_lock"),
         )
-        .add_system(mouse_lock.run_if(window_focused).label("set_mouse_lock"));
-
-        app.add_network_system(
-            update_local_player_inputs
-                .label("update_player_inputs")
-                .before("player_movement"),
-        );
+        .add_system(mouse_lock);
     }
 }

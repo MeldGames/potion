@@ -39,10 +39,10 @@ impl Plugin for NetworkPlugin {
         let info = NetworkSimulationInfo::new(crate::TICK_RATE);
         //info.slowdown = 3.0;
         app.insert_resource(info);
-        app.add_meta_network_system(
+        app.add_system(
             client_sync_players
-                .run_if_resource_exists::<RenetClient>()
-                .run_if(client_connected),
+                //.run_if_resource_exists::<RenetClient>()
+                //.run_if(client_connected),
         );
     }
 }

@@ -198,6 +198,8 @@ skip-tree = [
   { name = "concurrent-queue" },
   { name = "image" },
   { name = "png" },
+  { name = "bevy_prototype_debug_lines" },
+  { name = "jni" },
   { name = "glam" },             # this should be pretty apparent if it breaks.  #{ name = "ansi_term", version = "=0.11.0", depth = 20 },
 ]
 

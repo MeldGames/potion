@@ -1,6 +1,6 @@
 use bevy::diagnostic::Diagnostics;
 use bevy::prelude::*;
-use bevy_egui::EguiContext;
+use bevy_egui::EguiContexts;
 
 pub fn diagnostic_ui(ui: &mut egui::Ui, diagnostics: &Diagnostics) {
     egui::Grid::new("frame time diagnostics").show(ui, |ui| {
@@ -26,7 +26,7 @@ pub fn diagnostic_ui(ui: &mut egui::Ui, diagnostics: &Diagnostics) {
     });
 }
 
-pub fn display_diagnostics(mut egui_context: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
+pub fn display_diagnostics(mut egui_context: EguiContexts, diagnostics: Res<Diagnostics>) {
     egui::Window::new("Diagnostics")
         .min_width(0.0)
         .default_width(1.0)

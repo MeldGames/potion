@@ -1,18 +1,17 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContext;
+use bevy_egui::EguiContexts;
 use egui::{FontData, FontDefinitions, FontFamily};
-use iyes_loopless::prelude::*;
 
 pub struct SetupEguiPlugin;
 
 impl Plugin for SetupEguiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(setup_fonts.run_if_resource_added::<EguiContext>())
-            .add_system(setup_style.run_if_resource_added::<EguiContext>());
+        //app.add_system(setup_fonts)
+        //.add_system(setup_style);
     }
 }
 
-pub fn setup_fonts(mut egui_context: ResMut<EguiContext>) {
+pub fn setup_fonts(mut egui_context: EguiContexts) {
     let mut fonts = FontDefinitions::default();
 
     // Install my own font (maybe supporting non-latin characters):
@@ -38,7 +37,7 @@ pub fn setup_fonts(mut egui_context: ResMut<EguiContext>) {
     egui_context.ctx_mut().set_fonts(fonts);
 }
 
-pub fn setup_style(mut egui_context: ResMut<EguiContext>) {
+pub fn setup_style(mut egui_context: EguiContexts) {
     let mut visuals = egui::Visuals::dark();
     visuals.popup_shadow.extrusion = 1.0;
     visuals.window_shadow.extrusion = 1.0;

@@ -6,7 +6,7 @@ pub mod deposit;
 pub mod diagnostics;
 pub mod egui;
 pub mod joint_break;
-pub mod network;
+//pub mod network;
 pub mod physics;
 pub mod player;
 pub mod slot;
@@ -28,8 +28,6 @@ use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
 use ui::UiPlugin;
 
-use bevy_mod_outline::*;
-
 pub use debug::DebugVisible;
 
 use attach::Attach;
@@ -43,13 +41,13 @@ use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstance,
-    window::{CursorGrabMode, WindowPlugin},
+    window::{Cursor, CursorGrabMode, WindowPlugin},
 };
 
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
-pub const TICK_RATE: std::time::Duration = sabi::prelude::tick_hz(60);
+pub const TICK_RATE: std::time::Duration = std::time::Duration::from_millis(16);
 
 pub fn setup_app(app: &mut App) {
     //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
@@ -57,44 +55,22 @@ pub fn setup_app(app: &mut App) {
     //let default_res = (800.0, 500.0);
     //let default_res = (1920.0, 1080.0);
     let half_width = ((default_res.0 / 2.0), default_res.1);
-    let (title, (width, height), position) = match (
-        app.world.contains_resource::<sabi::Local>(),
-        app.world.contains_resource::<sabi::Client>(),
-        app.world.contains_resource::<sabi::Server>(),
-    ) {
-        (true, _, _) => (
-            "Potion Cellar Local".to_owned(),
-            default_res,
-            WindowPosition::Automatic,
-        ),
-        (_, true, _) => (
-            "Potion Cellar Client".to_owned(),
-            half_width,
-            WindowPosition::At(Vec2::new(half_width.0, 0.0)),
-        ),
-        (_, _, true) => (
-            "Potion Cellar Server".to_owned(),
-            half_width,
-            WindowPosition::At(Vec2::new(0.0, 0.0)),
-        ),
-        _ => {
-            panic!("unknown program")
-        }
-    };
-
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {
-                window: WindowDescriptor {
-                    title: title,
-                    width: width,
-                    height: height,
-                    cursor_visible: true,
-                    position: position,
-                    cursor_grab_mode: CursorGrabMode::None,
+                primary_window: Some(Window {
+                    title: "Potion Cellar".into(),
+                    resolution: default_res.into(),
+                    //position: position,
+                    cursor: {
+                        let mut cursor = Cursor::default();
+                        cursor.grab_mode = CursorGrabMode::None;
+                        cursor.visible = true;
+                        cursor
+                    },
                     present_mode: bevy::window::PresentMode::Immediate,
                     ..default()
-                },
+                }),
                 ..default()
             })
             .set(AssetPlugin {
@@ -109,12 +85,11 @@ pub fn setup_app(app: &mut App) {
     });
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
-    app.add_plugin(crate::egui::SetupEguiPlugin);
+    //app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin);
-    app.add_plugin(crate::network::NetworkPlugin);
 
     //app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(Msaa { samples: 4 })
+    app.insert_resource(Msaa::Sample8)
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
         .add_plugin(UiPlugin)
@@ -137,11 +112,6 @@ pub fn setup_app(app: &mut App) {
         //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
-    //app.add_plugin(OutlinePlugin);
-    //app.add_plugin(edge_detection::EdgeDetectionPlugin)
-    //   .init_resource::<edge_detection::EdgeDetectionConfig>();
-    //.add_plugin(AutoGenerateOutlineNormalsPlugin);
-    app.add_system(outline_meshes);
 
     //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
 
@@ -157,49 +127,13 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
-#[derive(Component)]
-pub struct NoOutline;
-
-fn outline_meshes(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    query: Query<
-        (Entity, &Handle<Mesh>),
-        (
-            Added<Handle<Mesh>>,
-            Without<OutlineVolume>,
-            Without<NotShadowReceiver>,
-        ),
-    >,
-) {
-    for (entity, mesh) in &query {
-        if let Some(mesh) = meshes.get_mut(mesh) {
-            if mesh.contains_attribute(Mesh::ATTRIBUTE_NORMAL) {
-                let _ = mesh.generate_outline_normals();
-
-                commands
-                    .entity(entity)
-                    .insert(SetOutlineDepth::Real)
-                    .insert(OutlineBundle {
-                        outline: OutlineVolume {
-                            visible: true,
-                            width: 5.0,
-                            colour: Color::rgba(0.0, 0.0, 0.0, 1.0),
-                        },
-                        ..default()
-                    });
-            }
-        }
-    }
-}
-
 fn fallback_camera(mut commands: Commands) {
     commands
         .spawn(Camera3dBundle {
             transform: Transform::from_translation(Vec3::new(0., 12., 10.))
                 .looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
             camera: Camera {
-                priority: -50,
+                order: -50,
                 is_active: false,
                 ..default()
             },
@@ -225,7 +159,7 @@ pub fn setup_map(
             NotShadowReceiver,
             Name::new("Ground"),
         ))
-        .add_children(|children| {
+        .with_children(|children| {
             children
                 .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     0.0, -10.0, 0.0,
@@ -249,15 +183,6 @@ pub fn setup_map(
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0,
-                far: 1000.0,
-                ..default()
-            },
             shadows_enabled: true,
             ..default()
         },
@@ -359,7 +284,7 @@ pub fn setup_map(
             crate::physics::TERRAIN_GROUPING,
             DEFAULT_FRICTION,
         ))
-        .add_children(|commands| {
+        .with_children(|commands| {
             commands.spawn(SceneBundle {
                 scene: asset_server.load("models/cart.gltf#Scene0"),
                 transform: Transform {
@@ -394,22 +319,22 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
-        /*
-    let _sky_clouds = commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/sky_clouds.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-1.5, 1.3, 1.075),
-                scale: Vec3::splat(2.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert((
-            NotShadowCaster,
-            NotShadowReceiver,
-        )).id();
- */
+    /*
+       let _sky_clouds = commands
+           .spawn(SceneBundle {
+               scene: asset_server.load("models/sky_clouds.glb#Scene0"),
+               transform: Transform {
+                   translation: Vec3::new(-1.5, 1.3, 1.075),
+                   scale: Vec3::splat(2.0),
+                   ..default()
+               },
+               ..default()
+           })
+           .insert((
+               NotShadowCaster,
+               NotShadowReceiver,
+           )).id();
+    */
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {

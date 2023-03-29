@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    app.insert_resource(sabi::Client);
+    //app.insert_resource(sabi::Client);
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
 

@@ -25,7 +25,11 @@ pub fn toggle_debug(kb: Res<Input<KeyCode>>, mut debug: ResMut<Debug>) {
 pub fn debug_visible(debug: Res<Debug>, mut visibility: Query<(&mut Visibility, &DebugVisible)>) {
     if debug.is_changed() {
         for (mut visibility, _debug_visible) in &mut visibility {
-            visibility.is_visible = debug.visible();
+            if debug.visible() {
+                *visibility = Visibility::Visible;
+            } else {
+                *visibility = Visibility::Inherited;
+            }
         }
     }
 }

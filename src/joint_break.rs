@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use sabi::stage::NetworkSimulationAppExt;
 
 #[derive(Debug, Default, Clone, Copy, Component, Reflect)]
 #[reflect(Component)]
@@ -74,11 +73,7 @@ pub struct BreakJointPlugin;
 
 impl Plugin for BreakJointPlugin {
     fn build(&self, app: &mut App) {
-        app.add_network_system(
-            break_grace_period
-                .label("brake_grace_period")
-                .after("break_joints"),
-        );
-        app.add_network_system(break_joints.label("break_joints"));
+        app.add_system(break_grace_period);
+        app.add_system(break_joints);
     }
 }

@@ -3,8 +3,6 @@ use bevy_rapier3d::prelude::*;
 
 use crate::cauldron::NamedEntity;
 
-use sabi::stage::NetworkSimulationAppExt;
-
 #[derive(Debug, Clone, Component)]
 pub struct Attach(Entity);
 
@@ -185,8 +183,8 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachRotation>()
             .register_type::<AttachScale>();
 
-        app.add_network_system(velocity_nonphysics.label("velocity_nonphysics"));
-        app.add_network_system(update_attach.label("update_attach"));
+        app.add_system(velocity_nonphysics);
+        app.add_system(update_attach);
         //app.add_system(update_attach.label("update_attach"));
     }
 }

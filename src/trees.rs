@@ -9,17 +9,14 @@ use bevy::{
         },
     },
 };
-use bevy_mod_outline::{OutlineStencil, OutlineVolume};
 use bevy_rapier3d::prelude::*;
-use bevy_shader_utils::ShaderUtilsPlugin;
 
 pub struct TreesPlugin;
 impl Plugin for TreesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(MaterialPlugin::<LeafMaterial>::default())
             .add_plugin(MaterialPlugin::<BarkMaterial>::default())
-            .add_plugin(ShaderUtilsPlugin)
-            .add_system_to_stage(CoreStage::PostUpdate, mod_scene);
+            .add_system(mod_scene);
     }
 }
 
@@ -137,8 +134,6 @@ fn mod_scene(
                 alpha_mode: AlphaMode::Mask(1.0),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
-            commands.entity(e).remove::<OutlineStencil>();
-            commands.entity(e).remove::<OutlineVolume>();
             commands
                 .entity(e)
                 .insert((custom_material, NotShadowReceiver, Inserted));
@@ -148,8 +143,6 @@ fn mod_scene(
                 color: Color::rgb(0.3, 0.2, 0.18),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
-            commands.entity(e).remove::<OutlineStencil>();
-            commands.entity(e).remove::<OutlineVolume>();
             commands
                 .entity(e)
                 .insert((custom_material, NotShadowReceiver, Inserted));

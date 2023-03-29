@@ -3,7 +3,6 @@ use std::{collections::VecDeque, time::Duration};
 use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
-use sabi::{prelude::ReplicatePlugin, stage::NetworkSimulationAppExt};
 
 use crate::cauldron::NamedEntity;
 
@@ -181,7 +180,8 @@ pub fn insert_slot(
                             if *slottable == Slottable::Free {
                                 info!("slotting {:?}", names.named(next_item));
                                 slot.containing = Some(next_item);
-                                grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
+                                grace_period.0 =
+                                    Timer::new(Duration::from_secs(1), TimerMode::Once);
                                 *slottable = Slottable::Slotted;
                                 break;
                             }
@@ -246,13 +246,13 @@ pub fn spring_slot(
                             *slottable = Slottable::Free;
                         }
 
-                            info!(
-                                "Removing from slot {:?}: {:?}",
-                                names.named(slot_entity),
-                                names.named(particle_entity)
-                            );
-                            slot.containing = None;
-                            continue;
+                        info!(
+                            "Removing from slot {:?}: {:?}",
+                            names.named(slot_entity),
+                            names.named(particle_entity)
+                        );
+                        slot.containing = None;
+                        continue;
                     } else {
                         impulse
                     }
@@ -313,15 +313,9 @@ impl Plugin for SlotPlugin {
             .register_type::<bevy::time::TimerMode>()
             .register_type::<SlotSettings>();
 
-        app.add_plugin(ReplicatePlugin::<Slot>::default());
-        app.add_plugin(ReplicatePlugin::<SlotSettings>::default());
-        app.add_plugin(ReplicatePlugin::<Slottable>::default());
-        app.add_plugin(ReplicatePlugin::<SlotGracePeriod>::default());
-        //app.add_plugin(ReplicatePlugin::<SlotDeposit>::default());
-
-        app.add_network_system(pending_slot);
-        app.add_network_system(insert_slot.after(pending_slot));
-        app.add_network_system(tick_grace_period.before(insert_slot));
-        app.add_network_system(spring_slot.after(insert_slot));
+        app.add_system(pending_slot);
+        app.add_system(insert_slot.after(pending_slot));
+        app.add_system(tick_grace_period.before(insert_slot));
+        app.add_system(spring_slot.after(insert_slot));
     }
 }

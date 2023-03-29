@@ -1,5 +1,3 @@
-
-
 use std::fmt::Debug;
 
 use bevy::{
@@ -25,16 +23,22 @@ use super::prelude::*;
 
 pub struct GrabPlugin;
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GrabSet;
+
 impl Plugin for GrabPlugin {
     fn build(&self, app: &mut App) {
-        use sabi::stage::NetworkSimulationAppExt;
-
         app.register_type::<AutoAim>();
 
-        app.add_network_system(auto_aim_debug_lines);
-        app.add_network_system(auto_aim_pull);
-        app.add_network_system(twist_grab);
-        app.add_network_system(update_grab_sphere);
+        app.add_systems(
+            (
+                auto_aim_debug_lines,
+                auto_aim_pull,
+                twist_grab,
+                update_grab_sphere,
+            )
+                .in_set(GrabSet),
+        );
     }
 }
 
@@ -90,7 +94,6 @@ pub fn grab_collider(
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
     for (hand, mut grabbing, global, children, connected) in &mut hands {
-        
         if grabbing.trying_grab {
             /*
             let mut already_grabbing = None;
@@ -190,7 +193,7 @@ pub fn grab_collider(
                         .build();
                     grab_joint.set_contacts_enabled(false);
 
-                    commands.entity(hand).add_children(|children| {
+                    commands.entity(hand).with_children(|children| {
                         children
                             .spawn(ImpulseJoint::new(other_rigidbody, grab_joint))
                             .insert(GrabJoint);
@@ -366,17 +369,22 @@ pub fn update_grab_sphere(
                 Color::RED,
             );
 
-            anchors.push((grabber, sphere_base.compute_matrix().inverse().project_point3(global_anchor), ));
+            anchors.push((
+                grabber,
+                sphere_base
+                    .compute_matrix()
+                    .inverse()
+                    .project_point3(global_anchor),
+            ));
         }
 
-        let (min, max) = 
-            if let Some(initial) = anchors.get(0) {
-                let min: Vec3 = anchors.iter().fold(initial.1, |a, b| a.min(b.1));
-                let max: Vec3 = anchors.iter().fold(initial.1, |a, b| a.max(b.1));
-                (min, max)
-            } else {
-                (Vec3::ZERO, Vec3::ZERO)
-            };
+        let (min, max) = if let Some(initial) = anchors.get(0) {
+            let min: Vec3 = anchors.iter().fold(initial.1, |a, b| a.min(b.1));
+            let max: Vec3 = anchors.iter().fold(initial.1, |a, b| a.max(b.1));
+            (min, max)
+        } else {
+            (Vec3::ZERO, Vec3::ZERO)
+        };
 
         let diameter = min.distance(max);
         let radius = diameter / 2.0;
@@ -395,15 +403,13 @@ pub fn update_grab_sphere(
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing
-            } else  {
+            } else {
                 continue;
             };
 
             grabbing.dir = (sphere.center - *anchor);
         }
     }
-
-
 }
 
 pub fn player_grabby_hands(
@@ -465,7 +471,8 @@ pub fn player_grabby_hands(
                 let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let grab_rotation = neck_yaw * grabbing.rotation;
-                target_position.translation = neck_global.translation() + direction * 2.5 + grab_rotation * grabbing.dir;
+                target_position.translation =
+                    neck_global.translation() + direction * 2.5 + grab_rotation * grabbing.dir;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;

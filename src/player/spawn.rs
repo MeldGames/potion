@@ -1,4 +1,3 @@
-
 use std::fmt::Debug;
 
 use bevy::prelude::*;
@@ -13,7 +12,6 @@ use bevy_mod_wanderlust::{
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
-use sabi::prelude::*;
 
 use super::prelude::*;
 use crate::attach::Attach;
@@ -59,15 +57,14 @@ pub fn setup_player(
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
-    mut lobby: ResMut<Lobby>,
     mut server: Option<ResMut<RenetServer>>,
 ) {
     for (event, id) in player_reader.iter_with_id() {
         info!("player event {:?}: {:?}", id, event);
         match event {
             &PlayerEvent::SetupLocal { id } => {
-                let player_entity = *lobby.players.get(&id).expect("Expected a player");
-                info!("setting up local entity: {:?}", player_entity);
+                //let player_entity = *lobby.players.get(&id).expect("Expected a player");
+                //info!("setting up local entity: {:?}", player_entity);
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
@@ -136,7 +133,7 @@ pub fn setup_player(
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
                     //.insert(ConnectedMass::default())
-                    .insert(Owned)
+                    //.insert(Owned)
                     .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
@@ -195,7 +192,7 @@ pub fn setup_player(
                         }
                         .into(),
                         camera: Camera {
-                            priority: 50,
+                            order: 50,
                             is_active: true,
                             ..default()
                         },
@@ -245,6 +242,7 @@ pub fn setup_player(
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
+                /*
                 lobby.players.insert(id, player_entity);
                 if let Some(ref mut server) = server {
                     for (existing_id, existing_entity) in lobby.players.iter() {
@@ -275,6 +273,7 @@ pub fn setup_player(
                     let message = bincode::serialize(&ServerMessage::SetPlayer { id }).unwrap();
                     server.send_message(id, ServerChannel::Message.id(), message);
                 }
+                */
             }
         }
     }
@@ -379,6 +378,7 @@ pub fn attach_arm(
             target: target,
             pole_target: Some(pole_target),
             pole_angle: std::f32::consts::FRAC_PI_2,
+            enabled: true,
         })
         .insert(Name::new(format!("Hand Target {}", index)))
         .insert(DebugVisible)
@@ -716,10 +716,13 @@ pub fn setup_ik(
         let pole_target = commands
             .spawn(PbrBundle {
                 transform: Transform::from_xyz(-1.0, 0.4, -0.4),
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.05,
-                    subdivisions: 1,
-                })),
+                mesh: meshes.add(
+                    Mesh::try_from(shape::Icosphere {
+                        radius: 0.05,
+                        subdivisions: 1,
+                    })
+                    .unwrap(),
+                ),
                 material: materials.add(StandardMaterial {
                     base_color: Color::GREEN,
                     ..default()
@@ -735,15 +738,19 @@ pub fn setup_ik(
             target: physics_right_hand,
             pole_target: Some(pole_target),
             pole_angle: std::f32::consts::FRAC_PI_2,
+            enabled: true,
         });
 
         let pole_target = commands
             .spawn(PbrBundle {
                 transform: Transform::from_xyz(1.0, 0.4, -0.4),
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.05,
-                    subdivisions: 1,
-                })),
+                mesh: meshes.add(
+                    Mesh::try_from(shape::Icosphere {
+                        radius: 0.05,
+                        subdivisions: 1,
+                    })
+                    .unwrap(),
+                ),
                 material: materials.add(StandardMaterial {
                     base_color: Color::GREEN,
                     ..default()
@@ -758,6 +765,7 @@ pub fn setup_ik(
             target: physics_left_hand,
             pole_target: Some(pole_target),
             pole_angle: std::f32::consts::FRAC_PI_2,
+            enabled: true,
         });
 
         commands.entity(entity).insert(Transform {

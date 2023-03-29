@@ -1,9 +1,7 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 
 use bevy_editor_pls::EditorState;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
-
-use sabi::stage::{NetworkCoreStage, NetworkSimulationAppExt};
 
 use crate::attach::AttachPlugin;
 
@@ -25,7 +23,7 @@ impl Plugin for CustomWanderlustPlugin {
             .register_type::<ControllerSettings>()
             .register_type::<ControllerInput>()
             //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
-            .add_network_system(bevy_mod_wanderlust::movement);
+            .add_system(bevy_mod_wanderlust::movement);
     }
 }
 
@@ -37,14 +35,11 @@ pub struct PlayerBundle {
     pub name: Name,
 }
 
-pub fn window_focused(windows: Option<Res<Windows>>) -> bool {
-    if let Some(windows) = windows {
-        if let Some(window) = windows.get_primary() {
-            return window.is_focused();
-        }
+pub fn window_focused(windows: Option<Query<&Window, With<PrimaryWindow>>>) -> bool {
+    match windows.and_then(|windows| windows.get_single().ok().map(|window| window.focused)) {
+        Some(focused) => focused,
+        _ => false,
     }
-
-    false
 }
 
 pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
@@ -54,6 +49,9 @@ pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
         false
     }
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ControllerSet;
 
 pub struct PlayerPlugin;
 
@@ -65,85 +63,27 @@ impl Plugin for PlayerPlugin {
 
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
 
-        app.add_network_system(
-            controller::player_movement
-                .label("player_movement")
-                .before(bevy_mod_wanderlust::movement)
-                .after("update_player_inputs")
-                .after("player_swivel_and_tilt"),
-        );
-        app.add_network_system(
-            grab::player_grabby_hands
-                .label("player_grabby_hands")
-                .after(bevy_mod_wanderlust::movement)
-                .after("update_player_inputs")
-                .after("player_movement"),
-        );
+        //app.configure_set(ControllerSet.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_system(grab::player_grabby_hands.in_set(ControllerSet));
+        app.add_system(grab::joint_children.in_set(ControllerSet));
+        app.add_system(grab::tense_arms.in_set(ControllerSet));
+        app.add_system(grab::grab_collider.in_set(ControllerSet));
 
-        app.add_system_to_network_stage(
-            NetworkCoreStage::PostUpdate,
-            bevy::transform::transform_propagate_system.label("tranform_propagate"),
-        );
-        app.add_system_to_network_stage(
-            NetworkCoreStage::PostUpdate,
-            controller::avoid_intersecting
-                .label("avoid_intersecting")
-                .before("transform_propagate"),
-        );
-        app.add_network_system(
-            controller::character_crouch
-                .label("character_crouch")
-                .before(bevy_mod_wanderlust::movement)
-                .after("update_player_inputs"),
-        );
-        app.add_network_system(grab::joint_children.label("joint_children"));
-        app.add_network_system(grab::tense_arms.label("tense_arms"));
-        app.add_network_system(
-            spawn::connected_entities
-                .label("connected_entities")
-                .after("joint_children")
-                .before("related_entities"),
-        );
+        app.add_system(controller::player_movement.in_set(ControllerSet));
+        app.add_system(controller::avoid_intersecting.in_set(ControllerSet));
+        app.add_system(controller::character_crouch.in_set(ControllerSet));
+        app.add_system(controller::controller_exclude.in_set(ControllerSet));
+        app.add_system(controller::player_swivel_and_tilt.in_set(ControllerSet));
+        app.add_system(controller::teleport_player_back.in_set(ControllerSet));
 
-        app.add_network_system(
-            spawn::contact_filter
-                .label("contact_filter")
-                .after("joint_children")
-                .before("related_entities"),
-        );
-        app.add_network_system(
-            spawn::connected_mass
-                .label("connected_mass")
-                .after("connected_entities"),
-        );
-
-        app.add_network_system(
-            spawn::extended_mass
-                .label("extended_mass")
-                .after("connected_mass"),
-        );
-
-        app.add_network_system(
-            controller::controller_exclude
-                .label("controller_exclude")
-                .after("joint_children"),
-        );
-        app.add_network_system(
-            grab::grab_collider
-                .label("grab_collider")
-                .after(bevy_mod_wanderlust::movement)
-                .after("target_position")
-                .after("related_entities"),
-        );
-        app.add_network_system(
-            controller::player_swivel_and_tilt
-                .label("player_swivel_and_tilt")
-                .after("update_player_inputs"),
-        );
-        app.add_meta_network_system(spawn::setup_player);
-        app.add_meta_network_system(spawn::setup_ik);
-        app.add_meta_network_system(Events::<spawn::PlayerEvent>::update_system);
-
-        app.add_network_system(controller::teleport_player_back);
+        /*
+               app.add_systems( spawn::connected_entities);
+               app.add_systems(spawn::contact_filter);
+               app.add_systems(spawn::connected_mass);
+               app.add_systems(spawn::extended_mass);
+               app.add_systems(spawn::setup_player);
+               app.add_systems(spawn::setup_ik);
+        */
+        app.add_system(Events::<spawn::PlayerEvent>::update_system);
     }
 }

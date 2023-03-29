@@ -2,13 +2,15 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_rapier3d::prelude::*;
 
-pub type HookData<'a> = &'a ContactFilter;
+//pub type HookData<'a> = &'a ContactFilter;
+pub type HookData = ();
 
 #[derive(Default, Debug, Clone, Component)]
 pub struct ContactFilter(pub HashSet<Entity>);
 
 pub struct ContactFilterHook;
 
+/*
 impl<'a> PhysicsHooksWithQuery<HookData<'a>> for ContactFilterHook {
     fn modify_solver_contacts(
         &self,
@@ -29,3 +31,4 @@ impl<'a> PhysicsHooksWithQuery<HookData<'a>> for ContactFilterHook {
         }
     }
 }
+ */

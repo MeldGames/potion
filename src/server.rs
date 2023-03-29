@@ -1,4 +1,3 @@
-use iyes_loopless::prelude::*;
 
 use bevy::prelude::*;
 
@@ -8,10 +7,8 @@ use potion::setup_map;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
-    app.insert_resource(sabi::Server);
     potion::setup_app(&mut app);
 
-    app.add_loopless_state(MouseState::Locked);
     app.insert_resource(LockToggle::default());
 
     /*
@@ -27,15 +24,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                .label("player_mouse_input"),
        );
     */
+    /*
     app.add_system(
         toggle_mouse_lock
             .run_if(window_focused)
-            .label("toggle_mouse_lock"),
     )
     .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
+ */
 
     app.add_startup_system(setup_map);
 
+/*
     #[cfg(feature = "public")]
     let ip = sabi::protocol::public_ip()?;
     #[cfg(not(feature = "public"))]
@@ -45,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sabi::protocol::new_renet_server(ip, None, sabi::protocol::PORT)
             .expect("could not make new server");
     app.insert_resource(new_server);
+ */
     app.run();
-
     Ok(())
 }
