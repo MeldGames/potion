@@ -7,7 +7,6 @@ use bevy::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    //app.insert_resource(sabi::Local);
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);

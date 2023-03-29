@@ -121,7 +121,7 @@ impl Plugin for PhysicsPlugin {
 
         */
         let physics_plugin =
-            RapierPhysicsPlugin::<HookData>::default().with_default_system_setup(false);
+            RapierPhysicsPlugin::<HookData>::default().with_default_system_setup(true);
         app.add_plugin(physics_plugin);
 
         app.add_system(cap_velocity);
