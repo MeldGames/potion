@@ -395,13 +395,9 @@ impl Plugin for PlayerInputPlugin {
             zoom_scroll_for_toi, //.run_if(window_focused)
                                  //.run_if(not(editor_active))
         )
-        .add_system(
-            player_mouse_inputs
-        )
+        .add_system(player_mouse_inputs)
         .add_system(initial_mouse_click)
-        .add_system(
-            toggle_mouse_lock
-        )
+        .add_system(toggle_mouse_lock)
         .add_system(mouse_lock)
         .add_system(update_local_player_inputs);
     }

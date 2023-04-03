@@ -18,8 +18,8 @@ pub mod ui_pieces;
 
 use std::f32::consts::PI;
 
-use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
+use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
 use cauldron::{CauldronPlugin, Ingredient};
 use deposit::DepositPlugin;
@@ -90,7 +90,7 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
     //app.add_plugin(crate::egui::SetupEguiPlugin);
-    app.add_plugin(bevy_editor_pls::EditorPlugin);
+    //app.add_plugin(bevy_editor_pls::EditorPlugin);
 
     app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
@@ -99,8 +99,8 @@ pub fn setup_app(app: &mut App) {
     });
 
     //app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(Msaa::Off)
-        .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
+    app.insert_resource(Msaa::Off);
+    app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
         .add_plugin(UiPlugin)
         .add_plugin(CauldronPlugin)
@@ -326,19 +326,20 @@ pub fn setup_map(
             ));
         });
 
-    let _sky = commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/skybox.gltf#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-1.5, 1.3, 1.075),
-                scale: Vec3::splat(3.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert((NotShadowCaster, NotShadowReceiver))
-        .id();
-
+    /*
+       let _sky = commands
+           .spawn(SceneBundle {
+               scene: asset_server.load("models/skybox.gltf#Scene0"),
+               transform: Transform {
+                   translation: Vec3::new(-1.5, 1.3, 1.075),
+                   scale: Vec3::splat(3.0),
+                   ..default()
+               },
+               ..default()
+           })
+           .insert((NotShadowCaster, NotShadowReceiver))
+           .id();
+    */
     /*
        let _sky_clouds = commands
            .spawn(SceneBundle {

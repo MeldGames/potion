@@ -198,10 +198,7 @@ pub fn setup_player(
                         },
                         ..default()
                     })
-                    .insert((
-                        DepthPrepass,
-                        NormalPrepass,
-                    ))
+                    .insert((DepthPrepass, NormalPrepass))
                     .insert(Fxaa {
                         enabled: true,
                         edge_threshold_min: Sensitivity::Extreme,

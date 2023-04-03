@@ -114,20 +114,16 @@ impl Plugin for PhysicsPlugin {
             ..Default::default()
         });
 
-
-        type PhysicsPlugin = RapierPhysicsPlugin::<HookData>;
+        type PhysicsPlugin = RapierPhysicsPlugin<HookData>;
         /*
                app.insert_resource(PhysicsHooksWithQueryResource::<HookData>(Box::new(
                    ContactFilterHook,
                )));
 
         */
-        let physics_plugin =
-            PhysicsPlugin::default().with_default_system_setup(true);
+        let physics_plugin = PhysicsPlugin::default().with_default_system_setup(false);
         app.add_plugin(physics_plugin);
 
-
-/*
         app.world
             .resource_mut::<Schedules>()
             .get_mut(&CoreSchedule::FixedUpdate)
@@ -139,24 +135,30 @@ impl Plugin for PhysicsPlugin {
                     PhysicsSet::StepSimulation,
                     PhysicsSet::Writeback,
                 )
-                    .chain()
+                    .chain(),
             );
 
         app.add_systems(
-            PhysicsPlugin::get_systems(PhysicsSet::SyncBackend).in_base_set(PhysicsSet::SyncBackend),
+            PhysicsPlugin::get_systems(PhysicsSet::SyncBackend)
+                .in_base_set(PhysicsSet::SyncBackend)
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)
-                .in_base_set(PhysicsSet::SyncBackendFlush),
+                .in_base_set(PhysicsSet::SyncBackendFlush)
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::StepSimulation)
-                .in_base_set(PhysicsSet::StepSimulation),
+                .in_base_set(PhysicsSet::StepSimulation)
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_systems(
-            PhysicsPlugin::get_systems(PhysicsSet::Writeback).in_base_set(PhysicsSet::Writeback),
+            PhysicsPlugin::get_systems(PhysicsSet::Writeback)
+                .in_base_set(PhysicsSet::Writeback)
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
- */
+
         app.add_system(cap_velocity);
         app.add_startup_system(modify_rapier_context);
     }
