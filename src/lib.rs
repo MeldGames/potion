@@ -90,7 +90,7 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
     //app.add_plugin(crate::egui::SetupEguiPlugin);
-    //app.add_plugin(bevy_editor_pls::EditorPlugin);
+    app.add_plugin(bevy_editor_pls::EditorPlugin);
 
     app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
@@ -326,36 +326,30 @@ pub fn setup_map(
             ));
         });
 
-    /*
-       let _sky = commands
-           .spawn(SceneBundle {
-               scene: asset_server.load("models/skybox.gltf#Scene0"),
-               transform: Transform {
-                   translation: Vec3::new(-1.5, 1.3, 1.075),
-                   scale: Vec3::splat(3.0),
-                   ..default()
-               },
-               ..default()
-           })
-           .insert((NotShadowCaster, NotShadowReceiver))
-           .id();
-    */
-    /*
-       let _sky_clouds = commands
-           .spawn(SceneBundle {
-               scene: asset_server.load("models/sky_clouds.glb#Scene0"),
-               transform: Transform {
-                   translation: Vec3::new(-1.5, 1.3, 1.075),
-                   scale: Vec3::splat(2.0),
-                   ..default()
-               },
-               ..default()
-           })
-           .insert((
-               NotShadowCaster,
-               NotShadowReceiver,
-           )).id();
-    */
+    let _sky = commands
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/skybox.gltf#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 1.075),
+                scale: Vec3::splat(3.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert((NotShadowCaster, NotShadowReceiver))
+        .id();
+    let _sky_clouds = commands
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/sky_clouds.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 1.075),
+                scale: Vec3::splat(2.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert((NotShadowCaster, NotShadowReceiver))
+        .id();
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {

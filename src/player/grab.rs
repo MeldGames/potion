@@ -30,7 +30,6 @@ impl Plugin for GrabPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<AutoAim>();
 
-        app.configure_set(GrabSet.in_base_set(CoreSet::FixedUpdate));
         app.add_systems(
             (
                 auto_aim_debug_lines,
@@ -38,7 +37,8 @@ impl Plugin for GrabPlugin {
                 twist_grab,
                 update_grab_sphere,
             )
-                .in_set(GrabSet),
+                .in_set(GrabSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
     }
 }

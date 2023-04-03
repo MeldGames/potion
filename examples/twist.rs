@@ -1,18 +1,15 @@
 use bevy::{prelude::*, window::CursorGrabMode};
 use bevy_prototype_debug_lines::*;
-use bevy_shader_utils::ShaderUtilsPlugin;
 
 fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
-                    window: WindowDescriptor {
-                        cursor_visible: false,
-                        cursor_grab_mode: CursorGrabMode::None,
+                    primary_window: Some(Window {
                         present_mode: bevy::window::PresentMode::Immediate,
                         ..default()
-                    },
+                    }),
                     ..default()
                 })
                 .set(AssetPlugin {
@@ -100,8 +97,8 @@ pub fn twist(
         *twist = world2 * *twist;
 
         lines.line_colored(
-            previous * Vec3::X * 1.01,
-            *twist * Vec3::X * 1.01,
+            previous * Vec3::X * 1.03,
+            *twist * Vec3::X * 1.03,
             3.0,
             Color::RED,
         );
@@ -145,16 +142,6 @@ fn setup(
     const HALF_SIZE: f32 = 100.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 1000.0 * HALF_SIZE,
-                ..default()
-            },
             shadows_enabled: true,
             ..default()
         },
