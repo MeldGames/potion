@@ -1,28 +1,27 @@
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_rapier3d::prelude::*;
 
-//pub type HookData<'a> = &'a ContactFilter;
-pub type HookData = ();
-
 #[derive(Default, Debug, Clone, Component)]
 pub struct ContactFilter(pub HashSet<Entity>);
 
-pub struct ContactFilterHook;
+#[derive(SystemParam)]
+pub struct ContactFilterHook<'w, 's> {
+    filters: Query<'w, 's, &'static ContactFilter>,
+}
 
-/*
-impl<'a> PhysicsHooksWithQuery<HookData<'a>> for ContactFilterHook {
+impl<'w, 's> BevyPhysicsHooks for ContactFilterHook<'w, 's> {
     fn modify_solver_contacts(
         &self,
         context: ContactModificationContextView,
-        user_data: &Query<HookData>,
     ) {
         let mut should_clear = false;
-        if let Ok(filter) = user_data.get(context.collider1()) {
+        if let Ok(filter) = self.filters.get(context.collider1()) {
             should_clear |= filter.0.contains(&context.collider2());
         }
 
-        if let Ok(filter) = user_data.get(context.collider2()) {
+        if let Ok(filter) = self.filters.get(context.collider2()) {
             should_clear |= filter.0.contains(&context.collider1());
         }
 
@@ -31,4 +30,3 @@ impl<'a> PhysicsHooksWithQuery<HookData<'a>> for ContactFilterHook {
         }
     }
 }
- */

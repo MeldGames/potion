@@ -115,7 +115,7 @@ pub fn setup_app(app: &mut App) {
         .add_plugin(crate::physics::MusclePlugin)
         .add_plugin(RapierDebugRenderPlugin {
             always_on_top: false,
-            enabled: false,
+            enabled: true,
             style: Default::default(),
             mode: DebugRenderMode::COLLIDER_SHAPES,
         })

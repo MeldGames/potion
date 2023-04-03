@@ -114,7 +114,7 @@ impl Plugin for PhysicsPlugin {
             ..Default::default()
         });
 
-        type PhysicsPlugin = RapierPhysicsPlugin<HookData>;
+        type PhysicsPlugin<'w, 's> = RapierPhysicsPlugin<ContactFilterHook<'w, 's>>;
         /*
                app.insert_resource(PhysicsHooksWithQueryResource::<HookData>(Box::new(
                    ContactFilterHook,
