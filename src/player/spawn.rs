@@ -16,7 +16,7 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
-use crate::attach::Attach;
+use crate::attach::{Attach, AttachTranslation};
 use crate::cauldron::NamedEntity;
 use crate::physics::{ContactFilter, Muscle};
 use crate::DebugVisible;
@@ -123,7 +123,7 @@ pub fn setup_player(
                         ..default()
                     })
                     .insert(SceneBundle {
-                        scene: asset_server.load("models/skin.gltf#Scene0"),
+                        //scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
@@ -186,11 +186,7 @@ pub fn setup_player(
                             .looking_at(Vec3::ZERO, Vec3::Y),
                     ))
                     .insert(Camera3dBundle {
-                        projection: PerspectiveProjection {
-                            far: 10000.,
-                            ..default()
-                        }
-                        .into(),
+                        projection: PerspectiveProjection { ..default() }.into(),
                         camera: Camera {
                             order: 50,
                             is_active: true,
@@ -232,10 +228,7 @@ pub fn setup_player(
                 let neck = commands
                     .spawn((TransformBundle::default(), Neck, Name::new("Neck")))
                     .insert(Attach::translation(head))
-                    /* .insert(AttachTranslation::Spring {
-                        strength: 50.0,
-                        damp_ratio: 0.9,
-                    }) */
+                    //.insert(Velocity::linear(Vec3::new(1.0, 0.0, 0.0)))
                     .insert(Velocity::default())
                     .id();
 

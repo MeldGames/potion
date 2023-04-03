@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow, transform::{systems::*, TransformSystem}};
 
 use bevy_editor_pls::EditorState;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
@@ -23,7 +23,7 @@ impl Plugin for CustomWanderlustPlugin {
             .register_type::<ControllerSettings>()
             .register_type::<ControllerInput>()
             //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
-            .add_system(bevy_mod_wanderlust::movement);
+            .add_system(bevy_mod_wanderlust::movement.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
@@ -63,18 +63,78 @@ impl Plugin for PlayerPlugin {
 
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
 
-        app.configure_set(ControllerSet.in_base_set(CoreSet::FixedUpdate));
-        app.add_system(grab::player_grabby_hands.in_set(ControllerSet));
-        app.add_system(grab::joint_children.in_set(ControllerSet));
-        app.add_system(grab::tense_arms.in_set(ControllerSet));
-        app.add_system(grab::grab_collider.in_set(ControllerSet));
+        app.add_system(
+            grab::player_grabby_hands
+                .in_set(ControllerSet)
+                .after(controller::player_movement)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            grab::joint_children
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            grab::tense_arms
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            grab::grab_collider
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
 
-        app.add_system(controller::player_movement.in_set(ControllerSet));
-        app.add_system(controller::avoid_intersecting.in_set(ControllerSet));
-        app.add_system(controller::character_crouch.in_set(ControllerSet));
-        app.add_system(controller::controller_exclude.in_set(ControllerSet));
-        app.add_system(controller::player_swivel_and_tilt.in_set(ControllerSet));
-        app.add_system(controller::teleport_player_back.in_set(ControllerSet));
+        app.add_system(
+            controller::player_movement
+                .in_set(ControllerSet)
+                .before(bevy_mod_wanderlust::movement)
+                .after(controller::player_swivel_and_tilt)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+
+        #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+        struct PropagateTransformsSet;
+
+        app.configure_set(PropagateTransformsSet.in_set(TransformSystem::TransformPropagate));
+        app.add_system(
+            sync_simple_transforms
+                .in_set(TransformSystem::TransformPropagate)
+                .ambiguous_with(PropagateTransformsSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            propagate_transforms
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+
+        app.configure_set(ControllerSet.before(TransformSystem::TransformPropagate));
+
+        app.add_system(
+            controller::avoid_intersecting
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            controller::character_crouch
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            controller::controller_exclude
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            controller::player_swivel_and_tilt
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            controller::teleport_player_back
+                .in_set(ControllerSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
 
         app.add_system(spawn::connected_entities);
         app.add_system(spawn::contact_filter);

@@ -37,28 +37,6 @@ pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(
 );
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
-/*
-RigidBody
-Velocity
-AdditionalMassProperties
-MassProperties
-LockedAxes
-ExternalForce
-ExternalImpulse
-Sleeping
-Damping
-Dominance
-Ccd
-GravityScale
-CollidingEntities
-Sensor
-Friction
-Restitution
-CollisionGroups
-SolverGroups
-ContactForceEventThreshold;
-*/
-
 #[derive(Bundle)]
 pub struct RigidBodyBundle {
     pub rigid_body: RigidBody,

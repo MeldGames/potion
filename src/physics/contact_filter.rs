@@ -12,10 +12,7 @@ pub struct ContactFilterHook<'w, 's> {
 }
 
 impl<'w, 's> BevyPhysicsHooks for ContactFilterHook<'w, 's> {
-    fn modify_solver_contacts(
-        &self,
-        context: ContactModificationContextView,
-    ) {
+    fn modify_solver_contacts(&self, context: ContactModificationContextView) {
         let mut should_clear = false;
         if let Ok(filter) = self.filters.get(context.collider1()) {
             should_clear |= filter.0.contains(&context.collider2());

@@ -59,19 +59,6 @@ pub fn player_movement(
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
         let mut desired_dir = Vec2::new(dir.x, dir.z);
 
-        /*
-               lines.line(
-                   global.translation(),
-                   global.translation() + Vec3::new(current_dir.x, 0.0, current_dir.y),
-                   0.0,
-               );
-               lines.line(
-                   global.translation(),
-                   global.translation() + Vec3::new(desired_dir.x, 0.0, desired_dir.y),
-                   0.0,
-               );
-        */
-
         // If we are grabby then make the character face the way we are grabbing.
         if player_input.any_grabby_hands() {
             let camera_dir = rotation * -Vec3::Z;
@@ -149,64 +136,6 @@ pub fn controller_exclude(
         }
 
         settings.exclude_from_ground = new_exclude;
-    }
-}
-
-pub fn pull_up(
-    grab_joints: Query<&GrabJoint>,
-    mut hands: Query<
-        (
-            Entity,
-            &GlobalTransform,
-            &mut ExternalImpulse,
-            Option<&Children>,
-        ),
-        With<Hand>,
-    >,
-    impulse_joints: Query<&ImpulseJoint>,
-    mut controllers: Query<(
-        &mut ControllerInput,
-        &mut ControllerSettings,
-        &GlobalTransform,
-        &LookTransform,
-        &PlayerInput,
-    )>,
-    _lines: ResMut<DebugLines>,
-) {
-    for (hand, _hand_position, _hand_impulse, children) in &mut hands {
-        let _should_pull_up = children
-            .map(|children| children.iter().any(|child| grab_joints.contains(*child)))
-            .unwrap_or_default();
-        // Get the direction from the body to the hand
-
-        let mut child_entity = hand;
-        while let Ok(joint) = impulse_joints.get(child_entity) {
-            child_entity = joint.parent;
-            if let Ok((_controller_input, _settings, _body_transform, _direction, _player_input)) =
-                controllers.get_mut(child_entity)
-            {
-                //controller_input.no_downward_float = should_pull_up;
-                /*
-                               if should_pull_up && player_input.pitch <= 0.0 {
-                                   let angle_strength = 1.0 - (-player_input.pitch) / (PI / 2.0);
-                                   let strength = ease_sine(angle_strength);
-
-                                   // move forward/backward when pulling on something
-                                   let rotation = Quat::from_axis_angle(Vec3::Y, player_input.yaw as f32);
-                                   let dir = (rotation * -Vec3::Z).normalize_or_zero();
-                                   controller_input.no_downward_float = true;
-                                   //controller_input.movement += dir * 0.1;
-                                   //controller_input.ignore_force = Vec3::new(0.0, 10.0, 0.0);
-                                   //settings.float_cast_length = 0.0;
-                               } else {
-                                   //controller_input.ignore_force = Vec3::new(0.0, 0.0, 0.0);
-                                   controller_input.no_downward_float = false;
-                                   //settings.float_cast_length = 1.0;
-                               }
-                */
-                break;
-            }
-        }
     }
 }
 
