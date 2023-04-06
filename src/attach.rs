@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use bevy::{
+    transform::TransformSystem,
+    prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use crate::cauldron::NamedEntity;
@@ -184,10 +186,6 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachScale>();
 
         app.add_system(velocity_nonphysics);
-        app.add_system(update_attach.in_base_set(CoreSet::PreUpdate));
-        app.add_system(update_attach.in_base_set(CoreSet::Update));
-        app.add_system(update_attach.in_schedule(CoreSchedule::FixedUpdate).after(crate::player::controller::player_movement));
-        app.add_system(update_attach.in_base_set(CoreSet::PostUpdate));
-        //app.add_system(update_attach.label("update_attach"));
+        app.add_system(update_attach.in_schedule(CoreSchedule::FixedUpdate));
     }
 }

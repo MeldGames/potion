@@ -123,7 +123,7 @@ pub fn setup_player(
                         ..default()
                     })
                     .insert(SceneBundle {
-                        //scene: asset_server.load("models/skin.gltf#Scene0"),
+                        scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))

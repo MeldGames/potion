@@ -93,6 +93,7 @@ impl Plugin for PlayerPlugin {
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
 
+        /*
         #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
         struct PropagateTransformsSet;
 
@@ -107,8 +108,7 @@ impl Plugin for PlayerPlugin {
             propagate_transforms
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
-
-        app.configure_set(ControllerSet.before(TransformSystem::TransformPropagate));
+        */
 
         app.add_system(
             controller::avoid_intersecting
