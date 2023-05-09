@@ -1,6 +1,4 @@
-use bevy::{
-    transform::TransformSystem,
-    prelude::*};
+use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
 use crate::cauldron::NamedEntity;

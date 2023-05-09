@@ -15,9 +15,12 @@ use super::prelude::*;
 /// Entities that should be considered as part of the controlled character, not including grabbed.
 #[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
 #[reflect(Component)]
-pub struct ConnectedEntities {
-    pub grabbed: HashSet<Entity>,
-}
+pub struct CharacterEntities(HashSet<Entity>);
+
+/// Entities that should be considered as part of the controlled character, not including grabbed.
+#[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
+#[reflect(Component)]
+pub struct ConnectedEntities(HashSet<Entity>);
 
 pub fn player_movement(
     mut query: Query<
@@ -115,21 +118,10 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSet
 
 pub fn controller_exclude(
     _names: Query<&Name>,
-    mut controllers: Query<(
-        Entity,
-        //Option<&GrabbedEntities>,
-        Option<&ConnectedEntities>,
-        &mut ControllerSettings,
-    )>,
+    mut controllers: Query<(Entity, Option<&CharacterEntities>, &mut ControllerSettings)>,
 ) {
     for (_entity, connected, mut settings) in &mut controllers {
         let mut new_exclude = HashSet::new();
-
-        /*
-        if let Some(grabbed) = grabbed {
-            new_related.extend(grabbed.iter());
-        }
-        */
 
         if let Some(connected) = connected {
             new_exclude.extend(connected.iter());

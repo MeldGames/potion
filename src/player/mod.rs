@@ -1,9 +1,16 @@
-use bevy::{prelude::*, window::PrimaryWindow, transform::{systems::*, TransformSystem}};
+use bevy::{
+    prelude::*,
+    transform::{systems::*, TransformSystem},
+    window::PrimaryWindow,
+};
 
 use bevy_editor_pls::EditorState;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
 use crate::attach::AttachPlugin;
+use crate::player::prelude::GrabJoint;
+
+use self::prelude::{CharacterEntities, ConnectedEntities};
 
 pub mod controller;
 pub mod grab;
@@ -119,7 +126,8 @@ impl Plugin for PlayerPlugin {
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
 
-        app.add_system(spawn::connected_entities);
+        app.add_system(spawn::related_entities::<CharacterEntities, Without<GrabJoint>>);
+        app.add_system(spawn::related_entities::<ConnectedEntities, ()>);
         app.add_system(spawn::contact_filter);
         app.add_system(spawn::connected_mass);
         app.add_system(spawn::extended_mass);

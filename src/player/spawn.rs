@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use bevy::core_pipeline::fxaa::{Fxaa, Sensitivity};
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
+use bevy::ecs::query::ReadOnlyWorldQuery;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_mod_inverse_kinematics::IkConstraint;
@@ -132,6 +133,7 @@ pub fn setup_player(
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
+                    .insert(CharacterEntities::default())
                     //.insert(ConnectedMass::default())
                     //.insert(Owned)
                     .insert(ReadMassProperties::default())
@@ -417,6 +419,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ConnectedEntities::default())
+        .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(upperarm_target))
         .id();
@@ -449,6 +452,7 @@ pub fn attach_arm(
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
         .insert(ConnectedEntities::default())
+        .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(forearm_target))
         .id();
@@ -474,7 +478,7 @@ pub fn attach_arm(
             resting_stiffness * 2.0,
             resting_damping * 2.0,
         )
-        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        //.motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     hand_joint.set_contacts_enabled(false);
 
@@ -483,6 +487,7 @@ pub fn attach_arm(
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(ConnectedEntities::default())
+        .insert(CharacterEntities::default())
         .insert(ConnectedMass::default())
         //.insert(GrabbedEntities::default())
         .insert(Grabbing { ..default() })
@@ -502,25 +507,16 @@ pub fn attach_arm(
         .id();
 }
 
-/// Traverse the transform hierarchy and joint hierarchy to find all related entities.
-pub fn connected_entities(
-    names: Query<&Name>,
-    mut related: Query<
-        (Entity, &mut ConnectedEntities),
-        /*
-               Or<(
-                   Changed<Children>,
-                   Changed<Parent>,
-                   Changed<ImpulseJoint>,
-                   Changed<JointChildren>,
-               )>,
-        */
-    >,
+pub fn related_entities<R, JointFilter>(
+    mut related: Query<(Entity, &mut R)>,
     childrens: Query<&Children>,
     parents: Query<&Parent>,
     joint_childrens: Query<&JointChildren>,
-    joints: Query<&ImpulseJoint, Without<GrabJoint>>,
-) {
+    joints: Query<&ImpulseJoint, JointFilter>,
+) where
+    R: std::ops::DerefMut<Target = HashSet<Entity>> + Component,
+    JointFilter: ReadOnlyWorldQuery,
+{
     for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
         related_entities.insert(core_entity);
@@ -565,14 +561,6 @@ pub fn connected_entities(
             entity_stack = new_stack;
         }
 
-        let mut named = Vec::new();
-        for entity in &related_entities {
-            named.push(match names.get(*entity) {
-                Ok(name) => name.as_str().to_owned(),
-                _ => format!("{:?}", entity),
-            });
-        }
-
         **related = related_entities;
     }
 }
@@ -593,7 +581,7 @@ pub fn connected_mass(
 ) {
     for (entity, mut connected_mass, connected) in &mut connected {
         let mut summed_mass = 0.0;
-        for attached in &connected.grabbed {
+        for attached in connected.iter() {
             if let Ok(_part_mass) = masses.get(*attached) {
                 //summed_mass += part_mass.0.mass;
             }
@@ -609,7 +597,7 @@ pub fn connected_mass(
 
 pub fn contact_filter(mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>) {
     for (_entity, mut contact_filter, connected) in &mut connected {
-        contact_filter.0 = connected.grabbed.clone();
+        contact_filter.0 = (**connected).clone();
     }
 }
 

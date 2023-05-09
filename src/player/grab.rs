@@ -33,9 +33,9 @@ impl Plugin for GrabPlugin {
         app.add_systems(
             (
                 auto_aim_debug_lines,
-                //auto_aim_pull,
-                //twist_grab,
-                //update_grab_sphere,
+                auto_aim_pull,
+                twist_grab,
+                update_grab_sphere,
             )
                 .in_set(GrabSet)
                 .in_schedule(CoreSchedule::FixedUpdate),
@@ -168,6 +168,7 @@ pub fn grab_collider(
                     let transform = global.compute_transform();
                     let matrix = global.compute_matrix();
                     let anchor2 = matrix.inverse().project_point3(closest_point) * transform.scale;
+                    let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
                     let name = name.get(other_rigidbody).unwrap();
                     info!("grabbing {:?}", name);
@@ -294,6 +295,9 @@ pub fn twist_grab(
     }
 
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
+    if cumulative_delta.length_squared() > 0.0 {
+        info!("delta: {:?}", cumulative_delta);
+    }
 
     for mut grabbing in &mut grabbing {
         let axis1 = Vec3::X;
@@ -409,7 +413,7 @@ pub fn update_grab_sphere(
                 continue;
             };
 
-            grabbing.dir = (sphere.center - *anchor);
+            grabbing.dir = sphere.center - *anchor;
         }
     }
 }
@@ -473,6 +477,7 @@ pub fn player_grabby_hands(
                 let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let grab_rotation = neck_yaw * grabbing.rotation;
+
                 target_position.translation =
                     neck_global.translation() + direction * 2.5 + grab_rotation * grabbing.dir;
 

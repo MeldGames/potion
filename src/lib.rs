@@ -351,7 +351,7 @@ pub fn setup_map(
         })
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
-    
+
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {

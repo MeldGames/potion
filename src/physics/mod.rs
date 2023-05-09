@@ -93,8 +93,7 @@ impl Plugin for PhysicsPlugin {
         });
 
         type PhysicsPlugin<'w, 's> = RapierPhysicsPlugin<ContactFilterHook<'w, 's>>;
-        let physics_plugin = PhysicsPlugin::default()
-            .with_default_system_setup(false);
+        let physics_plugin = PhysicsPlugin::default().with_default_system_setup(false);
         app.add_plugin(physics_plugin);
 
         app.world
@@ -112,8 +111,7 @@ impl Plugin for PhysicsPlugin {
             );
 
         app.add_system(
-            bevy_rapier3d::plugin::systems::sync_removals
-                .in_base_set(CoreSet::PostUpdate)
+            bevy_rapier3d::plugin::systems::sync_removals.in_base_set(CoreSet::PostUpdate),
         );
 
         app.add_systems(
