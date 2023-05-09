@@ -111,10 +111,15 @@ impl Plugin for PhysicsPlugin {
                     .chain(),
             );
 
+        app.add_system(
+            bevy_rapier3d::plugin::systems::sync_removals
+                .in_base_set(CoreSet::PostUpdate)
+        );
+
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackend)
                 .in_base_set(PhysicsSet::SyncBackend)
-                //.in_schedule(CoreSchedule::FixedUpdate),
+                .in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)
