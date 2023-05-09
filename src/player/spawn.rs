@@ -474,7 +474,7 @@ pub fn attach_arm(
             resting_stiffness * 2.0,
             resting_damping * 2.0,
         )
-        //.motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     hand_joint.set_contacts_enabled(false);
 

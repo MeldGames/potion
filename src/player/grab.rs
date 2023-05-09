@@ -33,9 +33,9 @@ impl Plugin for GrabPlugin {
         app.add_systems(
             (
                 auto_aim_debug_lines,
-                auto_aim_pull,
-                twist_grab,
-                update_grab_sphere,
+                //auto_aim_pull,
+                //twist_grab,
+                //update_grab_sphere,
             )
                 .in_set(GrabSet)
                 .in_schedule(CoreSchedule::FixedUpdate),
@@ -76,7 +76,7 @@ pub fn joint_children(
 
 pub fn grab_collider(
     mut commands: Commands,
-    name: Query<&Name>,
+    name: Query<DebugName>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
     rigid_bodies: Query<Entity, With<RigidBody>>,
@@ -169,11 +169,8 @@ pub fn grab_collider(
                     let matrix = global.compute_matrix();
                     let anchor2 = matrix.inverse().project_point3(closest_point) * transform.scale;
 
-                    if let Ok(name) = name.get(other_rigidbody) {
-                        info!("grabbing {:?}", name.as_str());
-                    } else {
-                        info!("grabbing entity {:?}", other_rigidbody);
-                    }
+                    let name = name.get(other_rigidbody).unwrap();
+                    info!("grabbing {:?}", name);
 
                     let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
@@ -197,20 +194,24 @@ pub fn grab_collider(
                     commands.entity(hand).with_children(|children| {
                         children
                             .spawn(ImpulseJoint::new(other_rigidbody, grab_joint))
-                            .insert(GrabJoint);
+                            .insert(GrabJoint)
+                            .insert(Name::new("Grab Joint"));
                     });
 
                     grabbing.grabbing = Some(other_rigidbody);
                 }
             }
         } else {
-            grabbing.grabbing = None;
+            if let Some(grabbing) = grabbing.grabbing.take() {
+                info!("letting go of {:?}", name.get(grabbing).unwrap());
+            }
 
             // clean up joints if we aren't grabbing anymore
             if let Some(children) = children {
                 for child in children.iter() {
-                    if let Ok((_impulse_joint, _joint)) = grab_joints.get(*child) {
+                    if grab_joints.contains(*child) {
                         commands.entity(*child).despawn_recursive();
+                        info!("despawning {:?}", name.get(*child).unwrap());
                     }
                 }
             }

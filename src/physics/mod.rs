@@ -93,13 +93,8 @@ impl Plugin for PhysicsPlugin {
         });
 
         type PhysicsPlugin<'w, 's> = RapierPhysicsPlugin<ContactFilterHook<'w, 's>>;
-        /*
-               app.insert_resource(PhysicsHooksWithQueryResource::<HookData>(Box::new(
-                   ContactFilterHook,
-               )));
-
-        */
-        let physics_plugin = PhysicsPlugin::default().with_default_system_setup(false);
+        let physics_plugin = PhysicsPlugin::default()
+            .with_default_system_setup(false);
         app.add_plugin(physics_plugin);
 
         app.world
@@ -119,7 +114,7 @@ impl Plugin for PhysicsPlugin {
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackend)
                 .in_base_set(PhysicsSet::SyncBackend)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                //.in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_systems(
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)

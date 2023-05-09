@@ -95,6 +95,7 @@ pub fn setup_app(app: &mut App) {
     app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
         debug: 0,
+        enabled: 1,
         ..default()
     });
 
