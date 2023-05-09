@@ -88,13 +88,13 @@ pub fn grab_collider(
             &mut Grabbing,
             &GlobalTransform,
             Option<&Children>,
-            &ConnectedEntities,
+            &CharacterEntities,
         ),
         With<Hand>,
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
 ) {
-    for (hand, mut grabbing, global, children, connected) in &mut hands {
+    for (hand, mut grabbing, global, children, character) in &mut hands {
         if grabbing.trying_grab {
             /*
             let mut already_grabbing = None;
@@ -131,7 +131,7 @@ pub fn grab_collider(
                     continue;
                 };
 
-                if connected.contains(&other_rigidbody) {
+                if character.contains(&other_rigidbody) {
                     continue;
                 }
 
@@ -212,7 +212,6 @@ pub fn grab_collider(
                 for child in children.iter() {
                     if grab_joints.contains(*child) {
                         commands.entity(*child).despawn_recursive();
-                        info!("despawning {:?}", name.get(*child).unwrap());
                     }
                 }
             }
@@ -479,7 +478,7 @@ pub fn player_grabby_hands(
                 let grab_rotation = neck_yaw * grabbing.rotation;
 
                 target_position.translation =
-                    neck_global.translation() + direction * 2.5 + grab_rotation * grabbing.dir;
+                    neck_global.translation() + direction * 1.45 + grab_rotation * grabbing.dir;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;

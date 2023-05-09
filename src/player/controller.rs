@@ -17,7 +17,7 @@ use super::prelude::*;
 #[reflect(Component)]
 pub struct CharacterEntities(HashSet<Entity>);
 
-/// Entities that should be considered as part of the controlled character, not including grabbed.
+/// Entities that should be considered connected to this entity in some way.
 #[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
 #[reflect(Component)]
 pub struct ConnectedEntities(HashSet<Entity>);

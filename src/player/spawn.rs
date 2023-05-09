@@ -134,6 +134,7 @@ pub fn setup_player(
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
                     .insert(CharacterEntities::default())
+                    .insert(ContactFilter::default())
                     //.insert(ConnectedMass::default())
                     //.insert(Owned)
                     .insert(ReadMassProperties::default())
@@ -499,7 +500,7 @@ pub fn attach_arm(
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
-        .insert(ContactFilter::default())
+        //.insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .insert(Muscle::new(hand_target))
@@ -574,29 +575,22 @@ impl Default for ConnectedMass {
     }
 }
 
-pub fn connected_mass(
-    mut connected: Query<(Entity, &mut ConnectedMass, &ConnectedEntities)>,
-    masses: Query<&ReadMassProperties>,
-    //names: Query<&Name>,
-) {
-    for (entity, mut connected_mass, connected) in &mut connected {
-        let mut summed_mass = 0.0;
-        for attached in connected.iter() {
-            if let Ok(_part_mass) = masses.get(*attached) {
-                //summed_mass += part_mass.0.mass;
-            }
+pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>) {
+    let debug_name = |entity| -> String {
+        if let Ok(name) = names.get(entity) {
+            name.as_str().to_owned()
+        } else {
+            format!("{:?}", entity)
         }
+    };
 
-        if let Ok(part_mass) = masses.get(entity) {
-            summed_mass += part_mass.0.mass;
+    for (entity, mut contact_filter, connected) in &mut connected {
+        let mut debug_connected = connected.iter().map(|entity| debug_name(*entity)).collect::<Vec<_>>();
+        debug_connected.sort();
+
+        if !debug_connected.is_empty() {
+            //info!("{:?} connected: {:#?}", debug_name(entity), debug_connected);
         }
-        connected_mass.0 = summed_mass * 1.0;
-        //info!("{:?} summed mass: {:?}", names.named(entity), summed_mass);
-    }
-}
-
-pub fn contact_filter(mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>) {
-    for (_entity, mut contact_filter, connected) in &mut connected {
         contact_filter.0 = (**connected).clone();
     }
 }
