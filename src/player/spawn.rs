@@ -575,7 +575,7 @@ impl Default for ConnectedMass {
     }
 }
 
-pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut ContactFilter, &ConnectedEntities)>) {
+pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut ContactFilter, &CharacterEntities)>) {
     let debug_name = |entity| -> String {
         if let Ok(name) = names.get(entity) {
             name.as_str().to_owned()

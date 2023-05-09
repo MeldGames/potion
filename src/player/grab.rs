@@ -289,24 +289,23 @@ pub fn twist_grab(
     mut mouse_motion: EventReader<MouseMotion>,
     mut grabbing: Query<&mut Grabbing>,
 ) {
-    if !kb.pressed(KeyCode::RControl) {
-        return;
-    }
-
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
-    if cumulative_delta.length_squared() > 0.0 {
-        info!("delta: {:?}", cumulative_delta);
-    }
 
     for mut grabbing in &mut grabbing {
-        let axis1 = Vec3::X;
-        let axis2 = Vec3::Y;
-        let world1 = Quat::from_axis_angle(axis1, cumulative_delta.y / 90.0);
-        let world2 = Quat::from_axis_angle(axis2, cumulative_delta.x / 90.0);
-        //lines.line_colored(-axis1, axis1 * 2.0, 3.0, Color::BLUE);
-        //lines.line_colored(-axis2, axis2 * 2.0, 3.0, Color::GREEN);
-        grabbing.rotation = world1 * grabbing.rotation;
-        grabbing.rotation = world2 * grabbing.rotation;
+        if grabbing.grabbing.is_none() {
+            grabbing.rotation = Quat::IDENTITY;
+        } else {
+            if !kb.pressed(KeyCode::RControl) {
+                continue;
+            }
+
+            let axis1 = Vec3::X;
+            let axis2 = Vec3::Y;
+            let world1 = Quat::from_axis_angle(axis1, cumulative_delta.y / 90.0);
+            let world2 = Quat::from_axis_angle(axis2, cumulative_delta.x / 90.0);
+            grabbing.rotation = world1 * grabbing.rotation;
+            grabbing.rotation = world2 * grabbing.rotation;
+        }
     }
 }
 
@@ -383,6 +382,12 @@ pub fn update_grab_sphere(
             ));
         }
 
+        if anchors.len() == 0 {
+            sphere.center = Vec3::ZERO;
+            sphere.radius = 0.0;
+            continue;
+        }
+
         let (min, max) = if let Some(initial) = anchors.get(0) {
             let min: Vec3 = anchors.iter().fold(initial.1, |a, b| a.min(b.1));
             let max: Vec3 = anchors.iter().fold(initial.1, |a, b| a.max(b.1));
@@ -412,7 +417,7 @@ pub fn update_grab_sphere(
                 continue;
             };
 
-            grabbing.dir = sphere.center - *anchor;
+            grabbing.dir = (sphere.center - *anchor).normalize_or_zero() * sphere.radius;
         }
     }
 }
