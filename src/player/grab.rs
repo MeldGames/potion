@@ -427,6 +427,7 @@ pub fn player_grabby_hands(
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
     inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
+    upper_arm: Query<Entity, With<UpperArm>>,
     //ik_base: Query<&IKBase>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
@@ -482,8 +483,14 @@ pub fn player_grabby_hands(
 
                 let grab_rotation = neck_yaw * grabbing.rotation;
 
+                let upper_arm = find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
+                let joint = joints.get(upper_arm).unwrap();
+                let upper_global = globals.get(upper_arm).unwrap();
+                let shoulder = joint.data.local_anchor2();
+                let shoulder_worldspace = upper_global.transform_point(shoulder);
+
                 target_position.translation =
-                    neck_global.translation() + direction * 1.45 + grab_rotation * grabbing.dir;
+                    shoulder_worldspace + direction * 1.45 + grab_rotation * grabbing.dir;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;
