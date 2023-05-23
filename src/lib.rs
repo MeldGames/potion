@@ -381,8 +381,8 @@ pub fn setup_map(
         .spawn(SceneBundle {
             scene: asset_server.load("models/placeholder_sphere.glb#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-1.5, 1.3, 2.075),
-                scale: Vec3::splat(1.0),
+                translation: Vec3::new(-7.5, 2.3, 3.075),
+                scale: Vec3::splat(0.5),
                 ..default()
             },
             ..default()
@@ -390,7 +390,7 @@ pub fn setup_map(
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
-            Collider::round_cylinder(0.025, 0.4, 0.2),
+            Collider::ball(1.0),
             RigidBody::Dynamic,
             Name::new("Ball"),
             Velocity::default(),
