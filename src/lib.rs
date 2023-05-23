@@ -378,18 +378,19 @@ pub fn setup_map(
         .id();
 
     let _ball = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 1.0,
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/placeholder_sphere.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-1.5, 1.3, 2.075),
+                scale: Vec3::splat(1.0),
                 ..default()
-            })),
-            transform: Transform::from_xyz(1.0, 3.0, -2.0),
+            },
             ..default()
         })
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
-            Collider::ball(1.0),
+            Collider::round_cylinder(0.025, 0.4, 0.2),
             RigidBody::Dynamic,
             Name::new("Ball"),
             Velocity::default(),
