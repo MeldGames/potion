@@ -385,7 +385,6 @@ pub fn update_grab_sphere(
         if anchors.len() == 0 {
             sphere.center = Vec3::ZERO;
             sphere.radius = 0.0;
-            continue;
         }
 
         let (min, max) = if let Some(initial) = anchors.get(0) {
@@ -410,6 +409,9 @@ pub fn update_grab_sphere(
             Color::RED,
         );
 
+        for (grabbing) in &mut grabbing {
+
+        }
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing

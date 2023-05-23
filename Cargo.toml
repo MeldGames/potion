@@ -19,10 +19,8 @@ serde = {version = "1.0", features = ["derive"]}
 #springy = {git = "https://github.com/aceeri/springy", rev = "ae09e5910a2", features = ["rapier3d"]}
 springy = {path = "../springy", features = ["rapier3d"]}
 
-#bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust", features = [
-#  "debug_lines",
-#]}
-bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
+bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
+#bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
 #bevy_mod_edge_detection = {path = "../bevy_mod_edge_detection"}
 bevy_mod_edge_detection = {git = "https://github.com/Aceeri/bevy_mod_edge_detection"}
 

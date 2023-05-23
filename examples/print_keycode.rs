@@ -3,11 +3,10 @@ use bevy::{prelude::*, window::WindowPlugin};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                width: 100.0,
-                height: 100.0,
+            primary_window: Some(Window {
+                resolution: (100.0, 100.0).into(),
                 ..default()
-            },
+            }),
             ..default()
         }))
         .add_system(print_keycode)

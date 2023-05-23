@@ -250,6 +250,31 @@ pub fn setup_map(
 
     crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
+
+    let big_ball = commands
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/rock1.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-2.0, 5.0, 2.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert((
+            Ingredient,
+            crate::deposit::Value::new(1),
+            Collider::cuboid(0.3, 0.3, 0.3),
+            RigidBody::Dynamic,
+            StoreItem,
+            Slottable::default(),
+            ReadMassProperties::default(),
+            ExternalImpulse::default(),
+            Name::new("Stone"),
+            Velocity::default(),
+            DEFAULT_FRICTION,
+        ))
+        .id();
+
     let _stone = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/rock1.glb#Scene0"),
@@ -352,6 +377,29 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
+    let _ball = commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 1.0,
+                ..default()
+            })),
+            transform: Transform::from_xyz(1.0, 3.0, -2.0),
+            ..default()
+        })
+        .insert((
+            Ingredient,
+            crate::deposit::Value::new(5),
+            Collider::ball(1.0),
+            RigidBody::Dynamic,
+            Name::new("Ball"),
+            Velocity::default(),
+            ExternalImpulse::default(),
+            Slottable::default(),
+            ReadMassProperties::default(),
+            DEFAULT_FRICTION,
+        ))
+        .id();
+
     let _donut = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Torus {
@@ -375,6 +423,7 @@ pub fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
+
 
     let _prallet = commands
         .spawn(SceneBundle {

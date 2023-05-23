@@ -10,7 +10,7 @@ use bevy_mod_inverse_kinematics::IkConstraint;
 use std::f32::consts::PI;
 
 use bevy_mod_wanderlust::{
-    CharacterControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring,
+    ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring,
 };
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -77,7 +77,7 @@ pub fn setup_player(
                 let player_radius = 0.5;
                 // Spawn player cube
                 let player_entity = commands
-                    .spawn(CharacterControllerBundle {
+                    .spawn(ControllerBundle {
                         settings: ControllerSettings {
                             acceleration: 5.0,
                             max_speed: 7.0,
@@ -96,8 +96,6 @@ pub fn setup_player(
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             float_cast_length: 1.0,
-                            //float_cast_length: 1.,
-                            //float_cast_collider: Collider::ball(player_radius - 0.05),
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 1.0,
                             float_spring: Spring {
