@@ -362,7 +362,7 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
-    let ball_radius = 0.8;
+    let ball_radius = 0.6;
     let _ball = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
