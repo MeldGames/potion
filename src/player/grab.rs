@@ -166,7 +166,14 @@ pub fn grab_collider(
                     let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
                     let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
-                        auto_aim.closest_point(other_global, global.translation())
+                        let closest_point = auto_aim.closest_point(other_global, global.translation());
+                        lines.line_colored(
+                            closest_point.unwrap(),
+                            closest_point.unwrap() + Vec3::Z * 0.5,
+                            2.0,
+                            Color::RED,
+                        );
+                        closest_point
                     } else {
                         None
                     };
@@ -178,19 +185,20 @@ pub fn grab_collider(
                     let anchor1 = if let Some(anchor1) = anchor1 {
                         anchor1
                     } else {
-                        // convert back to local space.
-                        let other_transform = other_global.compute_transform();
-                        let other_matrix = other_global.compute_matrix();
-                        let anchor1 = other_matrix.inverse().project_point3(closest_point)
-                            * other_transform.scale;
-                        anchor1
+                        closest_point
                     };
+
+                    // convert back to local space.
+                    let other_transform = other_global.compute_transform();
+                    let other_matrix = other_global.compute_matrix();
+                    let anchor1 = other_matrix.inverse().project_point3(anchor1)
+                        * other_transform.scale;
 
                     let point1 = transform(other_global, anchor1);
                     lines.line_colored(
                         point1,
                         point1 + Vec3::Z * 0.5,
-                        5.0,
+                        2.0,
                         Color::RED,
                     );
 

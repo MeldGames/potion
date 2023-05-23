@@ -172,11 +172,10 @@ pub fn setup_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let test_texture = asset_server.load("icons/frostbolt.png");
+    let test_texture = asset_server.load("models/materials/Placeholder.png");
     let test_material = materials.add(StandardMaterial {
         base_color_texture: Some(test_texture.clone()),
         alpha_mode: AlphaMode::Blend,
-        unlit: true,
         ..default()
     });
 
@@ -363,7 +362,7 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
-    let ball_radius = 0.5;
+    let ball_radius = 0.8;
     let _ball = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
