@@ -16,7 +16,7 @@ bevy_egui = "0.20"
 #sabi = { path = "../sabi/sabi", features = ["public"] }
 #sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
-springy = {git = "https://github.com/aceeri/springy", rev = "ae09e5910a2", features = ["rapier3d"]}
+springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
 #springy = {path = "../springy", features = ["rapier3d"]}
 
 bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
