@@ -79,6 +79,7 @@ pub fn grab_collider(
     name: Query<DebugName>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
+    auto_aim: Query<&AutoAim>,
     rigid_bodies: Query<Entity, With<RigidBody>>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
@@ -93,6 +94,8 @@ pub fn grab_collider(
         With<Hand>,
     >,
     grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
+
+    mut lines: ResMut<DebugLines>,
 ) {
     for (hand, mut grabbing, global, children, character) in &mut hands {
         if grabbing.trying_grab {
@@ -160,15 +163,36 @@ pub fn grab_collider(
                 }
 
                 if let Ok(other_global) = globals.get(other_rigidbody) {
-                    // convert back to local space.
-                    let other_transform = other_global.compute_transform();
-                    let other_matrix = other_global.compute_matrix();
-                    let anchor1 = other_matrix.inverse().project_point3(closest_point)
-                        * other_transform.scale;
-                    let transform = global.compute_transform();
-                    let matrix = global.compute_matrix();
-                    let anchor2 = matrix.inverse().project_point3(closest_point) * transform.scale;
                     let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
+
+                    let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
+                        auto_aim.closest_point(other_global, global.translation())
+                    } else {
+                        None
+                    };
+
+
+
+                    //let anchor1 = None;
+
+                    let anchor1 = if let Some(anchor1) = anchor1 {
+                        anchor1
+                    } else {
+                        // convert back to local space.
+                        let other_transform = other_global.compute_transform();
+                        let other_matrix = other_global.compute_matrix();
+                        let anchor1 = other_matrix.inverse().project_point3(closest_point)
+                            * other_transform.scale;
+                        anchor1
+                    };
+
+                    let point1 = transform(other_global, anchor1);
+                    lines.line_colored(
+                        point1,
+                        point1 + Vec3::Z * 0.5,
+                        5.0,
+                        Color::RED,
+                    );
 
                     let name = name.get(other_rigidbody).unwrap();
                     info!("grabbing {:?}", name);
@@ -508,20 +532,36 @@ pub fn player_grabby_hands(
     }
 }
 
-#[derive(Component, Reflect, FromReflect)]
+#[derive(Component, Reflect, FromReflect, Default)]
 #[reflect(Component)]
-pub enum AutoAim {
+pub struct AutoAim(pub Vec<AimPrimitive>);
+
+impl AutoAim {
+    pub fn closest_points(&self, global: &GlobalTransform, point: Vec3) -> Vec<Vec3> {
+        self.0.iter().map(|primitive| primitive.closest_point(global, point)).collect()
+    }
+
+    pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Option<Vec3> {
+        let mut points = self.closest_points(global, point);
+        points.sort_by(|a, b| a.length().total_cmp(&b.length()));
+        points.get(0).cloned()
+    }
+
+}
+
+#[derive(Reflect, FromReflect)]
+pub enum AimPrimitive {
     Point(Vec3),
     Line { start: Vec3, end: Vec3 },
 }
 
-impl Default for AutoAim {
+impl Default for AimPrimitive {
     fn default() -> Self {
         Self::Point(Vec3::ZERO)
     }
 }
 
-impl AutoAim {
+impl AimPrimitive {
     pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Vec3 {
         match *self {
             Self::Point(auto_point) => transform(global, auto_point),
@@ -561,18 +601,19 @@ pub fn auto_aim_debug_lines(
     mut lines: ResMut<DebugLines>,
 ) {
     for (global, auto) in &auto_aim {
-        match *auto {
-            AutoAim::Point(point) => {
+        for primitive in &auto.0 {
+        match *primitive {
+            AimPrimitive::Point(point) => {
                 let point = transform(global, point);
 
                 lines.line_colored(
                     point,
-                    point,
+                    point + Vec3::Y * 0.25,
                     crate::TICK_RATE.as_secs_f32(),
                     Color::LIME_GREEN,
                 );
             }
-            AutoAim::Line { start, end } => {
+            AimPrimitive::Line { start, end } => {
                 let start = transform(global, start);
                 let end = transform(global, end);
 
@@ -583,6 +624,7 @@ pub fn auto_aim_debug_lines(
                     Color::LIME_GREEN,
                 );
             }
+        }
         }
     }
 }
@@ -599,13 +641,15 @@ pub fn auto_aim_pull(
         let mut pulls = Vec::new();
         for (puller_global, auto_aim) in &pullers {
             let offset_point = offset_global.translation() - offset.0;
-            let closest = auto_aim.closest_point(puller_global, offset_point);
+            let closest = auto_aim.closest_points(puller_global, offset_point);
 
-            let difference = closest - offset_point;
-            let distance = difference.length();
+            for closest_point in closest {
+                let difference = closest_point - offset_point;
+                let distance = difference.length();
 
-            if distance < 1.5 {
-                pulls.push(difference);
+                if distance < 1.5 {
+                    pulls.push(difference);
+                }
             }
         }
 

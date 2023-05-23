@@ -36,7 +36,10 @@ use attach::Attach;
 use store::{SecurityCheck, StoreItem, StorePlugin};
 
 //use crate::network::NetworkPlugin;
-use crate::player::PlayerPlugin;
+use player::{
+    grab::{AimPrimitive, AutoAim},
+    PlayerPlugin,
+};
 
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
@@ -167,9 +170,16 @@ pub fn setup_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<StandardMaterial>>,
-    _assets: Res<AssetServer>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let test_texture = asset_server.load("icons/frostbolt.png");
+    let test_material = materials.add(StandardMaterial {
+        base_color_texture: Some(test_texture.clone()),
+        alpha_mode: AlphaMode::Blend,
+        unlit: true,
+        ..default()
+    });
+
     commands
         .spawn((
             SceneBundle {
@@ -249,31 +259,6 @@ pub fn setup_map(
     );
 
     crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
-
-
-    let big_ball = commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/rock1.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-2.0, 5.0, 2.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert((
-            Ingredient,
-            crate::deposit::Value::new(1),
-            Collider::cuboid(0.3, 0.3, 0.3),
-            RigidBody::Dynamic,
-            StoreItem,
-            Slottable::default(),
-            ReadMassProperties::default(),
-            ExternalImpulse::default(),
-            Name::new("Stone"),
-            Velocity::default(),
-            DEFAULT_FRICTION,
-        ))
-        .id();
 
     let _stone = commands
         .spawn(SceneBundle {
@@ -364,6 +349,7 @@ pub fn setup_map(
         })
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
+
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
@@ -377,20 +363,25 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
+    let ball_radius = 0.5;
     let _ball = commands
-        .spawn(SceneBundle {
-            scene: asset_server.load("models/placeholder_sphere.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(-7.5, 2.3, 3.075),
-                scale: Vec3::splat(0.5),
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: ball_radius,
                 ..default()
-            },
+            })),
+            material: test_material,
+            transform: Transform::from_xyz(1.0, 8.0, -2.0),
             ..default()
         })
+        .insert(AutoAim(vec![
+            AimPrimitive::Point(Vec3::Z * ball_radius),
+            AimPrimitive::Point(-Vec3::Z * ball_radius),
+        ]))
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
-            Collider::ball(1.0),
+            Collider::ball(ball_radius),
             RigidBody::Dynamic,
             Name::new("Ball"),
             Velocity::default(),
@@ -424,7 +415,6 @@ pub fn setup_map(
             DEFAULT_FRICTION,
         ))
         .id();
-
 
     let _prallet = commands
         .spawn(SceneBundle {
@@ -591,10 +581,10 @@ pub fn setup_map(
             },
             ..default()
         })
-        .insert(player::grab::AutoAim::Line {
+        .insert(AutoAim(vec![AimPrimitive::Line {
             start: Vec3::new(0.0, 0.3, 0.0),
             end: Vec3::new(0.0, 1.2, 0.0),
-        })
+        }]))
         .insert((
             //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),
