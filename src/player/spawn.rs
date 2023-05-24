@@ -74,7 +74,7 @@ pub fn setup_player(
                 let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 10.0, 0.0));
 
                 let player_height = 1.0;
-                let player_radius = 0.3;
+                let player_radius = 0.5;
                 // Spawn player cube
                 let player_entity = commands
                     .spawn(ControllerBundle {
