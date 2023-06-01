@@ -80,6 +80,17 @@ pub fn cap_velocity(mut velocities: Query<&mut Velocity, Changed<Velocity>>) {
     }
 }
 
+pub fn prevent_oob(mut commands: Commands, bodies: Query<(Entity, DebugName, &GlobalTransform), (Changed<GlobalTransform>, With<RigidBody>)>) {
+    for (entity, name, position) in &bodies {
+        let translation = position.translation();
+        if translation.length() > 100_000.0f32 {
+            warn!("Entity {:?} went too far out", name);
+            commands.entity(entity).remove::<RigidBody>();
+        }
+    }
+}
+
+
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
@@ -136,6 +147,7 @@ impl Plugin for PhysicsPlugin {
         );
 
         app.add_system(cap_velocity);
+        app.add_system(prevent_oob);
         app.add_startup_system(modify_rapier_context);
     }
 }

@@ -513,20 +513,9 @@ pub fn setup_map(
                 containing: Some(welt),
             },
             SlotGracePeriod::default(),
-            SlotSettings(springy::SpringState {
-                spring: springy::Spring {
-                    strength: 1.0,
-                    damp_ratio: 1.0,
-                    rest_distance: 0.0,
-                    limp_distance: 0.0,
-                },
-                breaking: Some(springy::SpringBreak {
-                    tear_force: 4.0,
-                    tear_step: 0.02,
-                    heal_step: 0.05,
-                    ..default()
-                }),
-                ..default()
+            SlotSettings(springy::Spring {
+                strength: 1.0,
+                damp_ratio: 1.0,
             }),
         ));
 

@@ -1,6 +1,9 @@
 # NOTE: For maximum performance, build using a nightly compiler
 # If you are using rust stable, remove the "-Zshare-generics=y" below.
 
+[env]
+RUST_BACKTRACE = "1"
+
 [toolchain]
 channel = "nightly"
 

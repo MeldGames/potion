@@ -129,7 +129,6 @@ impl Plugin for PlayerPlugin {
         app.add_system(spawn::related_entities::<CharacterEntities, Without<GrabJoint>>);
         app.add_system(spawn::related_entities::<ConnectedEntities, ()>);
         app.add_system(spawn::contact_filter);
-        app.add_system(spawn::extended_mass);
         app.add_system(spawn::setup_player);
         app.add_system(spawn::setup_ik);
         app.add_system(Events::<spawn::PlayerEvent>::update_system);

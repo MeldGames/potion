@@ -23,7 +23,7 @@ pub struct SlotBundle {
 
 #[derive(Default, Debug, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
-pub struct SlotSettings(pub springy::SpringState<Vec3>);
+pub struct SlotSettings(pub springy::Spring);
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Component, Reflect, FromReflect)]
 #[reflect(Component)]
@@ -238,6 +238,10 @@ pub fn spring_slot(
             let rigid_body_a = particle_a.rigid_body.cloned();
             let rigid_body_b = particle_a.rigid_body.cloned();
 
+            let instant = particle_a.translation().instant(&particle_b.translation());
+            let impulse = slot_settings.0.impulse(timestep, instant);
+
+/*
             let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
                 springy::SpringResult::Impulse(impulse) => impulse,
                 springy::SpringResult::Broke(impulse) => {
@@ -258,7 +262,7 @@ pub fn spring_slot(
                     }
                 }
             };
-
+    */
             let [slot_impulse, particle_impulse] =
                 impulses.many_mut([slot_entity, particle_entity]);
 
@@ -305,11 +309,11 @@ impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Slot>()
             //.register_type::<VecDeque<Entity>>()
-            .register_type::<springy::SpringState<Vec3>>()
-            .register_type::<Option<springy::SpringBreak>>()
+            //.register_type::<springy::SpringState<Vec3>>()
+            //.register_type::<Option<springy::SpringBreak>>()
             .register_type::<Option<Entity>>()
             .register_type::<springy::Spring>()
-            .register_type::<springy::SpringBreak>()
+            //.register_type::<springy::SpringBreak>()
             .register_type::<bevy::time::TimerMode>()
             .register_type::<SlotSettings>();
 

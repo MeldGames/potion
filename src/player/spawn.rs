@@ -316,6 +316,10 @@ pub fn attach_arm(
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
+    let debug_mesh = meshes.add(Mesh::from(shape::UVSphere {
+        radius: 0.02,
+        ..default()
+    }));
 
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
     let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
@@ -324,19 +328,18 @@ pub fn attach_arm(
     //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let upperarm_target = commands
-        .spawn(TransformBundle::from_transform(
-            Transform::from_translation(at),
-        ))
+        .spawn(PbrBundle {
+            mesh: debug_mesh.clone(),
+            transform: Transform::from_translation(at),
+            ..default()
+        })
         .insert(DebugVisible)
         .insert(Name::new(format!("Upperarm Target {}", index)))
         .id();
 
     let target = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.05,
-                ..default()
-            })),
+            mesh: debug_mesh.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
             ..default()
         })
@@ -348,19 +351,18 @@ pub fn attach_arm(
         .id();
 
     let forearm_target = commands
-        .spawn(TransformBundle::from_transform(
-            Transform::from_translation(-forearm_height),
-        ))
+        .spawn(PbrBundle {
+            mesh: debug_mesh.clone(),
+            transform: Transform::from_translation(-forearm_height),
+            ..default()
+        })
         .insert(Name::new(format!("Forearm Target {}", index)))
         .insert(DebugVisible)
         .id();
 
     let pole_target = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.02,
-                ..default()
-            })),
+            mesh: debug_mesh.clone(),
             transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
             ..default()
         })
@@ -369,9 +371,11 @@ pub fn attach_arm(
         .id();
 
     let hand_target = commands
-        .spawn(TransformBundle::from_transform(
-            Transform::from_translation(-forearm_height - Vec3::new(0.0, arm_radius, 0.0)),
-        ))
+        .spawn(PbrBundle {
+            mesh: debug_mesh.clone(),
+            transform: Transform::from_translation(-forearm_height - Vec3::new(0.0, arm_radius, 0.0)),
+            ..default()
+        })
         .insert(IkConstraint {
             chain_length: 2,
             iterations: 20,
@@ -590,14 +594,6 @@ pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut Co
             //info!("{:?} connected: {:#?}", debug_name(entity), debug_connected);
         }
         contact_filter.0 = (**connected).clone();
-    }
-}
-
-pub fn extended_mass(mut command: Commands, masses: Query<(Entity, &ConnectedMass)>) {
-    for (entity, mass) in &masses {
-        command
-            .entity(entity)
-            .insert(springy::rapier::ExtendedMass(mass.0));
     }
 }
 

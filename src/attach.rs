@@ -135,6 +135,7 @@ pub fn update_attach(
                             continue;
                         };
 
+/*
                     let (impulse, _) = spring.impulse(timestep, particle_a, particle_b, None);
 
                     let [attach_impulse, particle_impulse] = if let Ok(impulses) =
@@ -153,6 +154,7 @@ pub fn update_attach(
                     if let Some(mut particle_impulse) = particle_impulse {
                         particle_impulse.impulse = impulse;
                     }
+ */
                 }
                 _ => {}
             }

@@ -90,21 +90,11 @@ pub fn spawn_cauldron(
                         .insert(Slot::default())
                         .insert(crate::DebugVisible)
                         .insert(crate::slot::SlotGracePeriod::default())
-                        .insert(crate::slot::SlotSettings(springy::SpringState {
-                            spring: springy::Spring {
+                        .insert(crate::slot::SlotSettings(springy::Spring {
                                 strength: 1.00,
                                 damp_ratio: 0.2,
-                                rest_distance: 0.0,
-                                limp_distance: 0.0,
                             },
-                            breaking: Some(springy::SpringBreak {
-                                tear_force: 3.0,
-                                tear_step: 0.02,
-                                heal_step: 0.05,
-                                ..default()
-                            }),
-                            ..default()
-                        }))
+                        ))
                         .id(),
                 );
             }
