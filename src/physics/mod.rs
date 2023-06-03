@@ -4,11 +4,9 @@ use bevy_rapier3d::prelude::*;
 
 pub mod contact_filter;
 pub mod muscle;
-pub mod spring;
 
 pub use contact_filter::*;
 pub use muscle::*;
-pub use spring::Spring;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {

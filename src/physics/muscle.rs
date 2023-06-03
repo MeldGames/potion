@@ -2,8 +2,8 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 
-use bevy_mod_wanderlust::Spring;
 use bevy_rapier3d::prelude::*;
+use springy::{Particle, RapierParticleQuery, Spring};
 
 pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
@@ -17,7 +17,7 @@ impl Plugin for MusclePlugin {
 #[reflect(Component)]
 pub struct Muscle {
     pub target: Option<Entity>,
-    pub strength: f32,
+    pub spring: Spring,
     pub tense: bool,
 }
 
@@ -25,7 +25,7 @@ impl Muscle {
     pub fn new(target: Entity) -> Self {
         Self {
             target: Some(target),
-            strength: 30.0,
+            spring: Spring::default(),
             tense: true,
         }
     }
@@ -34,17 +34,11 @@ impl Muscle {
 pub fn muscle_target(
     ctx: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
-    mut targets: Query<(
-        Entity,
-        &Muscle,
-        &mut ExternalImpulse,
-        &Velocity,
-        &ReadMassProperties,
-    )>,
+    mut targets: Query<(Entity, &Muscle, &mut ExternalImpulse, RapierParticleQuery)>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
-    for (current_entity, muscle, mut impulse, velocity, mass_properties) in &mut targets {
+    for (current_entity, muscle, mut impulse, particle) in &mut targets {
         if !muscle.tense {
             continue;
         }
@@ -62,25 +56,19 @@ pub fn muscle_target(
                 continue;
             };
 
-        let current_transform = current_global.compute_transform();
-        let target_transform = target_global.compute_transform();
-        let current_dir = current_transform.rotation * -Vec3::Y;
-        let target_dir = target_transform.rotation * -Vec3::Y;
+        let current = current_global.compute_transform().up();
+        let target = target_global.compute_transform().up();
 
         // Not normalizing this doubles as a strength of the difference
-        let target_axis = current_dir.normalize().cross(target_dir.normalize());
+        let difference = current.cross(target);
 
-        let local_angular_velocity = velocity.angvel;
+        let particle_b = Particle::default();
 
-        let mass = mass_properties.0.mass;
-        let spring = Spring {
-            strength: muscle.strength,
-            damping: 0.1,
-        };
-
-        let mut torque = (target_axis * spring.strength)
-            - (local_angular_velocity * spring.damp_coefficient(mass));
-        torque = torque.clamp_length_max(spring.strength) * dt;
-        impulse.torque_impulse += torque;
+        /*
+               let mut torque = (target_axis * muscle.spring.strength)
+                   - (local_angular_velocity * spring.damp_coefficient(mass));
+               torque = torque.clamp_length_max(spring.strength) * dt;
+               impulse.torque_impulse += torque;
+        */
     }
 }

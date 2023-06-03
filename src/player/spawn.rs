@@ -9,9 +9,7 @@ use bevy_mod_inverse_kinematics::IkConstraint;
 
 use std::f32::consts::PI;
 
-use bevy_mod_wanderlust::{
-    ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring,
-};
+use bevy_mod_wanderlust::{ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring};
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
@@ -74,7 +72,7 @@ pub fn setup_player(
                 let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 10.0, 0.0));
 
                 let player_height = 1.0;
-                let player_radius = 0.5;
+                let player_radius = 0.3;
                 // Spawn player cube
                 let player_entity = commands
                     .spawn(ControllerBundle {
@@ -103,8 +101,8 @@ pub fn setup_player(
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 500.0,
-                                damping: 0.7,
+                                strength: 50.0,
+                                damping: 0.5,
                             },
                             opposing_movement_impulse_scale: 0.0,
                             ..default()
@@ -477,7 +475,7 @@ pub fn attach_arm(
             resting_stiffness * 2.0,
             resting_damping * 2.0,
         )
-        //.motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     hand_joint.set_contacts_enabled(false);
 
@@ -573,7 +571,10 @@ impl Default for ConnectedMass {
     }
 }
 
-pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut ContactFilter, &CharacterEntities)>) {
+pub fn contact_filter(
+    names: Query<&Name>,
+    mut connected: Query<(Entity, &mut ContactFilter, &CharacterEntities)>,
+) {
     let debug_name = |entity| -> String {
         if let Ok(name) = names.get(entity) {
             name.as_str().to_owned()
@@ -583,7 +584,10 @@ pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut Co
     };
 
     for (entity, mut contact_filter, connected) in &mut connected {
-        let mut debug_connected = connected.iter().map(|entity| debug_name(*entity)).collect::<Vec<_>>();
+        let mut debug_connected = connected
+            .iter()
+            .map(|entity| debug_name(*entity))
+            .collect::<Vec<_>>();
         debug_connected.sort();
 
         if !debug_connected.is_empty() {
