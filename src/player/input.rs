@@ -82,8 +82,8 @@ impl Debug for Radians {
 pub struct PlayerInput {
     /// Movement inputs
     pub binary_inputs: PlayerInputSet,
-    /// Grabby hands by index.
-    pub grabby_hands: [bool; 8],
+    /// Arm should extend by index.
+    pub extend_arm: [bool; 8],
     /// Vertical rotation of camera
     pub pitch: f32,
     /// Horizontal rotation of camera
@@ -100,9 +100,9 @@ impl Debug for PlayerInput {
             .field("yaw", &Radians(self.yaw))
             .field("twist", &self.twist)
             .field(
-                "grabby_hands",
+                "extend_arm",
                 &self
-                    .grabby_hands
+                    .extend_arm
                     .iter()
                     .enumerate()
                     .filter(|(_, grabbing)| **grabbing)
@@ -119,7 +119,7 @@ impl PlayerInput {
     pub fn new() -> Self {
         Self {
             binary_inputs: PlayerInputSet::empty(),
-            grabby_hands: [false; 8],
+            extend_arm: [false; 8],
             pitch: 0.0,
             yaw: 0.0,
             twist: false,
@@ -146,8 +146,8 @@ impl PlayerInput {
         self.binary_inputs.set(PlayerInputSet::JUMP, jump);
     }
 
-    pub fn set_grabby_hands(&mut self, index: usize, grabby_hands: bool) {
-        self.grabby_hands[index] = grabby_hands;
+    pub fn set_extend_arm(&mut self, index: usize, extend_arm: bool) {
+        self.extend_arm[index] = extend_arm;
     }
 
     pub fn set_twist(&mut self, twist: bool) {
@@ -174,12 +174,12 @@ impl PlayerInput {
         self.binary_inputs.contains(PlayerInputSet::JUMP)
     }
 
-    pub fn any_grabby_hands(&self) -> bool {
-        self.grabby_hands.iter().any(|grabby| *grabby)
+    pub fn any_extend_arm(&self) -> bool {
+        self.extend_arm.iter().any(|grabby| *grabby)
     }
 
-    pub fn grabby_hands(&self, index: usize) -> bool {
-        self.grabby_hands[index]
+    pub fn extend_arm(&self, index: usize) -> bool {
+        self.extend_arm[index]
     }
 
     pub fn twist(&self) -> bool {
@@ -292,11 +292,11 @@ pub fn player_binary_inputs(
         .set_back(keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
     player_input
         .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
-    player_input.set_grabby_hands(
+    player_input.set_extend_arm(
         0,
         mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::LShift),
     );
-    player_input.set_grabby_hands(
+    player_input.set_extend_arm(
         1,
         mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::LShift),
     );

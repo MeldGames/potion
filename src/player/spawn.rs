@@ -56,7 +56,10 @@ pub enum PlayerEvent {
 
 pub fn setup_player(
     mut commands: Commands,
+
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
@@ -103,7 +106,7 @@ pub fn setup_player(
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 500.0,
+                                strength: 150.0,
                                 damping: 0.7,
                             },
                             opposing_movement_impulse_scale: 0.0,
@@ -146,6 +149,7 @@ pub fn setup_player(
                 attach_arm(
                     &mut commands,
                     &mut meshes,
+                    &mut materials,
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(distance_from_body, player_height, 0.0),
@@ -154,6 +158,7 @@ pub fn setup_player(
                 attach_arm(
                     &mut commands,
                     &mut meshes,
+                    &mut materials,
                     player_entity,
                     global_transform.compute_transform(),
                     Vec3::new(-distance_from_body, player_height, 0.0),
@@ -303,6 +308,7 @@ impl IKBase {
 pub fn attach_arm(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
     to: Entity,
     to_transform: Transform,
     at: Vec3,
@@ -321,6 +327,7 @@ pub fn attach_arm(
         ..default()
     }));
 
+
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
     let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
@@ -330,6 +337,7 @@ pub fn attach_arm(
     let upperarm_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
+            material: materials.add(Color::BLUE.into()),
             transform: Transform::from_translation(at),
             ..default()
         })
@@ -340,6 +348,7 @@ pub fn attach_arm(
     let target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
+            material: materials.add(Color::RED.into()),
             transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
             ..default()
         })
@@ -353,6 +362,7 @@ pub fn attach_arm(
     let forearm_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
+            material: materials.add(Color::BLUE.into()),
             transform: Transform::from_translation(-forearm_height),
             ..default()
         })
@@ -363,6 +373,7 @@ pub fn attach_arm(
     let pole_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
+            material: materials.add(Color::YELLOW.into()),
             transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
             ..default()
         })
@@ -373,6 +384,7 @@ pub fn attach_arm(
     let hand_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
+            material: materials.add(Color::BLUE.into()),
             transform: Transform::from_translation(-forearm_height - Vec3::new(0.0, arm_radius, 0.0)),
             ..default()
         })
@@ -458,6 +470,7 @@ pub fn attach_arm(
         .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(forearm_target))
+        .insert(MuscleIKTarget::new(target))
         .id();
 
     let mut hand_joint = SphericalJointBuilder::new()
@@ -505,8 +518,8 @@ pub fn attach_arm(
         //.insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
-        .insert(Muscle::new(hand_target))
-        .insert(MuscleIKTarget::new(target))
+        //.insert(Muscle::new(hand_target))
+        //.insert(MuscleIKTarget::new(target))
         .id();
 }
 

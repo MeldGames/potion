@@ -71,7 +71,7 @@ impl Plugin for PlayerPlugin {
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
 
         app.add_system(
-            grab::player_grabby_hands
+            grab::player_extend_arm
                 .in_set(ControllerSet)
                 .after(controller::player_movement)
                 .in_schedule(CoreSchedule::FixedUpdate),

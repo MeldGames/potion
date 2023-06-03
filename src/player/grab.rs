@@ -230,7 +230,6 @@ pub fn grab_collider(
                             .insert(GrabJoint)
                             .insert(Name::new("Grab Joint"));
                     });
-
                     grabbing.grabbing = Some(other_rigidbody);
                 }
             }
@@ -456,7 +455,7 @@ pub fn update_grab_sphere(
     }
 }
 
-pub fn player_grabby_hands(
+pub fn player_extend_arm(
     kb: Res<Input<KeyCode>>,
     globals: Query<&GlobalTransform>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
@@ -511,7 +510,7 @@ pub fn player_grabby_hands(
         let direction =
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
 
-        if input.grabby_hands(arm_id.0) {
+        if input.extend_arm(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
@@ -524,7 +523,7 @@ pub fn player_grabby_hands(
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
                 target_position.translation =
-                    shoulder_worldspace + direction * 1.45 + grab_rotation * grabbing.dir;
+                    shoulder_worldspace + direction * 1.2 + grab_rotation * grabbing.dir;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;
