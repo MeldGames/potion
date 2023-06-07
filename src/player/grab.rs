@@ -295,12 +295,12 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 }
 
 pub fn tense_arms(
-    hands: Query<(Entity, &Grabbing), With<Hand>>,
+    hands: Query<(Entity, &Grabbing, &Forearm), With<Hand>>,
     mut muscles: Query<&mut Muscle>,
     joints: Query<&ImpulseJoint>,
 ) {
-    for (hand_entity, grabbing) in &hands {
-        let mut entity = hand_entity;
+    for (hand_entity, grabbing, forearm) in &hands {
+        let mut entity = forearm.0;
         while let Ok(mut muscle) = muscles.get_mut(entity) {
             if muscle.tense != grabbing.trying_grab {
                 muscle.tense = grabbing.trying_grab;
@@ -382,7 +382,6 @@ pub fn update_grab_sphere(
 
         let results = children_with_recursive(&grab_joints, &children, &joint_children, entity);
         for (joint_entity, joint) in &results {
-            //info!("grabbing: {:?}", joint.parent);
             // we need to get translate from the joints local space to the spheres local space
             let joint: &ImpulseJoint = joint;
 
@@ -461,10 +460,8 @@ pub fn player_extend_arm(
     mut transforms: Query<(&mut Transform, &PullOffset)>,
     inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
     upper_arm: Query<Entity, With<UpperArm>>,
-    //ik_base: Query<&IKBase>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    //ctx: Res<RapierContext>,
     mut hands: Query<
         (
             Entity,
@@ -486,7 +483,6 @@ pub fn player_extend_arm(
         muscle_ik_target,
     ) in &mut hands
     {
-        warn!("found hand");
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {

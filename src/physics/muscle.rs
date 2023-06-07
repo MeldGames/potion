@@ -9,7 +9,7 @@ pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Muscle>();
-        //app.add_system(muscle_target.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_system(muscle_target.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 

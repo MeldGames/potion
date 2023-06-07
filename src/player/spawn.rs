@@ -136,8 +136,6 @@ pub fn setup_player(
                     .insert(ConnectedEntities::default())
                     .insert(CharacterEntities::default())
                     .insert(ContactFilter::default())
-                    //.insert(ConnectedMass::default())
-                    //.insert(Owned)
                     .insert(ReadMassProperties::default())
                     //.insert(Loader::<Mesh>::new("scenes/gltfs/boi.glb#Mesh0/Primitive0"))
                     .insert(crate::physics::PLAYER_GROUPING)
@@ -234,7 +232,6 @@ pub fn setup_player(
                 let neck = commands
                     .spawn((TransformBundle::default(), Neck, Name::new("Neck")))
                     .insert(Attach::translation(head))
-                    //.insert(Velocity::linear(Vec3::new(1.0, 0.0, 0.0)))
                     .insert(Velocity::default())
                     .id();
 
@@ -247,6 +244,7 @@ pub fn setup_player(
                 // We could send an InitState with all the players id and positions for the client
                 // but this is easier to do.
 
+                // Server-Client code is disabled for now
                 /*
                 lobby.players.insert(id, player_entity);
                 if let Some(ref mut server) = server {
@@ -305,6 +303,15 @@ impl IKBase {
     }
 }
 
+#[derive(Debug, Clone, Component)]
+pub struct Forearm(pub Entity);
+
+impl Forearm {
+    pub fn new(entity: Entity) -> Self {
+        Self(entity)
+    }
+}
+
 pub fn attach_arm(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -327,11 +334,8 @@ pub fn attach_arm(
         ..default()
     }));
 
-    //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
     let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
-    //let arm_height = forearm_height + upperarm_height;
-    //let arm_height = Vec3::new(0.0, 1.25, 0.0);
 
     let upperarm_target = commands
         .spawn(PbrBundle {
@@ -399,7 +403,6 @@ pub fn attach_arm(
         .insert(DebugVisible)
         .id();
 
-    //commands.entity(to).add_child(target);
     commands.entity(to).add_child(upperarm_target);
     commands.entity(upperarm_target).add_child(forearm_target);
     commands.entity(forearm_target).add_child(hand_target);
@@ -471,8 +474,17 @@ pub fn attach_arm(
         .insert(Muscle::new(forearm_target))
         .id();
 
+    let hand_position = commands
+        .spawn(TransformBundle {
+            local: Transform::default(),
+            ..default()
+        })
+        .insert(Name::new(format!("Hand Position {}", index)))
+        .id();
+
+    commands.entity(forearm_entity).add_child(hand_position);
+
     let mut hand_joint = SphericalJointBuilder::new()
-        //.local_anchor2(Vec3::new(0.0, arm_radius + hand_radius, 0.0))
         .local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
@@ -497,8 +509,9 @@ pub fn attach_arm(
     hand_joint.set_contacts_enabled(false);
 
     let _hand_entity = commands
-        .spawn(TransformBundle::from_transform(to_transform))
+        .spawn(TransformBundle::default())
         .insert(Name::new(format!("Hand {}", index)))
+        //.insert(Attach::translation(hand_position))
         .insert(Hand)
         .insert(ConnectedEntities::default())
         .insert(CharacterEntities::default())
@@ -508,7 +521,7 @@ pub fn attach_arm(
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
         .insert(ReadMassProperties::default())
-        //.insert(RigidBody::Dynamic)
+        .insert(RigidBody::Dynamic)
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
@@ -518,6 +531,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         //.insert(Muscle::new(hand_target))
         .insert(MuscleIKTarget::new(target))
+        .insert(Forearm::new(forearm_entity))
         .id();
 }
 

@@ -106,7 +106,8 @@ impl Debug for PlayerInput {
                     .iter()
                     .enumerate()
                     .filter(|(_, grabbing)| **grabbing)
-                    .map(|(index, _)| index),
+                    .map(|(index, _)| index)
+                    .collect::<Vec<_>>()
             )
             .finish()
     }
