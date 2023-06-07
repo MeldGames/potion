@@ -327,7 +327,6 @@ pub fn attach_arm(
         ..default()
     }));
 
-
     //let arm_height = Vec3::new(0.0, 1.25 - arm_radius - hand_radius, 0.0);
     let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
@@ -510,7 +509,7 @@ pub fn attach_arm(
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
         .insert(ReadMassProperties::default())
-        .insert(RigidBody::Dynamic)
+        //.insert(RigidBody::Dynamic)
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
