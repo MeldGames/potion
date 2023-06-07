@@ -180,7 +180,6 @@ skip = [
 # by default infinite
 skip-tree = [
   { name = "webbrowser" },
-  { name = "stdweb" },
   { name = "semver" },
   { name = "rustc_version" },
   { name = "parking_lot" },
@@ -188,7 +187,6 @@ skip-tree = [
   { name = "num-rational" },
   { name = "nix" },
   { name = "mio" },
-  { name = "mach" },
   { name = "epaint" },
   { name = "miniz_oxide" },
   { name = "core-foundation" },

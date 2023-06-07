@@ -36,7 +36,7 @@ derive_more = "0.99"
 egui = "0.21"
 leafwing-input-manager = "0.9"
 wgpu-types = "0.15"
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
+#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
  
 bevy_prototype_debug_lines = {version = "0.10", features = ["3d"]}
 bevy_renet = {git = "https://github.com/lucaspoffo/renet"}
@@ -70,7 +70,7 @@ obj = "0.10.2"
 #rechannel = { git = "https://github.com/lucaspoffo/renet" }
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
-bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "e480225"}
+bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "38e1b79169303c47d639d64558b7d9adeed99211"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
