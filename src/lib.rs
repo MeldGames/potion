@@ -923,3 +923,21 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
         /// Default: 1024
         max_convex_hulls: 1024,
     });
+
+
+pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>) -> bool {
+    match windows.get_single().ok().map(|window| window.focused) {
+        Some(focused) => focused,
+        _ => false,
+    }
+}
+
+/*
+pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
+    if let Some(editor) = editor {
+        editor.active
+    } else {
+        false
+    }
+}
+ */

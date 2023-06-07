@@ -7,9 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::f32::consts::PI;
 
 use super::prelude::*;
-use crate::player::editor_active;
-
-use super::window_focused;
 
 #[derive(Resource, Debug)]
 pub struct MouseSensitivity(f32);
@@ -393,6 +390,11 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
         app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
+        app.configure_set(CollectInputs
+            .run_if(crate::window_focused)
+            // TODO: fix this since bevy editor pls now works on multiple windows
+            //.run_if(crate::editor_active)
+        );
         app.add_systems(
             (player_binary_inputs,
             zoom_on_scroll,

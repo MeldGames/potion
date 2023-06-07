@@ -42,21 +42,6 @@ pub struct PlayerBundle {
     pub name: Name,
 }
 
-pub fn window_focused(windows: Option<Query<&Window, With<PrimaryWindow>>>) -> bool {
-    match windows.and_then(|windows| windows.get_single().ok().map(|window| window.focused)) {
-        Some(focused) => focused,
-        _ => false,
-    }
-}
-
-pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
-    if let Some(editor) = editor {
-        editor.active
-    } else {
-        false
-    }
-}
-
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ControllerSet;
 
