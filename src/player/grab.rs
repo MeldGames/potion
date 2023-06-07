@@ -486,6 +486,7 @@ pub fn player_extend_arm(
         muscle_ik_target,
     ) in &mut hands
     {
+        warn!("found hand");
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {
@@ -498,12 +499,14 @@ pub fn player_extend_arm(
         let camera_global = if let Ok(global) = globals.get(cam.0) {
             global
         } else {
+            warn!("couldn't find camera global");
             continue;
         };
 
         let neck_global = if let Ok(global) = globals.get(neck.0) {
             global
         } else {
+            warn!("couldn't find neck global");
             continue;
         };
 

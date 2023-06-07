@@ -264,7 +264,7 @@ pub fn spring_slot(
             };
     */
             let [slot_impulse, particle_impulse] =
-                impulses.many_mut([slot_entity, particle_entity]);
+                impulses.get_many_mut([slot_entity, particle_entity]).unwrap();
 
             let impulse_error = |entity: Entity, rigid_body: Option<RigidBody>| {
                 if let Some(RigidBody::Dynamic) = rigid_body {

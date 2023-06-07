@@ -106,7 +106,7 @@ pub fn setup_player(
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 150.0,
+                                strength: 250.0,
                                 damping: 0.7,
                             },
                             opposing_movement_impulse_scale: 0.0,
@@ -129,7 +129,7 @@ pub fn setup_player(
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
-                    //.insert(ColliderMassProperties::Density(5.0))
+                    .insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
@@ -469,7 +469,6 @@ pub fn attach_arm(
         .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(forearm_target))
-        .insert(MuscleIKTarget::new(target))
         .id();
 
     let mut hand_joint = SphericalJointBuilder::new()
@@ -518,7 +517,7 @@ pub fn attach_arm(
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         //.insert(Muscle::new(hand_target))
-        //.insert(MuscleIKTarget::new(target))
+        .insert(MuscleIKTarget::new(target))
         .id();
 }
 
