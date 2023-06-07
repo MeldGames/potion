@@ -376,6 +376,15 @@ pub fn update_local_player_inputs(
     }
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InputSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CollectInputs;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MetaInputs;
+
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
@@ -383,23 +392,21 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
-        app.add_system(
-            player_binary_inputs, //.run_if(window_focused)
-                                  //.run_if(not(editor_active))
+        app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
+        app.add_systems(
+            (player_binary_inputs,
+            zoom_on_scroll,
+            zoom_scroll_for_toi,
+            player_mouse_inputs)
+                .in_set(CollectInputs)
         )
-        .add_system(
-            zoom_on_scroll, //.in_state(MouseState::Locked)
-                            //.run_if(window_focused)
-                            //.run_if(not(editor_active))
+        .add_systems((
+            initial_mouse_click,
+            toggle_mouse_lock,
+            mouse_lock,
+            update_local_player_inputs,
         )
-        .add_system(
-            zoom_scroll_for_toi, //.run_if(window_focused)
-                                 //.run_if(not(editor_active))
-        )
-        .add_system(player_mouse_inputs)
-        .add_system(initial_mouse_click)
-        .add_system(toggle_mouse_lock)
-        .add_system(mouse_lock)
-        .add_system(update_local_player_inputs);
+                .in_set(MetaInputs)
+        );
     }
 }

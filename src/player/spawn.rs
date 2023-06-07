@@ -9,9 +9,7 @@ use bevy_mod_inverse_kinematics::IkConstraint;
 
 use std::f32::consts::PI;
 
-use bevy_mod_wanderlust::{
-    ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring,
-};
+use bevy_mod_wanderlust::{ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring};
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
@@ -388,7 +386,9 @@ pub fn attach_arm(
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
             material: materials.add(Color::BLUE.into()),
-            transform: Transform::from_translation(-forearm_height - Vec3::new(0.0, arm_radius, 0.0)),
+            transform: Transform::from_translation(
+                -forearm_height - Vec3::new(0.0, arm_radius, 0.0),
+            ),
             ..default()
         })
         .insert(IkConstraint {
@@ -602,7 +602,10 @@ impl Default for ConnectedMass {
     }
 }
 
-pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut ContactFilter, &CharacterEntities)>) {
+pub fn contact_filter(
+    names: Query<&Name>,
+    mut connected: Query<(Entity, &mut ContactFilter, &CharacterEntities)>,
+) {
     let debug_name = |entity| -> String {
         if let Ok(name) = names.get(entity) {
             name.as_str().to_owned()
@@ -612,7 +615,10 @@ pub fn contact_filter(names: Query<&Name>, mut connected: Query<(Entity, &mut Co
     };
 
     for (entity, mut contact_filter, connected) in &mut connected {
-        let mut debug_connected = connected.iter().map(|entity| debug_name(*entity)).collect::<Vec<_>>();
+        let mut debug_connected = connected
+            .iter()
+            .map(|entity| debug_name(*entity))
+            .collect::<Vec<_>>();
         debug_connected.sort();
 
         if !debug_connected.is_empty() {

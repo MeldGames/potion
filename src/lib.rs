@@ -12,8 +12,6 @@ pub mod player;
 pub mod slot;
 pub mod store;
 pub mod trees;
-pub mod ui;
-pub mod ui_pieces;
 //pub mod edge_detection;
 
 use std::f32::consts::PI;
@@ -27,7 +25,6 @@ use joint_break::BreakJointPlugin;
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
 use trees::TreesPlugin;
-use ui::UiPlugin;
 
 pub use debug::DebugVisible;
 
@@ -106,7 +103,6 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(Msaa::Off);
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
-        .add_plugin(UiPlugin)
         .add_plugin(CauldronPlugin)
         .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
@@ -209,7 +205,6 @@ pub fn setup_map(
         brightness: 0.72,
     });
 
-    const HALF_SIZE: f32 = 100.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene

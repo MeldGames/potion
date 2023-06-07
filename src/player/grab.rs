@@ -166,7 +166,8 @@ pub fn grab_collider(
                     let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
                     let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
-                        let closest_point = auto_aim.closest_point(other_global, global.translation());
+                        let closest_point =
+                            auto_aim.closest_point(other_global, global.translation());
                         lines.line_colored(
                             closest_point.unwrap(),
                             closest_point.unwrap() + Vec3::Z * 0.5,
@@ -177,8 +178,6 @@ pub fn grab_collider(
                     } else {
                         None
                     };
-
-
 
                     //let anchor1 = None;
 
@@ -191,16 +190,11 @@ pub fn grab_collider(
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
                     let other_matrix = other_global.compute_matrix();
-                    let anchor1 = other_matrix.inverse().project_point3(anchor1)
-                        * other_transform.scale;
+                    let anchor1 =
+                        other_matrix.inverse().project_point3(anchor1) * other_transform.scale;
 
                     let point1 = transform(other_global, anchor1);
-                    lines.line_colored(
-                        point1,
-                        point1 + Vec3::Z * 0.5,
-                        2.0,
-                        Color::RED,
-                    );
+                    lines.line_colored(point1, point1 + Vec3::Z * 0.5, 2.0, Color::RED);
 
                     let name = name.get(other_rigidbody).unwrap();
                     info!("grabbing {:?}", name);
@@ -439,9 +433,7 @@ pub fn update_grab_sphere(
             Color::RED,
         );
 
-        for (grabbing) in &mut grabbing {
-
-        }
+        for (grabbing) in &mut grabbing {}
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing
@@ -515,7 +507,8 @@ pub fn player_extend_arm(
 
                 let grab_rotation = neck_yaw * grabbing.rotation;
 
-                let upper_arm = find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
+                let upper_arm =
+                    find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
                 let joint = joints.get(upper_arm).unwrap();
                 let upper_global = globals.get(upper_arm).unwrap();
                 let shoulder = joint.data.local_anchor2();
@@ -544,7 +537,10 @@ pub struct AutoAim(pub Vec<AimPrimitive>);
 
 impl AutoAim {
     pub fn closest_points(&self, global: &GlobalTransform, point: Vec3) -> Vec<Vec3> {
-        self.0.iter().map(|primitive| primitive.closest_point(global, point)).collect()
+        self.0
+            .iter()
+            .map(|primitive| primitive.closest_point(global, point))
+            .collect()
     }
 
     pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Option<Vec3> {
@@ -552,7 +548,6 @@ impl AutoAim {
         points.sort_by(|a, b| a.length().total_cmp(&b.length()));
         points.get(0).cloned()
     }
-
 }
 
 #[derive(Reflect, FromReflect)]
@@ -608,29 +603,29 @@ pub fn auto_aim_debug_lines(
 ) {
     for (global, auto) in &auto_aim {
         for primitive in &auto.0 {
-        match *primitive {
-            AimPrimitive::Point(point) => {
-                let point = transform(global, point);
+            match *primitive {
+                AimPrimitive::Point(point) => {
+                    let point = transform(global, point);
 
-                lines.line_colored(
-                    point,
-                    point + Vec3::Y * 0.25,
-                    crate::TICK_RATE.as_secs_f32(),
-                    Color::LIME_GREEN,
-                );
-            }
-            AimPrimitive::Line { start, end } => {
-                let start = transform(global, start);
-                let end = transform(global, end);
+                    lines.line_colored(
+                        point,
+                        point + Vec3::Y * 0.25,
+                        crate::TICK_RATE.as_secs_f32(),
+                        Color::LIME_GREEN,
+                    );
+                }
+                AimPrimitive::Line { start, end } => {
+                    let start = transform(global, start);
+                    let end = transform(global, end);
 
-                lines.line_colored(
-                    start,
-                    end,
-                    crate::TICK_RATE.as_secs_f32(),
-                    Color::LIME_GREEN,
-                );
+                    lines.line_colored(
+                        start,
+                        end,
+                        crate::TICK_RATE.as_secs_f32(),
+                        Color::LIME_GREEN,
+                    );
+                }
             }
-        }
         }
     }
 }

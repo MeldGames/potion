@@ -135,26 +135,26 @@ pub fn update_attach(
                             continue;
                         };
 
-/*
-                    let (impulse, _) = spring.impulse(timestep, particle_a, particle_b, None);
+                    /*
+                                       let (impulse, _) = spring.impulse(timestep, particle_a, particle_b, None);
 
-                    let [attach_impulse, particle_impulse] = if let Ok(impulses) =
-                        impulses.get_many_mut([attach_entity, particle_entity])
-                    {
-                        impulses
-                    } else {
-                        warn!("Particle does not contain all necessary components");
-                        continue;
-                    };
+                                       let [attach_impulse, particle_impulse] = if let Ok(impulses) =
+                                           impulses.get_many_mut([attach_entity, particle_entity])
+                                       {
+                                           impulses
+                                       } else {
+                                           warn!("Particle does not contain all necessary components");
+                                           continue;
+                                       };
 
-                    if let Some(mut attach_impulse) = attach_impulse {
-                        attach_impulse.impulse = -impulse;
-                    }
+                                       if let Some(mut attach_impulse) = attach_impulse {
+                                           attach_impulse.impulse = -impulse;
+                                       }
 
-                    if let Some(mut particle_impulse) = particle_impulse {
-                        particle_impulse.impulse = impulse;
-                    }
- */
+                                       if let Some(mut particle_impulse) = particle_impulse {
+                                           particle_impulse.impulse = impulse;
+                                       }
+                    */
                 }
                 _ => {}
             }

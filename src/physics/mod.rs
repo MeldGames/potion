@@ -80,7 +80,13 @@ pub fn cap_velocity(mut velocities: Query<&mut Velocity, Changed<Velocity>>) {
     }
 }
 
-pub fn prevent_oob(mut commands: Commands, bodies: Query<(Entity, DebugName, &GlobalTransform), (Changed<GlobalTransform>, With<RigidBody>)>) {
+pub fn prevent_oob(
+    mut commands: Commands,
+    bodies: Query<
+        (Entity, DebugName, &GlobalTransform),
+        (Changed<GlobalTransform>, With<RigidBody>),
+    >,
+) {
     for (entity, name, position) in &bodies {
         let translation = position.translation();
         if translation.length() > 100_000.0f32 {
@@ -89,7 +95,6 @@ pub fn prevent_oob(mut commands: Commands, bodies: Query<(Entity, DebugName, &Gl
         }
     }
 }
-
 
 pub struct PhysicsPlugin;
 

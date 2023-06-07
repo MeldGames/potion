@@ -91,10 +91,9 @@ pub fn spawn_cauldron(
                         .insert(crate::DebugVisible)
                         .insert(crate::slot::SlotGracePeriod::default())
                         .insert(crate::slot::SlotSettings(springy::Spring {
-                                strength: 1.00,
-                                damp_ratio: 0.2,
-                            },
-                        ))
+                            strength: 1.00,
+                            damp_ratio: 0.2,
+                        }))
                         .id(),
                 );
             }

@@ -241,30 +241,31 @@ pub fn spring_slot(
             let instant = particle_a.translation().instant(&particle_b.translation());
             let impulse = slot_settings.0.impulse(timestep, instant);
 
-/*
-            let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
-                springy::SpringResult::Impulse(impulse) => impulse,
-                springy::SpringResult::Broke(impulse) => {
-                    if grace_period.0.finished() {
-                        if let Ok(mut slottable) = slottables.get_mut(particle_entity) {
-                            *slottable = Slottable::Free;
-                        }
+            /*
+                    let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
+                        springy::SpringResult::Impulse(impulse) => impulse,
+                        springy::SpringResult::Broke(impulse) => {
+                            if grace_period.0.finished() {
+                                if let Ok(mut slottable) = slottables.get_mut(particle_entity) {
+                                    *slottable = Slottable::Free;
+                                }
 
-                        info!(
-                            "Removing from slot {:?}: {:?}",
-                            names.named(slot_entity),
-                            names.named(particle_entity)
-                        );
-                        slot.containing = None;
-                        continue;
-                    } else {
-                        impulse
-                    }
-                }
-            };
-    */
-            let [slot_impulse, particle_impulse] =
-                impulses.get_many_mut([slot_entity, particle_entity]).unwrap();
+                                info!(
+                                    "Removing from slot {:?}: {:?}",
+                                    names.named(slot_entity),
+                                    names.named(particle_entity)
+                                );
+                                slot.containing = None;
+                                continue;
+                            } else {
+                                impulse
+                            }
+                        }
+                    };
+            */
+            let [slot_impulse, particle_impulse] = impulses
+                .get_many_mut([slot_entity, particle_entity])
+                .unwrap();
 
             let impulse_error = |entity: Entity, rigid_body: Option<RigidBody>| {
                 if let Some(RigidBody::Dynamic) = rigid_body {
