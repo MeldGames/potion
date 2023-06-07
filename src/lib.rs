@@ -369,7 +369,7 @@ pub fn setup_map(
                 radius: ball_radius,
                 ..default()
             })),
-            material: test_material,
+            material: test_material.clone(),
             transform: Transform::from_xyz(1.0, 8.0, -2.0),
             ..default()
         })
@@ -398,6 +398,7 @@ pub fn setup_map(
                 ring_radius: 0.2,
                 ..default()
             })),
+            material: test_material.clone(),
             transform: Transform::from_xyz(1.0, 6.0, -2.0),
             ..default()
         })
@@ -411,6 +412,10 @@ pub fn setup_map(
             ExternalImpulse::default(),
             Slottable::default(),
             ReadMassProperties::default(),
+            Damping {
+                linear_damping: 0.5,
+                angular_damping: 0.5,
+            },
             DEFAULT_FRICTION,
         ))
         .id();
@@ -484,6 +489,10 @@ pub fn setup_map(
             ExternalImpulse::default(),
             ExternalForce::default(),
             //ColliderMassProperties::Density(50.0),
+            Damping {
+                linear_damping: 0.5,
+                angular_damping: 0.5,
+            },
             ReadMassProperties::default(),
             DEFAULT_FRICTION,
         ))

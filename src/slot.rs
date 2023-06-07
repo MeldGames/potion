@@ -276,7 +276,7 @@ pub fn spring_slot(
             };
 
             if let Some(mut slot_impulse) = slot_impulse {
-                slot_impulse.impulse = -impulse;
+                slot_impulse.impulse = impulse;
 
                 lines.line_colored(
                     translation_a,
@@ -289,7 +289,7 @@ pub fn spring_slot(
             }
 
             if let Some(mut particle_impulse) = particle_impulse {
-                particle_impulse.impulse = impulse;
+                particle_impulse.impulse = -impulse;
 
                 lines.line_colored(
                     translation_b,
@@ -308,12 +308,8 @@ pub struct SlotPlugin;
 impl Plugin for SlotPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Slot>()
-            //.register_type::<VecDeque<Entity>>()
-            //.register_type::<springy::SpringState<Vec3>>()
-            //.register_type::<Option<springy::SpringBreak>>()
             .register_type::<Option<Entity>>()
             .register_type::<springy::Spring>()
-            //.register_type::<springy::SpringBreak>()
             .register_type::<bevy::time::TimerMode>()
             .register_type::<SlotSettings>();
 
