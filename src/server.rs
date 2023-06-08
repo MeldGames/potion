@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use potion::player::prelude::{mouse_lock, toggle_mouse_lock, LockToggle, MouseState};
-use potion::player::window_focused;
+//use potion::player::window_focused;
 use potion::setup_map;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

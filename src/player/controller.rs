@@ -63,36 +63,82 @@ pub fn player_movement(
         let mut desired_dir = Vec2::new(dir.x, dir.z);
 
         // If we are grabby then make the character face the way we are grabbing.
-        if player_input.any_extend_arm() {
+        //if player_input.any_extend_arm() {
             let camera_dir = rotation * -Vec3::Z;
             desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
-        }
+        //}
+
+        let spring = springy::Spring {
+            strength: 0.1,
+            damp_ratio: 1.0,
+        };
 
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
-            impulse.torque_impulse.y += y * 0.5; // avoid overshooting
+            impulse.torque_impulse.y += y * 0.5;
         }
     }
 }
 
 pub fn teleport_player_back(
-    mut players: Query<(&mut Transform, &mut Velocity), With<Player>>,
+    mut players: Query<Entity, With<Player>>,
     kb: Res<Input<KeyCode>>,
+    names: Query<&Name>,
+
+    parents: Query<&Parent>,
+    children: Query<&Children>,
+    joint_children: Query<&JointChildren>,
+    related: Query<Entity>,
+
+    mut velocities: Query<&mut Velocity, With<RigidBody>>,
+    mut transforms: Query<&mut Transform>,
 ) {
-    for (mut transform, mut velocity) in &mut players {
+    for entity in &mut players {
         let mut should_teleport = kb.just_pressed(KeyCode::Equals);
-        should_teleport = should_teleport || transform.translation.y < -100.0;
-        should_teleport = should_teleport || transform.translation.y > 1000.0;
-        should_teleport = should_teleport || transform.translation.x < -1000.0;
-        should_teleport = should_teleport || transform.translation.x > 1000.0;
-        should_teleport = should_teleport || transform.translation.z < -1000.0;
-        should_teleport = should_teleport || transform.translation.z > 1000.0;
+
+        if let Ok(transform) = transforms.get(entity) {
+            should_teleport = should_teleport || transform.translation.y < -100.0;
+            should_teleport = should_teleport || transform.translation.y > 1000.0;
+            should_teleport = should_teleport || transform.translation.x < -1000.0;
+            should_teleport = should_teleport || transform.translation.x > 1000.0;
+            should_teleport = should_teleport || transform.translation.z < -1000.0;
+            should_teleport = should_teleport || transform.translation.z > 1000.0;
+        }
 
         if should_teleport {
-            transform.translation = Vec3::new(0.0, 10.0, 0.0);
-            transform.rotation = Quat::IDENTITY;
-            velocity.linvel = Vec3::ZERO;
-            velocity.angvel = Vec3::ZERO;
+            let results = children_with_recursive(&related, &children, &joint_children, entity);
+
+            let mut relative_positions = bevy::utils::HashMap::new();
+            for result in results {
+                /*
+                let debug_name = names.get(result)
+                    .map(|name| name.as_str().to_owned())
+                    .unwrap_or(format!("{:?}", result));
+                info!("resetting velocity: {:?}", debug_name);
+                */
+
+                if let Ok(mut velocity) = velocities.get_mut(result) {
+                    velocity.linvel = Vec3::ZERO;
+                    velocity.angvel = Vec3::ZERO;
+
+                    if let Ok([transform, other]) = transforms.get_many([entity, result]) {
+                        let relative = transform.translation - other.translation;
+                        relative_positions.insert(result, relative);
+                    }
+                }
+            }
+
+            let new_position = Vec3::new(0.0, 10.0, 0.0);
+            if let Ok(mut transform) = transforms.get_mut(entity) {
+                transform.translation = new_position;
+                transform.rotation = Quat::IDENTITY;
+            }
+
+            for (entity, relative_position) in relative_positions {
+                if let Ok(mut transform) = transforms.get_mut(entity) {
+                    transform.translation = new_position + relative_position;
+                }
+            }
         }
     }
 }
