@@ -167,13 +167,14 @@ pub fn grab_collider(
 
                     let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
                         let closest_point =
-                            auto_aim.closest_point(other_global, global.translation());
+                            auto_aim.closest_point(other_global, closest_point);
                         lines.line_colored(
                             closest_point.unwrap(),
-                            closest_point.unwrap() + Vec3::Z * 0.5,
-                            2.0,
+                            closest_point.unwrap() + Vec3::Y * 2.0,
+                            5.0,
                             Color::RED,
                         );
+                        println!("auto aim anchor: {:?}", closest_point);
                         closest_point
                     } else {
                         None
@@ -187,14 +188,14 @@ pub fn grab_collider(
                         closest_point
                     };
 
+                    println!("contact anchor: {:?}", closest_point);
+
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
                     let other_matrix = other_global.compute_matrix();
-                    let anchor1 =
-                        other_matrix.inverse().project_point3(anchor1) * other_transform.scale;
+                    let anchor1 = other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
 
-                    let point1 = transform(other_global, anchor1);
-                    lines.line_colored(point1, point1 + Vec3::Z * 0.5, 2.0, Color::RED);
+                    println!("localspace anchor1: {:?}", anchor1);
 
                     let name = name.get(other_rigidbody).unwrap();
                     info!("grabbing {:?}", name);
@@ -212,9 +213,9 @@ pub fn grab_collider(
                         .motor_max_force(JointAxis::AngX, max_force)
                         .motor_max_force(JointAxis::AngY, max_force)
                         .motor_max_force(JointAxis::AngZ, max_force)
-                        .motor_position(JointAxis::AngX, 0.0, stiffness, damping)
-                        .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
-                        .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
+                        //.motor_position(JointAxis::AngX, 0.0, stiffness, damping)
+                        //.motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
+                        //.motor_position(JointAxis::AngY, 0.0, stiffness, damping)
                         .build();
                     grab_joint.set_contacts_enabled(false);
 
@@ -586,36 +587,26 @@ impl Default for AimPrimitive {
 impl AimPrimitive {
     pub fn closest_point(&self, global: &GlobalTransform, point: Vec3) -> Vec3 {
         match *self {
-            Self::Point(auto_point) => transform(global, auto_point),
-            Self::Line { start: a, end: b } => {
-                if (a - b).length() < 0.001 {
-                    return Vec3::ZERO;
-                }
+            Self::Point(auto_point) => global.transform_point(auto_point),
+            Self::Line { start, end } => {
+                let start = global.transform_point(start);
+                let end = global.transform_point(end);
 
-                let a = transform(global, a);
-                let b = transform(global, b);
-
-                let ap = point - a;
-                let ab = b - a;
-
-                let distance = ab.dot(ap) / ab.length();
-
+                let vector = end - start;
+                let direction = vector.normalize_or_zero();
+                let relative_point = point - start;
+                let distance = direction.dot(relative_point);
+                
                 if distance < 0.0 {
-                    a
-                } else if distance > 1.0 {
-                    b
+                    start
+                } else if distance > vector.length() {
+                    end
                 } else {
-                    a + ab * distance
+                    start + direction * distance
                 }
             }
         }
     }
-}
-
-fn transform(global: &GlobalTransform, point: Vec3) -> Vec3 {
-    global
-        .mul_transform(Transform::from_translation(point))
-        .translation()
 }
 
 pub fn auto_aim_debug_lines(
@@ -626,7 +617,7 @@ pub fn auto_aim_debug_lines(
         for primitive in &auto.0 {
             match *primitive {
                 AimPrimitive::Point(point) => {
-                    let point = transform(global, point);
+                    let point = global.transform_point(point);
 
                     lines.line_colored(
                         point,
@@ -636,8 +627,8 @@ pub fn auto_aim_debug_lines(
                     );
                 }
                 AimPrimitive::Line { start, end } => {
-                    let start = transform(global, start);
-                    let end = transform(global, end);
+                    let start = global.transform_point(start);
+                    let end = global.transform_point(end);
 
                     lines.line_colored(
                         start,
@@ -657,20 +648,27 @@ pub struct PullOffset(Vec3);
 
 pub fn auto_aim_pull(
     pullers: Query<(&GlobalTransform, &AutoAim)>,
-    mut offsets: Query<(&GlobalTransform, &mut PullOffset)>,
+    mut offsets: Query<(Entity, &GlobalTransform, &mut PullOffset)>,
+
+    mut lines: ResMut<DebugLines>,
 ) {
-    for (offset_global, mut offset) in &mut offsets {
-        let mut pulls = Vec::new();
+    for (entity, offset_global, mut offset) in &mut offsets {
+        let mut pulls: Vec<Vec3> = Vec::new();
         for (puller_global, auto_aim) in &pullers {
-            let offset_point = offset_global.translation() - offset.0;
+            let offset_point = offset_global.translation();
             let closest = auto_aim.closest_points(puller_global, offset_point);
 
             for closest_point in closest {
                 let difference = closest_point - offset_point;
-                let distance = difference.length();
 
-                if distance < 1.5 {
-                    pulls.push(difference);
+                if difference.length() < 5.0 {
+                    lines.line_colored(
+                        offset_point,
+                        closest_point,
+                        crate::TICK_RATE.as_secs_f32(),
+                        Color::GREEN,
+                    );
+                    //pulls.push(difference);
                 }
             }
         }
@@ -681,5 +679,44 @@ pub fn auto_aim_pull(
         } else {
             offset.0 = Vec3::ZERO;
         }
+    }
+}
+
+#[cfg(test)]
+mod auto_aim_test {
+    use bevy::prelude::*;
+
+    #[test]
+    fn closest_point_on_line() {
+        let start = Vec3::new(3.0, 3.0, 3.0);
+        let end = Vec3::new(4.0, 4.0, 4.0);
+
+        let point = Vec3::new(3.0, 3.0, 3.0);
+
+        let closest_point = |point: Vec3| -> Vec3 {
+            let vector = end - start;
+            let direction = vector.normalize_or_zero();
+            let relative_point = point - start;
+            let distance = direction.dot(relative_point);
+            
+            println!("----");
+            println!("relative {:?}", relative_point);
+            println!("dir {:?}", direction);
+            println!("length: {:?}", vector.length());
+            println!("distance: {:?}", distance);
+
+            if distance < 0.0 {
+                start
+            } else if distance > vector.length() {
+                end
+            } else {
+                start + direction * distance
+            }
+        };
+
+        println!("{:?}", closest_point(Vec3::new(3.0, 3.0, 3.0)));
+        println!("{:?}", closest_point(Vec3::new(3.5, 3.0, 3.0)));
+        //println!("{:?}", closest_point(Vec3::new(3.1, 3.1, 3.1)));
+        //println!("{:?}", closest_point(Vec3::new(4.1, 4.1, 4.1)));
     }
 }

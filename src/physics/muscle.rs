@@ -25,7 +25,7 @@ impl Muscle {
     pub fn new(target: Entity) -> Self {
         Self {
             target: Some(target),
-            strength: 30.0,
+            strength: 100.0,
             tense: true,
         }
     }
@@ -75,7 +75,7 @@ pub fn muscle_target(
         let mass = mass_properties.0.mass;
         let spring = Spring {
             strength: muscle.strength,
-            damping: 0.1,
+            damping: 0.2,
         };
 
         let mut torque = (target_axis * spring.strength)
