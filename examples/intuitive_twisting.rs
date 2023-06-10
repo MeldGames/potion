@@ -1,5 +1,7 @@
 use potion::{
-    player::prelude::{CollectInputs, MetaInputs, InputSet, PlayerEvent, PlayerInput, PlayerInputPlugin},
+    player::prelude::{
+        CollectInputs, InputSet, MetaInputs, PlayerEvent, PlayerInput, PlayerInputPlugin,
+    },
     setup_map,
 };
 
@@ -81,4 +83,3 @@ fn reset_movement(mut input: ResMut<PlayerInput>) {
         ..default()
     }
 }
-

@@ -104,7 +104,7 @@ impl Debug for PlayerInput {
                     .enumerate()
                     .filter(|(_, grabbing)| **grabbing)
                     .map(|(index, _)| index)
-                    .collect::<Vec<_>>()
+                    .collect::<Vec<_>>(),
             )
             .finish()
     }
@@ -390,25 +390,27 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
         app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
-        app.configure_set(CollectInputs
-            .run_if(crate::window_focused)
-            // TODO: fix this since bevy editor pls now works on multiple windows
-            //.run_if(crate::editor_active)
+        app.configure_set(
+            CollectInputs.run_if(crate::window_focused), // TODO: fix this since bevy editor pls now works on multiple windows
+                                                         //.run_if(crate::editor_active)
         );
         app.add_systems(
-            (player_binary_inputs,
-            zoom_on_scroll,
-            zoom_scroll_for_toi,
-            player_mouse_inputs)
-                .in_set(CollectInputs)
+            (
+                player_binary_inputs,
+                zoom_on_scroll,
+                zoom_scroll_for_toi,
+                player_mouse_inputs,
+            )
+                .in_set(CollectInputs),
         )
-        .add_systems((
-            initial_mouse_click,
-            toggle_mouse_lock,
-            mouse_lock,
-            update_local_player_inputs,
-        )
-                .in_set(MetaInputs)
+        .add_systems(
+            (
+                initial_mouse_click,
+                toggle_mouse_lock,
+                mouse_lock,
+                update_local_player_inputs,
+            )
+                .in_set(MetaInputs),
         );
     }
 }

@@ -246,16 +246,34 @@ pub fn grab_collider(
 
 #[derive(Default, Debug, Component, Clone, Copy)]
 pub struct Grabbing {
+    // Attempting to grab something.
     pub trying_grab: bool,
+    // Which entity we have a hold of currently.
     pub grabbing: Option<Entity>,
+    // Rotation on the grab sphere we are currently oriented on.
     pub rotation: Quat,
-    pub dir: Vec3,
+
+    pub point: Vec3,
 }
 
-#[derive(Default, Debug, Component, Clone, Copy)]
-pub struct GrabSphere {
+#[derive(Default, Debug, Clone, Copy, Reflect, FromReflect)]
+pub struct Sphere {
+    // Center of sphere in world space.
     pub center: Vec3,
+    // Radius of the sphere.
     pub radius: f32,
+}
+
+#[derive(Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[reflect(Component)]
+pub struct GrabSphere {
+    pub sphere: Option<Sphere>,
+}
+
+impl Default for GrabSphere {
+    fn default() -> Self {
+        Self { sphere: None }
+    }
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -361,7 +379,7 @@ pub fn children_with_recursive<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 }
 
 pub fn update_grab_sphere(
-    mut grab_spheres: Query<(Entity, &GlobalTransform, &mut GrabSphere)>,
+    mut grab_spheres: Query<(Entity, &mut GrabSphere)>,
     mut grabbing: Query<&mut Grabbing>,
     parents: Query<&Parent>,
     children: Query<&Children>,
@@ -371,7 +389,7 @@ pub fn update_grab_sphere(
 
     mut lines: ResMut<DebugLines>,
 ) {
-    for (entity, sphere_base, mut sphere) in &mut grab_spheres {
+    for (entity, mut grab_sphere) in &mut grab_spheres {
         let mut anchors = Vec::new();
 
         let results = children_with_recursive(&grab_joints, &children, &joint_children, entity);
@@ -389,26 +407,19 @@ pub fn update_grab_sphere(
 
             let anchor = joint.data.local_anchor2();
             let global_anchor = global.transform_point(anchor);
-
             lines.line_colored(
-                sphere_base.translation(),
                 global_anchor,
+                global_anchor + Vec3::Y,
                 crate::TICK_RATE.as_secs_f32(),
-                Color::RED,
+                Color::YELLOW,
             );
 
-            anchors.push((
-                grabber,
-                sphere_base
-                    .compute_matrix()
-                    .inverse()
-                    .project_point3(global_anchor),
-            ));
+            anchors.push((grabber, global_anchor));
         }
 
         if anchors.len() == 0 {
-            sphere.center = Vec3::ZERO;
-            sphere.radius = 0.0;
+            grab_sphere.sphere = None;
+            continue;
         }
 
         let (min, max) = if let Some(initial) = anchors.get(0) {
@@ -423,17 +434,20 @@ pub fn update_grab_sphere(
         let radius = diameter / 2.0;
 
         let midpoint = min * 0.5 + max * 0.5;
-        sphere.center = midpoint;
-        sphere.radius = radius;
+        grab_sphere.sphere = Some(Sphere {
+            center: midpoint,
+            radius: radius,
+        });
 
         lines.line_colored(
-            sphere_base.transform_point(min),
-            sphere_base.transform_point(max),
+            midpoint,
+            midpoint + Vec3::Y,
             crate::TICK_RATE.as_secs_f32(),
             Color::RED,
         );
 
-        for (grabbing) in &mut grabbing {}
+        lines.line_colored(min, max, crate::TICK_RATE.as_secs_f32(), Color::PURPLE);
+
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing
@@ -441,7 +455,7 @@ pub fn update_grab_sphere(
                 continue;
             };
 
-            grabbing.dir = (sphere.center - *anchor).normalize_or_zero() * sphere.radius;
+            grabbing.point = *anchor;
         }
     }
 }
@@ -449,6 +463,7 @@ pub fn update_grab_sphere(
 pub fn player_extend_arm(
     kb: Res<Input<KeyCode>>,
     globals: Query<&GlobalTransform>,
+    grab_sphere: Query<&GrabSphere>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
     inputs: Query<(&PlayerInput, &PlayerCamera, &PlayerNeck)>,
     upper_arm: Query<Entity, With<UpperArm>>,
@@ -505,8 +520,6 @@ pub fn player_extend_arm(
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
-                let grab_rotation = neck_yaw * grabbing.rotation;
-
                 let upper_arm =
                     find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
                 let joint = joints.get(upper_arm).unwrap();
@@ -514,8 +527,16 @@ pub fn player_extend_arm(
                 let shoulder = joint.data.local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
-                target_position.translation =
-                    shoulder_worldspace + direction * 1.2 + grab_rotation * grabbing.dir;
+                let grab_sphere =
+                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity).unwrap();
+                //info!("grab sphere: {:?}", grab_sphere);
+
+                if let Some(sphere) = grab_sphere.sphere {
+                    let relative = sphere.center - grabbing.point;
+                    target_position.translation = sphere.center + grabbing.rotation * relative;
+                } else {
+                    target_position.translation = shoulder_worldspace + direction * 1.2;
+                }
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;

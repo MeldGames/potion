@@ -16,7 +16,7 @@ bitflags::bitflags! {
         const TERRAIN = 1 << 1;
         const FLUFF = 1 << 3;
 
-        const PLAYER_FILTER = Groups::PLAYER.bits() | Groups::TERRAIN.bits();
+        const PLAYER_FILTER = Groups::TERRAIN.bits();
         const TERRAIN_FILTER = Groups::PLAYER.bits() | Groups::TERRAIN.bits() | Groups::FLUFF.bits();
     }
 }
@@ -33,7 +33,8 @@ pub const TERRAIN_GROUPING: CollisionGroups = CollisionGroups::new(
 
 pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(
     Group::from_bits_truncate(Groups::PLAYER.bits()),
-    Group::from_bits_truncate(Groups::PLAYER.bits()),
+    Group::from_bits_truncate(0),
+    //Group::from_bits_truncate(Groups::PLAYER.bits()),
 );
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 

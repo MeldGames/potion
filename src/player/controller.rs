@@ -64,8 +64,8 @@ pub fn player_movement(
 
         // If we are grabby then make the character face the way we are grabbing.
         //if player_input.any_extend_arm() {
-            let camera_dir = rotation * -Vec3::Z;
-            desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
+        let camera_dir = rotation * -Vec3::Z;
+        desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
         //}
 
         let spring = springy::Spring {
