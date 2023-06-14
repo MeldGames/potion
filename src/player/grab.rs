@@ -166,8 +166,7 @@ pub fn grab_collider(
                     let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
                     let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
-                        let closest_point =
-                            auto_aim.closest_point(other_global, closest_point);
+                        let closest_point = auto_aim.closest_point(other_global, closest_point);
                         lines.line_colored(
                             closest_point.unwrap(),
                             closest_point.unwrap() + Vec3::Y * 2.0,
@@ -193,7 +192,8 @@ pub fn grab_collider(
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
                     let other_matrix = other_global.compute_matrix();
-                    let anchor1 = other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
+                    let anchor1 =
+                        other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
 
                     println!("localspace anchor1: {:?}", anchor1);
 
@@ -532,12 +532,14 @@ pub fn player_extend_arm(
                     find_parent_with(&grab_sphere, &parents, &joints, hand_entity).unwrap();
                 //info!("grab sphere: {:?}", grab_sphere);
 
-                if let Some(sphere) = grab_sphere.sphere {
+                let sphere_offset = if let Some(sphere) = grab_sphere.sphere {
                     let relative = sphere.center - grabbing.point;
-                    target_position.translation = sphere.center + grabbing.rotation * relative;
+                    sphere.center + grabbing.rotation * relative
                 } else {
-                    target_position.translation = shoulder_worldspace + direction * 1.2;
-                }
+                    Vec3::ZERO
+                };
+
+                target_position.translation = shoulder_worldspace + direction * 1.2 + sphere_offset;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;
@@ -596,7 +598,7 @@ impl AimPrimitive {
                 let direction = vector.normalize_or_zero();
                 let relative_point = point - start;
                 let distance = direction.dot(relative_point);
-                
+
                 if distance < 0.0 {
                     start
                 } else if distance > vector.length() {
@@ -698,7 +700,7 @@ mod auto_aim_test {
             let direction = vector.normalize_or_zero();
             let relative_point = point - start;
             let distance = direction.dot(relative_point);
-            
+
             println!("----");
             println!("relative {:?}", relative_point);
             println!("dir {:?}", direction);
