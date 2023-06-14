@@ -567,8 +567,8 @@ pub fn setup_map(
             scene: asset_server.load("models/cauldron_stirrer.glb#Scene0"),
             transform: Transform {
                 // translation: Vec3::new(5., 10., -0.075),
-                translation: Vec3::new(0.0, 10.0, -3.0),
-                scale: Vec3::splat(2.5),
+                translation: Vec3::new(-10.0, 10.0, -4.0),
+                scale: Vec3::splat(1.5),
                 ..default()
             },
             ..default()
@@ -578,12 +578,8 @@ pub fn setup_map(
             end: Vec3::new(0.0, 1.2, 0.0),
         }]))
         .insert((
-            //Collider::cuboid(0.1, 0.2, 0.1),
             //GravityScale(0.0),
-            Damping {
-                linear_damping: 0.5,
-                angular_damping: 0.5,
-            },
+            ColliderMassProperties::Density(4.0),
             //RigidBody::KinematicVelocityBased,
             RigidBody::Dynamic,
             Name::new("Stirrer"),
@@ -592,9 +588,20 @@ pub fn setup_map(
             ReadMassProperties::default(),
             Velocity::default(),
             DEFAULT_FRICTION,
-            DecompLoad("stirrer".to_owned()),
+            //DecompLoad("stirrer".to_owned()),
             level_collision_mesh3,
         ))
+        .with_children(|builder| {
+            builder
+                .spawn(TransformBundle {
+                    local: Transform {
+                        translation: Vec3::new(0.0, 1.0, 0.0),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Collider::cuboid(0.1, 0.5, 0.1));
+        })
         .id();
 
     let level_collision_mesh: Handle<Mesh> =

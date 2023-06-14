@@ -332,10 +332,26 @@ pub fn twist_grab(
     kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut grabbing: Query<&mut Grabbing>,
+    mut impulses: Query<&mut ExternalImpulse>,
 ) {
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
 
     for mut grabbing in &mut grabbing {
+        if let Some(grabbed_entity) = grabbing.grabbing {
+            if let Ok(mut grabbed) = impulses.get_mut(grabbed_entity) {
+                let axis1 = Vec3::X;
+                let axis2 = Vec3::Y;
+                let world1 = Quat::from_axis_angle(axis1, cumulative_delta.y / 90.0);
+                let world2 = Quat::from_axis_angle(axis2, cumulative_delta.x / 90.0);
+
+                let axis1_impulse = world1.to_scaled_axis();
+                let axis2_impulse = world2.to_scaled_axis();
+
+                //grabbed.torque_impulse += axis1_impulse;
+                //grabbed.torque_impulse += axis2_impulse;
+            }
+        }
+
         if grabbing.grabbing.is_none() {
             grabbing.rotation = Quat::IDENTITY;
         } else {
@@ -343,8 +359,8 @@ pub fn twist_grab(
                 continue;
             }
 
-            let axis1 = Vec3::X;
-            let axis2 = Vec3::Y;
+            let axis1 = Vec3::Y;
+            let axis2 = Vec3::X;
             let world1 = Quat::from_axis_angle(axis1, cumulative_delta.y / 90.0);
             let world2 = Quat::from_axis_angle(axis2, cumulative_delta.x / 90.0);
             grabbing.rotation = world1 * grabbing.rotation;
@@ -458,6 +474,12 @@ pub fn update_grab_sphere(
 
             grabbing.point = *anchor;
         }
+    }
+}
+
+pub fn rotate_grabbed_object(hands: Query<&Grabbing>, impulse: Query<&ExternalImpulse>) {
+    for (grabbing) in &hands {
+        if let Some(grabbing) = grabbing.grabbing {}
     }
 }
 

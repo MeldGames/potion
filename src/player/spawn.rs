@@ -332,8 +332,10 @@ pub fn attach_arm(
         ..default()
     }));
 
-    let forearm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
-    let upperarm_height = Vec3::new(0.0, 0.75 - arm_radius, 0.0);
+    let arm_segment = 1.0;
+
+    let forearm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
+    let upperarm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
 
     let upperarm_target = commands
         .spawn(PbrBundle {
@@ -407,6 +409,8 @@ pub fn attach_arm(
     commands.entity(upperarm_target).add_child(forearm_target);
     commands.entity(forearm_target).add_child(hand_target);
 
+    let arm_density = 1.0;
+
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
         .local_anchor2(upperarm_height)
@@ -439,6 +443,7 @@ pub fn attach_arm(
         .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(upperarm_target))
+        .insert(ColliderMassProperties::Density(arm_density))
         .id();
 
     let mut forearm_joint = SphericalJointBuilder::new()
@@ -472,6 +477,7 @@ pub fn attach_arm(
         .insert(CharacterEntities::default())
         .insert(ArmId(index))
         .insert(Muscle::new(forearm_target))
+        .insert(ColliderMassProperties::Density(arm_density))
         .id();
 
     let hand_position = commands
@@ -485,7 +491,8 @@ pub fn attach_arm(
     commands.entity(forearm_entity).add_child(hand_position);
 
     let mut hand_joint = SphericalJointBuilder::new()
-        .local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
+        //.local_anchor2(Vec3::new(0.0, arm_radius, 0.0))
+        .local_anchor2(Vec3::new(0.0, 0.0, 0.0))
         .motor_model(JointAxis::AngX, motor_model)
         .motor_model(JointAxis::AngY, motor_model)
         .motor_model(JointAxis::AngZ, motor_model)
@@ -517,6 +524,7 @@ pub fn attach_arm(
         .insert(CharacterEntities::default())
         .insert(ConnectedMass::default())
         //.insert(GrabbedEntities::default())
+        //.insert(ColliderMassProperties::Density(10.0))
         .insert(Grabbing { ..default() })
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
