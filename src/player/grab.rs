@@ -534,7 +534,8 @@ pub fn player_extend_arm(
 
                 let sphere_offset = if let Some(sphere) = grab_sphere.sphere {
                     let relative = sphere.center - grabbing.point;
-                    sphere.center + grabbing.rotation * relative
+                    //sphere.center + grabbing.rotation * relative
+                    grabbing.rotation * relative
                 } else {
                     Vec3::ZERO
                 };
