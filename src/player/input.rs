@@ -229,7 +229,6 @@ pub fn initial_mouse_click(
 }
 
 pub fn toggle_mouse_lock(
-    mut commands: Commands,
     windows: Query<&Window, With<PrimaryWindow>>,
     kb: Res<Input<KeyCode>>,
     state: Res<State<MouseState>>,

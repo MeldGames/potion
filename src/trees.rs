@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
     reflect::TypeUuid,
     render::{
-        mesh::{MeshVertexBufferLayout, VertexAttributeValues},
+        mesh::MeshVertexBufferLayout,
         render_resource::{
             AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
         },
@@ -121,12 +121,12 @@ pub struct BarkMaterial {
 fn mod_scene(
     mut commands: Commands,
     spheres: Query<(Entity, &Handle<Mesh>, &Name), Without<Inserted>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<LeafMaterial>>,
     mut bark_materials: ResMut<Assets<BarkMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    for (e, hand, name) in spheres.iter() {
+    for (e, _hand, name) in spheres.iter() {
         if name.as_str().contains("leaves") {
             let custom_material = custom_materials.add(LeafMaterial {
                 color: Color::YELLOW_GREEN,

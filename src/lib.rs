@@ -24,7 +24,6 @@ use deposit::DepositPlugin;
 use joint_break::BreakJointPlugin;
 use obj::Obj;
 use slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable};
-use trees::TreesPlugin;
 
 pub use debug::DebugVisible;
 
@@ -55,14 +54,14 @@ pub fn setup_app(app: &mut App) {
     let default_res = (1000.0, 600.0);
     //let default_res = (800.0, 500.0);
     //let default_res = (1920.0, 1080.0);
-    let half_width = ((default_res.0 / 2.0), default_res.1);
+    //let half_width = ((default_res.0 / 2.0), default_res.1);
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Potion Cellar".into(),
                     resolution: default_res.into(),
-                    //position: position,
+                    position: WindowPosition::At(IVec2::ZERO),
                     cursor: {
                         let mut cursor = Cursor::default();
                         cursor.grab_mode = CursorGrabMode::None;

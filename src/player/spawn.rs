@@ -15,7 +15,7 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
-use crate::attach::{Attach, AttachTranslation};
+use crate::attach::Attach;
 use crate::cauldron::NamedEntity;
 use crate::physics::{ContactFilter, Muscle};
 use crate::DebugVisible;

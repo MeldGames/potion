@@ -8,7 +8,6 @@ use std::f32::consts::PI;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
-use super::grab::GrabJoint;
 use super::input::PlayerInput;
 use super::prelude::*;
 

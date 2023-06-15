@@ -200,14 +200,14 @@ pub fn spring_slot(
     entities: &Entities,
     particles: Query<springy::RapierParticleQuery>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
-    mut slottables: Query<&mut Slottable>,
-    mut slots: Query<(Entity, &mut Slot, &mut SlotSettings, &SlotGracePeriod)>,
+    //mut slottables: Query<&mut Slottable>,
+    mut slots: Query<(Entity, &mut Slot, &SlotSettings, &SlotGracePeriod)>,
     names: Query<&Name>,
     mut lines: ResMut<DebugLines>,
 ) {
     let timestep = crate::TICK_RATE.as_secs_f32();
 
-    for (slot_entity, mut slot, mut slot_settings, grace_period) in &mut slots {
+    for (slot_entity, mut slot, slot_settings, grace_period) in &mut slots {
         if let Some(particle_entity) = slot.containing {
             if !entities.contains(particle_entity) {
                 warn!(
@@ -241,7 +241,9 @@ pub fn spring_slot(
             let instant = particle_a.translation().instant(&particle_b.translation());
             let impulse = slot_settings.0.impulse(timestep, instant);
 
-            let ang_instant = particle_a.angular(Vec3::Y).instant(&particle_b.angular(Vec3::Y));
+            let ang_instant = particle_a
+                .angular(Vec3::Y)
+                .instant(&particle_b.angular(Vec3::Y));
             let ang_impulse = -slot_settings.0.impulse(timestep, ang_instant);
 
             /*
@@ -326,6 +328,7 @@ impl Plugin for SlotPlugin {
                 tick_grace_period.before(insert_slot),
                 spring_slot.after(insert_slot),
             )
+            .before(PhysicsSet::SyncBackend)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
     }

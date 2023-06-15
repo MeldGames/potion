@@ -1,10 +1,5 @@
-use bevy::{
-    prelude::*,
-    transform::{systems::*, TransformSystem},
-    window::PrimaryWindow,
-};
+use bevy::prelude::*;
 
-use bevy_editor_pls::EditorState;
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
 use crate::attach::AttachPlugin;

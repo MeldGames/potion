@@ -17,7 +17,6 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
 use crate::physics::{Muscle, GRAB_GROUPING, REST_GROUPING};
 
-use super::controller::ConnectedEntities;
 use super::input::PlayerInput;
 use super::prelude::*;
 
@@ -308,11 +307,11 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
 }
 
 pub fn tense_arms(
-    hands: Query<(Entity, &Grabbing, &Forearm), With<Hand>>,
+    hands: Query<(&Grabbing, &Forearm), With<Hand>>,
     mut muscles: Query<&mut Muscle>,
     joints: Query<&ImpulseJoint>,
 ) {
-    for (hand_entity, grabbing, forearm) in &hands {
+    for (grabbing, forearm) in &hands {
         let mut entity = forearm.0;
         while let Ok(mut muscle) = muscles.get_mut(entity) {
             if muscle.tense != grabbing.trying_grab {
@@ -332,7 +331,7 @@ pub fn twist_grab(
     kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut grabbing: Query<&mut Grabbing>,
-    mut impulses: Query<&mut ExternalImpulse>,
+    //mut impulses: Query<&mut ExternalImpulse>,
 ) {
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
 
@@ -479,14 +478,7 @@ pub fn update_grab_sphere(
     }
 }
 
-pub fn rotate_grabbed_object(hands: Query<&Grabbing>, impulse: Query<&ExternalImpulse>) {
-    for (grabbing) in &hands {
-        if let Some(grabbing) = grabbing.grabbing {}
-    }
-}
-
 pub fn player_extend_arm(
-    kb: Res<Input<KeyCode>>,
     globals: Query<&GlobalTransform>,
     grab_sphere: Query<&GrabSphere>,
     mut transforms: Query<(&mut Transform, &PullOffset)>,
@@ -499,7 +491,6 @@ pub fn player_extend_arm(
             Entity,
             &mut Grabbing,
             &mut CollisionGroups,
-            &mut ExternalImpulse,
             &ArmId,
             &MuscleIKTarget,
         ),
@@ -510,7 +501,6 @@ pub fn player_extend_arm(
         hand_entity,
         mut grabbing,
         mut collision_groups,
-        mut hand_impulse,
         arm_id,
         muscle_ik_target,
     ) in &mut hands
@@ -672,11 +662,11 @@ pub struct PullOffset(Vec3);
 
 pub fn auto_aim_pull(
     pullers: Query<(&GlobalTransform, &AutoAim)>,
-    mut offsets: Query<(Entity, &GlobalTransform, &mut PullOffset)>,
+    mut offsets: Query<(&GlobalTransform, &mut PullOffset)>,
 
     mut lines: ResMut<DebugLines>,
 ) {
-    for (entity, offset_global, mut offset) in &mut offsets {
+    for (offset_global, mut offset) in &mut offsets {
         let mut pulls: Vec<Vec3> = Vec::new();
         for (puller_global, auto_aim) in &pullers {
             let offset_point = offset_global.translation();
