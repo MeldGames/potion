@@ -328,12 +328,11 @@ pub fn attach_arm(
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
     let debug_mesh = meshes.add(Mesh::from(shape::UVSphere {
-        radius: 0.02,
+        radius: 0.04,
         ..default()
     }));
 
     let arm_segment = 1.0;
-
     let forearm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
 
@@ -376,8 +375,8 @@ pub fn attach_arm(
     let pole_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::YELLOW.into()),
-            transform: Transform::from_translation(Vec3::new(-1.0, 0.4, -0.2)),
+            material: materials.add(Color::PURPLE.into()),
+            transform: Transform::from_translation(at + Vec3::new(0.0, -0.8, 1.2)),
             ..default()
         })
         .insert(Name::new(format!("Elbow pole {}", index)))
@@ -408,6 +407,7 @@ pub fn attach_arm(
     commands.entity(to).add_child(upperarm_target);
     commands.entity(upperarm_target).add_child(forearm_target);
     commands.entity(forearm_target).add_child(hand_target);
+    commands.entity(to).add_child(pole_target);
 
     let arm_density = 1.0;
 
@@ -445,6 +445,8 @@ pub fn attach_arm(
         .insert(Muscle::new(upperarm_target))
         .insert(ColliderMassProperties::Density(arm_density))
         .id();
+
+    //commands.entity(pole_target).insert(Attach::translation(upperarm_entity));
 
     let mut forearm_joint = SphericalJointBuilder::new()
         .local_anchor2(forearm_height)
@@ -511,7 +513,7 @@ pub fn attach_arm(
             resting_stiffness * 2.0,
             resting_damping * 2.0,
         )
-        //.motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     hand_joint.set_contacts_enabled(false);
 

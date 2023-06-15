@@ -337,6 +337,7 @@ pub fn twist_grab(
     let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
 
     for mut grabbing in &mut grabbing {
+        /*
         if let Some(grabbed_entity) = grabbing.grabbing {
             if let Ok(mut grabbed) = impulses.get_mut(grabbed_entity) {
                 let axis1 = Vec3::X;
@@ -351,6 +352,7 @@ pub fn twist_grab(
                 //grabbed.torque_impulse += axis2_impulse;
             }
         }
+        */
 
         if grabbing.grabbing.is_none() {
             grabbing.rotation = Quat::IDENTITY;
@@ -359,8 +361,8 @@ pub fn twist_grab(
                 continue;
             }
 
-            let axis1 = Vec3::Y;
-            let axis2 = Vec3::X;
+            let axis1 = Vec3::X;
+            let axis2 = Vec3::Y;
             let world1 = Quat::from_axis_angle(axis1, cumulative_delta.y / 90.0);
             let world2 = Quat::from_axis_angle(axis2, cumulative_delta.x / 90.0);
             grabbing.rotation = world1 * grabbing.rotation;
@@ -555,14 +557,11 @@ pub fn player_extend_arm(
                 //info!("grab sphere: {:?}", grab_sphere);
 
                 let sphere_offset = if let Some(sphere) = grab_sphere.sphere {
-                    let relative = sphere.center - grabbing.point;
-                    //sphere.center + grabbing.rotation * relative
-                    grabbing.rotation * relative
+                    //let relative = sphere.center - grabbing.point;
+                    //target_position.translation = sphere.center;// + grabbing.rotation// * relative;
                 } else {
-                    Vec3::ZERO
+                    target_position.translation = shoulder_worldspace + direction * 2.0;
                 };
-
-                target_position.translation = shoulder_worldspace + direction * 1.2 + sphere_offset;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;
