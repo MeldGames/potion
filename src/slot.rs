@@ -241,6 +241,9 @@ pub fn spring_slot(
             let instant = particle_a.translation().instant(&particle_b.translation());
             let impulse = slot_settings.0.impulse(timestep, instant);
 
+            let ang_instant = particle_a.angular(Vec3::Y).instant(&particle_b.angular(Vec3::Y));
+            let ang_impulse = -slot_settings.0.impulse(timestep, ang_instant);
+
             /*
                     let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
                         springy::SpringResult::Impulse(impulse) => impulse,
@@ -277,7 +280,8 @@ pub fn spring_slot(
             };
 
             if let Some(mut slot_impulse) = slot_impulse {
-                slot_impulse.impulse = impulse;
+                slot_impulse.impulse += impulse;
+                slot_impulse.torque_impulse += ang_impulse;
 
                 lines.line_colored(
                     translation_a,
@@ -290,7 +294,8 @@ pub fn spring_slot(
             }
 
             if let Some(mut particle_impulse) = particle_impulse {
-                particle_impulse.impulse = -impulse;
+                particle_impulse.impulse -= impulse;
+                particle_impulse.torque_impulse -= ang_impulse;
 
                 lines.line_colored(
                     translation_b,
@@ -314,9 +319,14 @@ impl Plugin for SlotPlugin {
             .register_type::<bevy::time::TimerMode>()
             .register_type::<SlotSettings>();
 
-        app.add_system(pending_slot);
-        app.add_system(insert_slot.after(pending_slot));
-        app.add_system(tick_grace_period.before(insert_slot));
-        app.add_system(spring_slot.after(insert_slot));
+        app.add_systems(
+            (
+                pending_slot,
+                insert_slot.after(pending_slot),
+                tick_grace_period.before(insert_slot),
+                spring_slot.after(insert_slot),
+            )
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
     }
 }
