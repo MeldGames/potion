@@ -68,6 +68,7 @@ pub fn setup_app(app: &mut App) {
                         cursor.visible = true;
                         cursor
                     },
+                    focused: true,
                     present_mode: bevy::window::PresentMode::Immediate,
                     ..default()
                 }),
@@ -78,6 +79,14 @@ pub fn setup_app(app: &mut App) {
                 ..default()
             }),
     );
+
+    app.add_startup_system(move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>| {
+        if let Ok(mut window) = windows.get_single_mut() {
+            let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
+            window.set_cursor_position(Some(center_cursor));
+            window.cursor.grab_mode = CursorGrabMode::Locked;
+        }
+    });
 
     app.insert_resource(bevy_framepace::FramepaceSettings {
         //limiter: bevy_framepace::Limiter::Off,

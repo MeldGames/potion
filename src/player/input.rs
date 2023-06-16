@@ -246,7 +246,7 @@ pub fn toggle_mouse_lock(
         .unwrap_or(false);
 
     let should_lock =
-        (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused && initial_click.is_some();
+        (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused;// && initial_click.is_some();
 
     match &state.0 {
         MouseState::Free if should_lock => next_state.set(MouseState::Locked),
@@ -267,6 +267,10 @@ pub fn mouse_lock(
         window.cursor.visible = !locked;
 
         if locked {
+            if window.cursor_position().is_none() {
+                let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
+                window.set_cursor_position(Some(center_cursor));
+            }
             window.cursor.grab_mode = bevy::window::CursorGrabMode::Locked;
         } else {
             window.cursor.grab_mode = bevy::window::CursorGrabMode::None;
