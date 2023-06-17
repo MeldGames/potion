@@ -66,7 +66,7 @@ impl Material for LeafMaterial {
     }
 
     fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
+        AlphaMode::Opaque
     }
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
@@ -74,7 +74,7 @@ impl Material for LeafMaterial {
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
+        //descriptor.primitive.cull_mode = None;
         Ok(())
     }
 }
@@ -105,7 +105,7 @@ impl Material for BarkMaterial {
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
+        //descriptor.primitive.cull_mode = None;
         Ok(())
     }
 }

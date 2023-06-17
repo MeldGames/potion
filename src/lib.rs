@@ -62,12 +62,12 @@ pub fn setup_app(app: &mut App) {
                     title: "Potion Cellar".into(),
                     resolution: default_res.into(),
                     position: WindowPosition::At(IVec2::ZERO),
-                    cursor: {
+                    /*cursor: {
                         let mut cursor = Cursor::default();
                         cursor.grab_mode = CursorGrabMode::None;
                         cursor.visible = true;
                         cursor
-                    },
+                    },*/
                     focused: true,
                     present_mode: bevy::window::PresentMode::Immediate,
                     ..default()
@@ -352,6 +352,7 @@ pub fn setup_map(
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
 
+/*
     let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
@@ -364,6 +365,7 @@ pub fn setup_map(
         })
         .insert((NotShadowCaster, NotShadowReceiver))
         .id();
+ */
 
     let ball_radius = 0.6;
     let _ball = commands

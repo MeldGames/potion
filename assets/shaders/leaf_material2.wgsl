@@ -187,7 +187,7 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
 
 
     // mask and output
-    if (cutout.a == 0.0) { discard; } else {
+    if (cutout.a <= 0.1) { discard; } else {
         return vec4(output_color);
     }
 

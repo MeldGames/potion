@@ -550,8 +550,9 @@ pub fn player_extend_arm(
                     //let relative = sphere.center - grabbing.point;
                     //target_position.translation = sphere.center;// + grabbing.rotation// * relative;
                 } else {
-                    target_position.translation = shoulder_worldspace + direction * 2.0;
                 };
+
+                target_position.translation = shoulder_worldspace + direction * 2.0;
 
                 if grabbing.grabbing.is_none() {
                     target_position.translation += pull_offset.0;

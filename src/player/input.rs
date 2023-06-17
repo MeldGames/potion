@@ -267,7 +267,14 @@ pub fn mouse_lock(
         window.cursor.visible = !locked;
 
         if locked {
-            if window.cursor_position().is_none() {
+            let oob = match window.cursor_position() {
+                Some(position) => {
+                    position.x > window.width() || position.x < 0.0 || position.y > window.height() || position.y < 0.0
+                }
+                None => true,
+            };
+            if oob {
+                info!("position: {:?}", window.cursor_position());
                 let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
                 window.set_cursor_position(Some(center_cursor));
             }

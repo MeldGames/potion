@@ -79,7 +79,11 @@ fn fragment(
     //return vec4(dot(normalize(vec3(world_position.x, world_position.y, world_position.z)), normalize(vec3(1.0,1.0,1.0)) )) ;
     //return vec4(mask);
 
-    return vec4(color * cutout.a);
+    if cutout.a < 0.2 {
+        discard;
+    }
+
+    return vec4(color);
     //var t = sin(uv.x * 6.28 *1.0 + -0.5) *0.5 + 0.5;
     //t = abs(fract(uv.x * 5.0) * 2.0 - 1.0);
     //return vec4(t);
