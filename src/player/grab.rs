@@ -497,14 +497,7 @@ pub fn player_extend_arm(
         With<Hand>,
     >,
 ) {
-    for (
-        hand_entity,
-        mut grabbing,
-        mut collision_groups,
-        arm_id,
-        muscle_ik_target,
-    ) in &mut hands
-    {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {

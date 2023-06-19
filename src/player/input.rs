@@ -245,8 +245,7 @@ pub fn toggle_mouse_lock(
         .and_then(|window| Ok(window.focused))
         .unwrap_or(false);
 
-    let should_lock =
-        (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused;// && initial_click.is_some();
+    let should_lock = (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused; // && initial_click.is_some();
 
     match &state.0 {
         MouseState::Free if should_lock => next_state.set(MouseState::Locked),
@@ -269,7 +268,10 @@ pub fn mouse_lock(
         if locked {
             let oob = match window.cursor_position() {
                 Some(position) => {
-                    position.x > window.width() || position.x < 0.0 || position.y > window.height() || position.y < 0.0
+                    position.x > window.width()
+                        || position.x < 0.0
+                        || position.y > window.height()
+                        || position.y < 0.0
                 }
                 None => true,
             };

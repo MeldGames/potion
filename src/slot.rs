@@ -328,7 +328,7 @@ impl Plugin for SlotPlugin {
                 tick_grace_period.before(insert_slot),
                 spring_slot.after(insert_slot),
             )
-            .before(PhysicsSet::SyncBackend)
+                .before(PhysicsSet::SyncBackend)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
     }
