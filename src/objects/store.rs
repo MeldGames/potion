@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{deposit::Value};
+use crate::deposit::Value;
 
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Store;
@@ -65,7 +65,10 @@ pub fn push_item_back(
                 if let Ok((item_entity, item_transform, impulse, _store_item)) =
                     store_items.get_mut(potential)
                 {
-                    info!("Player is trying to steal {:?}", name.get(potential).unwrap());
+                    info!(
+                        "Player is trying to steal {:?}",
+                        name.get(potential).unwrap()
+                    );
                     commands
                         .entity(item_entity)
                         .insert(CaughtItem::new(security_entity));

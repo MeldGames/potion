@@ -4,24 +4,18 @@ pub mod deposit;
 pub mod egui;
 //pub mod network;
 pub mod maps;
+pub mod objects;
 pub mod physics;
 pub mod player;
-pub mod objects;
 
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
 
 use self::{
-    objects::{
-        store::{StorePlugin},
-    },
     deposit::DepositPlugin,
-    
-    physics::{
-        slot::{SlotPlugin},
-    joint_break::BreakJointPlugin,
-    },
+    objects::store::StorePlugin,
+    physics::{joint_break::BreakJointPlugin, slot::SlotPlugin},
     player::PlayerPlugin,
 };
 

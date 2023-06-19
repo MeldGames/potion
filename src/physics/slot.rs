@@ -217,7 +217,10 @@ pub fn spring_slot(
             }
 
             if particle_entity == slot_entity {
-                warn!("Slot cannot contain itself: {:?}", names.get(slot_entity).unwrap());
+                warn!(
+                    "Slot cannot contain itself: {:?}",
+                    names.get(slot_entity).unwrap()
+                );
                 slot.containing = None;
                 continue;
             }

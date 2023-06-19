@@ -1,6 +1,4 @@
-use potion::{
-    player::prelude::{PlayerEvent, PlayerInputPlugin},
-};
+use potion::player::prelude::{PlayerEvent, PlayerInputPlugin};
 
 use bevy::prelude::*;
 

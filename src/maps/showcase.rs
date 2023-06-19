@@ -1,14 +1,13 @@
-
 use std::f32::consts::PI;
 
 use crate::{
     attach::Attach,
-    objects:: {
-        cauldron::{Ingredient},
+    objects::{
+        cauldron::Ingredient,
         store::{SecurityCheck, StoreItem},
     },
-    player::grab::{AimPrimitive, AutoAim},
     physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+    player::grab::{AimPrimitive, AutoAim},
 };
 
 use bevy::{
@@ -24,13 +23,6 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let test_texture = asset_server.load("models/materials/Placeholder.png");
-    let test_material = materials.add(StandardMaterial {
-        base_color_texture: Some(test_texture.clone()),
-        alpha_mode: AlphaMode::Blend,
-        ..default()
-    });
-
     commands
         .spawn((
             SceneBundle {
@@ -222,7 +214,6 @@ pub fn setup(
                 radius: ball_radius,
                 ..default()
             })),
-            material: test_material.clone(),
             transform: Transform::from_xyz(1.0, 8.0, -2.0),
             ..default()
         })
@@ -251,7 +242,6 @@ pub fn setup(
                 ring_radius: 0.2,
                 ..default()
             })),
-            material: test_material.clone(),
             transform: Transform::from_xyz(1.0, 6.0, -2.0),
             ..default()
         })

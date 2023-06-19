@@ -16,9 +16,9 @@ use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
 use crate::{
-attach::Attach,
-physics::{ContactFilter, Muscle},
-DebugVisible,
+    attach::Attach,
+    physics::{ContactFilter, Muscle},
+    DebugVisible,
 };
 
 #[derive(Default, Debug, Component, Reflect)]

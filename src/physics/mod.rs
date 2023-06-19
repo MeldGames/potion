@@ -3,10 +3,10 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 pub mod contact_filter;
-pub mod muscle;
-pub mod spring;
-pub mod slot;
 pub mod joint_break;
+pub mod muscle;
+pub mod slot;
+pub mod spring;
 
 pub use contact_filter::*;
 pub use muscle::*;

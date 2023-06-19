@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 pub mod texture;
 
+pub use texture::TestMaterial;
+
 #[derive(Debug, Clone, Resource)]
 pub struct Debug(bool);
 
@@ -41,7 +43,11 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Debug(true));
+
         app.add_system(toggle_debug);
         app.add_system(debug_visible);
+
+        app.add_startup_system(texture::setup_test_texture);
+        app.add_system(texture::replace_blank_textures);
     }
 }

@@ -1,14 +1,13 @@
-
 use std::f32::consts::PI;
 
 use crate::{
     attach::Attach,
-    objects:: {
-        cauldron::{Ingredient},
+    objects::{
+        cauldron::Ingredient,
         store::{SecurityCheck, StoreItem},
     },
-    player::grab::{AimPrimitive, AutoAim},
     physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+    player::grab::{AimPrimitive, AutoAim},
 };
 
 use bevy::{
@@ -24,18 +23,9 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let test_texture = asset_server.load("models/materials/Placeholder.png");
-    let test_material = materials.add(StandardMaterial {
-        base_color_texture: Some(test_texture.clone()),
-        perceptual_roughness: 0.95,
-        reflectance: 0.05,
-        ..default()
-    });
-
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
-            material: test_material.clone(),
             transform: Transform {
                 translation: Vec3::new(0.0, -3.0, 0.0),
                 scale: Vec3::new(100.0, 2.0, 100.0),
