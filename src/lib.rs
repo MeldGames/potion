@@ -242,7 +242,7 @@ pub fn setup_map(
         &mut commands,
         &*asset_server,
         Transform {
-            translation: Vec3::new(5.0, 2.0, 0.0),
+            translation: Vec3::new(-5.0, 2.0, 0.0),
             scale: Vec3::splat(2.),
             ..default()
         },

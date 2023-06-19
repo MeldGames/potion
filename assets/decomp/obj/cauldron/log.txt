@@ -12,10 +12,10 @@
 	PCA (ON/OFF):                      0
 	k for Rv:                          0.3
 	Hausdorff Sampling Resolution:     2000
-	Random Seed:                       1675896816
+	Random Seed:                       1687160591
  - Pre-processing (manifold)
 	resolution: 10000
-Manifold time: 0.269716s
+Manifold time: 0.260221s
 #Points: 58758
 #Triangles: 117512
  - Decomposition (MCTS)
@@ -29,5 +29,5 @@ iter 6 ---- waiting pool: 56
 iter 7 ---- waiting pool: 64
 iter 8 ---- waiting pool: 22
 iter 9 ---- waiting pool: 8
-Compute Time: 117.579s
+Compute Time: 123.765s
 #Convex After Merge: 101
