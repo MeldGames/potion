@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{cauldron::NamedEntity, deposit::Value};
+use crate::{deposit::Value};
 
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Store;
@@ -41,7 +41,7 @@ impl CaughtItem {
 
 pub fn push_item_back(
     mut commands: Commands,
-    name: Query<&Name>,
+    name: Query<DebugName>,
     rapier_context: Res<RapierContext>,
     security_checks: Query<(Entity, &GlobalTransform, &SecurityCheck, Option<&Children>)>,
     mut store_items: Query<(
@@ -65,7 +65,7 @@ pub fn push_item_back(
                 if let Ok((item_entity, item_transform, impulse, _store_item)) =
                     store_items.get_mut(potential)
                 {
-                    info!("Player is trying to steal {:?}", name.named(potential));
+                    info!("Player is trying to steal {:?}", name.get(potential).unwrap());
                     commands
                         .entity(item_entity)
                         .insert(CaughtItem::new(security_entity));
@@ -103,7 +103,7 @@ pub fn push_item_back(
 
 pub fn buy_item(
     mut commands: Commands,
-    name: Query<&Name>,
+    name: Query<DebugName>,
     rapier_context: Res<RapierContext>,
     registers: Query<(Entity, Option<&Children>), With<Register>>,
     store_items: Query<(&Value, &StoreItem)>,
@@ -120,7 +120,7 @@ pub fn buy_item(
             if intersecting {
                 if let Ok((value, _)) = store_items.get(potential) {
                     if player_value.enough(value) {
-                        info!("Player buying {:?}", name.named(potential));
+                        info!("Player buying {:?}", name.get(potential).unwrap());
                         *player_value -= *value;
                         commands.entity(entity).remove::<StoreItem>();
                     }

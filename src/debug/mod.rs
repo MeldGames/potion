@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+pub mod texture;
+
 #[derive(Debug, Clone, Resource)]
 pub struct Debug(bool);
 

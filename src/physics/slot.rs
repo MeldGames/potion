@@ -4,8 +4,6 @@ use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
 
-use crate::cauldron::NamedEntity;
-
 #[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct Slot {
@@ -85,7 +83,7 @@ impl SlotDeposit {
 }
 
 pub fn pending_slot(
-    names: Query<&Name>,
+    names: Query<DebugName>,
     mut slotters: Query<(Entity, &mut SlotDeposit)>,
     slottable: Query<(Entity, &Slottable)>,
     mut collision_events: EventReader<CollisionEvent>,
@@ -140,7 +138,7 @@ pub fn pending_slot(
             slotter
                 .attempting
                 .iter()
-                .map(|entity| names.named(*entity))
+                .map(|entity| names.get(*entity).unwrap())
                 .collect::<Vec<_>>()
         );
     }
@@ -156,7 +154,7 @@ pub fn insert_slot(
     mut slotted: Query<&mut Slottable>,
     mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
     mut deposits: Query<&mut SlotDeposit>,
-    names: Query<&Name>,
+    names: Query<DebugName>,
 ) {
     for mut deposit in &mut deposits {
         if deposit.slots.len() == 0 {
@@ -178,7 +176,7 @@ pub fn insert_slot(
                     while let Some(next_item) = attempting.pop_front() {
                         if let Ok(mut slottable) = slotted.get_mut(next_item) {
                             if *slottable == Slottable::Free {
-                                info!("slotting {:?}", names.named(next_item));
+                                info!("slotting {:?}", names.get(next_item).unwrap());
                                 slot.containing = Some(next_item);
                                 grace_period.0 =
                                     Timer::new(Duration::from_secs(1), TimerMode::Once);
@@ -202,7 +200,7 @@ pub fn spring_slot(
     mut impulses: Query<Option<&mut ExternalImpulse>>,
     //mut slottables: Query<&mut Slottable>,
     mut slots: Query<(Entity, &mut Slot, &SlotSettings, &SlotGracePeriod)>,
-    names: Query<&Name>,
+    names: Query<DebugName>,
     mut lines: ResMut<DebugLines>,
 ) {
     let timestep = crate::TICK_RATE.as_secs_f32();
@@ -212,14 +210,14 @@ pub fn spring_slot(
             if !entities.contains(particle_entity) {
                 warn!(
                     "contained entity is no longer alive: {:?}",
-                    names.named(particle_entity)
+                    names.get(particle_entity).unwrap()
                 );
                 slot.containing = None;
                 continue;
             }
 
             if particle_entity == slot_entity {
-                warn!("Slot cannot contain itself: {:?}", names.named(slot_entity));
+                warn!("Slot cannot contain itself: {:?}", names.get(slot_entity).unwrap());
                 slot.containing = None;
                 continue;
             }
@@ -246,28 +244,6 @@ pub fn spring_slot(
                 .instant(&particle_b.angular(Vec3::Y));
             let ang_impulse = -slot_settings.0.impulse(timestep, ang_instant);
 
-            /*
-                    let impulse = match slot_settings.0.impulse(timestep, particle_a, particle_b) {
-                        springy::SpringResult::Impulse(impulse) => impulse,
-                        springy::SpringResult::Broke(impulse) => {
-                            if grace_period.0.finished() {
-                                if let Ok(mut slottable) = slottables.get_mut(particle_entity) {
-                                    *slottable = Slottable::Free;
-                                }
-
-                                info!(
-                                    "Removing from slot {:?}: {:?}",
-                                    names.named(slot_entity),
-                                    names.named(particle_entity)
-                                );
-                                slot.containing = None;
-                                continue;
-                            } else {
-                                impulse
-                            }
-                        }
-                    };
-            */
             let [slot_impulse, particle_impulse] = impulses
                 .get_many_mut([slot_entity, particle_entity])
                 .unwrap();
@@ -276,7 +252,7 @@ pub fn spring_slot(
                 if let Some(RigidBody::Dynamic) = rigid_body {
                     warn!(
                         "Particle {:?} does not have an `ExternalImpulse` component",
-                        names.named(entity)
+                        names.get(entity).unwrap()
                     );
                 }
             };

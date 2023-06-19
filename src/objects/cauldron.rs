@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{
     attach::Attach,
-    slot::{Slot, SlotDeposit},
+    physics::slot::{Slot, SlotDeposit},
 };
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
@@ -14,26 +14,6 @@ pub struct Cauldron;
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct Ingredient;
-
-pub trait NamedEntity {
-    fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a>;
-}
-
-impl<'w, 's> NamedEntity for Query<'w, 's, &Name, ()> {
-    fn named<'a>(&'a self, entity: Entity) -> Box<dyn std::fmt::Debug + 'a> {
-        match self.get_component::<Name>(entity) {
-            Ok(name) => Box::new(name.as_str()),
-            _ => Box::new(entity),
-        }
-    }
-}
-
-pub struct CauldronPlugin;
-impl Plugin for CauldronPlugin {
-    fn build(&self, _app: &mut App) {
-        //app.add_network_system(slot_ingredient);
-    }
-}
 
 pub fn spawn_cauldron(
     commands: &mut Commands,
@@ -54,7 +34,7 @@ pub fn spawn_cauldron(
             RigidBody::Dynamic,
             Velocity::default(),
             ExternalImpulse::default(),
-            crate::store::StoreItem,
+            crate::objects::store::StoreItem,
             Collider::cylinder(0.5, 0.75),
             Name::new("Cauldron"),
             crate::physics::TERRAIN_GROUPING,
@@ -85,8 +65,8 @@ pub fn spawn_cauldron(
                         .insert(Velocity::default())
                         .insert(Slot::default())
                         .insert(crate::DebugVisible)
-                        .insert(crate::slot::SlotGracePeriod::default())
-                        .insert(crate::slot::SlotSettings(springy::Spring {
+                        .insert(crate::physics::slot::SlotGracePeriod::default())
+                        .insert(crate::physics::slot::SlotSettings(springy::Spring {
                             strength: 1.00,
                             damp_ratio: 0.2,
                         }))

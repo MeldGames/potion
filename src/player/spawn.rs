@@ -15,10 +15,11 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
-use crate::attach::Attach;
-use crate::cauldron::NamedEntity;
-use crate::physics::{ContactFilter, Muscle};
-use crate::DebugVisible;
+use crate::{
+attach::Attach,
+physics::{ContactFilter, Muscle},
+DebugVisible,
+};
 
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
@@ -654,11 +655,6 @@ pub fn setup_ik(
     for (entity, parent) in added_query.iter() {
         let player = parents.get(parent.get()).unwrap().get();
 
-        info!(
-            "added animation player to {:?}, {:?}",
-            names.named(entity),
-            names.named(player),
-        );
         let mesh_right_hand = if let Ok(found_entity) = find_entity(
             &EntityPath {
                 parts: vec![

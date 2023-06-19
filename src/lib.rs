@@ -1,35 +1,35 @@
 pub mod attach;
-pub mod cauldron;
 pub mod debug;
 pub mod deposit;
 pub mod egui;
-pub mod joint_break;
 //pub mod network;
 pub mod maps;
 pub mod physics;
 pub mod player;
-pub mod slot;
-pub mod store;
-pub mod trees;
+pub mod objects;
 
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
-use cauldron::{CauldronPlugin};
-use deposit::DepositPlugin;
-use joint_break::BreakJointPlugin;
+
+use self::{
+    objects::{
+        store::{StorePlugin},
+    },
+    deposit::DepositPlugin,
+    
+    physics::{
+        slot::{SlotPlugin},
+    joint_break::BreakJointPlugin,
+    },
+    player::PlayerPlugin,
+};
+
 use obj::Obj;
-use slot::{SlotPlugin};
 
 pub use debug::DebugVisible;
 
-use store::{StorePlugin};
-
 //use crate::network::NetworkPlugin;
-use player::{
-    PlayerPlugin,
-};
-
 use bevy::{
     prelude::*,
     scene::SceneInstance,
@@ -105,7 +105,6 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(Msaa::Off);
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
-        .add_plugin(CauldronPlugin)
         .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)

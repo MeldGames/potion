@@ -5,6 +5,8 @@ use bevy_rapier3d::prelude::*;
 pub mod contact_filter;
 pub mod muscle;
 pub mod spring;
+pub mod slot;
+pub mod joint_break;
 
 pub use contact_filter::*;
 pub use muscle::*;

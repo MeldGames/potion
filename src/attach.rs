@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::cauldron::NamedEntity;
-
 #[derive(Debug, Clone, Component)]
 pub struct Attach(Entity);
 
@@ -94,7 +92,7 @@ pub fn update_attach(
         )>,
     >,
     globals: Query<&GlobalTransform>,
-    names: Query<&Name>,
+    names: Query<DebugName>,
 ) {
     /*
        for invalid_attacher in &parented {
@@ -107,7 +105,7 @@ pub fn update_attach(
     for invalid_attacher in &no_velocity {
         info!(
             "attacher needs Velocity, adding default: {:?}",
-            names.named(invalid_attacher)
+            names.get(invalid_attacher).unwrap(),
         );
 
         commands

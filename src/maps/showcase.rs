@@ -1,24 +1,22 @@
 
-use bevy_rapier3d::prelude::*;
+use std::f32::consts::PI;
 
 use crate::{
     attach::Attach,
-    cauldron::{Ingredient},
+    objects:: {
+        cauldron::{Ingredient},
+        store::{SecurityCheck, StoreItem},
+    },
     player::grab::{AimPrimitive, AutoAim},
-    slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
-    store::{SecurityCheck, StoreItem},
+    physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
 };
-
-
 
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
 };
 
-
-
-use std::f32::consts::PI;
+use bevy_rapier3d::prelude::*;
 
 pub fn setup(
     mut commands: Commands,
@@ -88,7 +86,7 @@ pub fn setup(
             crate::physics::TERRAIN_GROUPING,
         ));
 
-    let _cauldron = crate::cauldron::spawn_cauldron(
+    let _cauldron = crate::objects::cauldron::spawn_cauldron(
         &mut commands,
         &*asset_server,
         Transform {
@@ -110,7 +108,7 @@ pub fn setup(
         },
     );
 
-    crate::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    crate::objects::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
         .spawn(SceneBundle {
