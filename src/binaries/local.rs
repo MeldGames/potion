@@ -7,8 +7,8 @@ fn main() {
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);
-    app.add_startup_system(potion::maps::showcase::setup);
-    //app.add_startup_system(potion::maps::base_test::setup);
+    //app.add_startup_system(potion::maps::showcase::setup);
+    app.add_startup_system(potion::maps::base_test::setup);
 
     app.run();
 }

@@ -36,7 +36,7 @@ pub fn setup_test_texture(
 }
 
 pub fn replace_blank_textures(
-    mut materials: Query<&mut Handle<StandardMaterial>>,
+    mut materials: Query<&mut Handle<StandardMaterial>, Changed<Handle<StandardMaterial>>>,
     test_material: Res<TestMaterial>,
 ) {
     for mut handle in &mut materials {
