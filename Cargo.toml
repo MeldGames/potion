@@ -122,15 +122,15 @@ bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "38e1b79
 #
 [[bin]]
 name = "local"
-path = "src/local.rs"
+path = "src/binaries/local.rs"
 
 [[bin]]
 name = "client"
-path = "src/client.rs"
+path = "src/binaries/client.rs"
 
 [[bin]]
 name = "server"
-path = "src/server.rs"
+path = "src/binaries/server.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

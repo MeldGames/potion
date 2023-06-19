@@ -1,9 +1,7 @@
 pub mod attach;
-//pub mod brew;
 pub mod cauldron;
 pub mod debug;
 pub mod deposit;
-pub mod diagnostics;
 pub mod egui;
 pub mod joint_break;
 //pub mod network;
@@ -13,9 +11,6 @@ pub mod player;
 pub mod slot;
 pub mod store;
 pub mod trees;
-//pub mod edge_detection;
-
-
 
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
@@ -27,8 +22,6 @@ use obj::Obj;
 use slot::{SlotPlugin};
 
 pub use debug::DebugVisible;
-
-
 
 use store::{StorePlugin};
 
@@ -129,8 +122,7 @@ pub fn setup_app(app: &mut App) {
             mode: DebugRenderMode::COLLIDER_SHAPES,
         })
         //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
-        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-        .add_plugin(crate::diagnostics::DiagnosticsEguiPlugin);
+        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
 
     //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
 
