@@ -5,7 +5,7 @@ use egui::{FontData, FontDefinitions, FontFamily};
 pub struct SetupEguiPlugin;
 
 impl Plugin for SetupEguiPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         //app.add_system(setup_fonts)
         //.add_system(setup_style);
     }

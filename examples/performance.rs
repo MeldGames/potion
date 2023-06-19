@@ -1,7 +1,6 @@
 use bevy::{
-    diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
-    window::{CursorGrabMode, WindowPlugin},
 };
 
 use bevy_editor_pls::EditorPlugin;
@@ -27,12 +26,12 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     });
 
-    let ground = commands.spawn(SceneBundle {
+    let _ground = commands.spawn(SceneBundle {
         scene: asset_server.load("models/ground.gltf#Scene0"),
         ..default()
     });
 
-    let sky = commands
+    let _sky = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky.glb#Scene0"),
             transform: Transform {
@@ -43,7 +42,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .id();
 
-    let sky_clouds = commands
+    let _sky_clouds = commands
         .spawn(SceneBundle {
             scene: asset_server.load("models/sky_clouds.glb#Scene0"),
             transform: Transform {

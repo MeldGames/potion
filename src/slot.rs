@@ -207,7 +207,7 @@ pub fn spring_slot(
 ) {
     let timestep = crate::TICK_RATE.as_secs_f32();
 
-    for (slot_entity, mut slot, slot_settings, grace_period) in &mut slots {
+    for (slot_entity, mut slot, slot_settings, _grace_period) in &mut slots {
         if let Some(particle_entity) = slot.containing {
             if !entities.contains(particle_entity) {
                 warn!(

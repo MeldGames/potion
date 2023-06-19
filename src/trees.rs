@@ -70,7 +70,7 @@ impl Material for LeafMaterial {
     }
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
-        descriptor: &mut RenderPipelineDescriptor,
+        _descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
@@ -101,7 +101,7 @@ impl Material for BarkMaterial {
 
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
-        descriptor: &mut RenderPipelineDescriptor,
+        _descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
@@ -121,7 +121,7 @@ pub struct BarkMaterial {
 fn mod_scene(
     mut commands: Commands,
     spheres: Query<(Entity, &Handle<Mesh>, &Name), Without<Inserted>>,
-    meshes: ResMut<Assets<Mesh>>,
+    _meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<LeafMaterial>>,
     mut bark_materials: ResMut<Assets<BarkMaterial>>,
     asset_server: Res<AssetServer>,

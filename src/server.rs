@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use potion::player::prelude::{mouse_lock, toggle_mouse_lock, LockToggle, MouseState};
+use potion::player::prelude::{LockToggle};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();

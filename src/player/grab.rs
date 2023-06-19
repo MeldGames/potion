@@ -201,8 +201,8 @@ pub fn grab_collider(
 
                     let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
-                    let stiffness = 20.0;
-                    let damping = 0.4;
+                    let _stiffness = 20.0;
+                    let _damping = 0.4;
                     let mut grab_joint = SphericalJointBuilder::new()
                         .local_anchor1(anchor1)
                         .local_anchor2(anchor2)
@@ -526,7 +526,7 @@ pub fn player_extend_arm(
 
         if input.extend_arm(arm_id.0) {
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
-                let neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
+                let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let upper_arm =
                     find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
@@ -539,7 +539,7 @@ pub fn player_extend_arm(
                     find_parent_with(&grab_sphere, &parents, &joints, hand_entity).unwrap();
                 //info!("grab sphere: {:?}", grab_sphere);
 
-                let sphere_offset = if let Some(sphere) = grab_sphere.sphere {
+                let _sphere_offset = if let Some(_sphere) = grab_sphere.sphere {
                     //let relative = sphere.center - grabbing.point;
                     //target_position.translation = sphere.center;// + grabbing.rotation// * relative;
                 } else {
@@ -699,7 +699,7 @@ mod auto_aim_test {
         let start = Vec3::new(3.0, 3.0, 3.0);
         let end = Vec3::new(4.0, 4.0, 4.0);
 
-        let point = Vec3::new(3.0, 3.0, 3.0);
+        let _point = Vec3::new(3.0, 3.0, 3.0);
 
         let closest_point = |point: Vec3| -> Vec3 {
             let vector = end - start;

@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::CursorGrabMode};
+use bevy::{prelude::*};
 use bevy_prototype_debug_lines::*;
 
 fn main() {
@@ -71,7 +71,7 @@ impl Arcball {
 }
 
 pub fn twist(
-    kb: Res<Input<KeyCode>>,
+    _kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut twist: Local<Quat>,
     mut lines: ResMut<DebugLines>,
@@ -107,7 +107,7 @@ pub fn twist(
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    _asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {

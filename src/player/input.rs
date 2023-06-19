@@ -234,7 +234,7 @@ pub fn toggle_mouse_lock(
     state: Res<State<MouseState>>,
     mut next_state: ResMut<NextState<MouseState>>,
     mut toggle: ResMut<LockToggle>,
-    initial_click: Option<Res<InitialClick>>,
+    _initial_click: Option<Res<InitialClick>>,
 ) {
     if kb.just_pressed(KeyCode::Escape) || kb.just_pressed(KeyCode::Delete) {
         toggle.0 = !toggle.0;

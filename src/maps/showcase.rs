@@ -1,25 +1,22 @@
-use bevy_mod_edge_detection::EdgeDetectionConfig;
+
 use bevy_rapier3d::prelude::*;
 
 use crate::{
     attach::Attach,
-    cauldron::{CauldronPlugin, Ingredient},
-    debug::DebugVisible,
+    cauldron::{Ingredient},
     player::grab::{AimPrimitive, AutoAim},
-    slot::{Slot, SlotGracePeriod, SlotPlugin, SlotSettings, Slottable},
+    slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
     store::{SecurityCheck, StoreItem},
 };
 
-use obj::Obj;
+
 
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
-    scene::SceneInstance,
-    window::{Cursor, CursorGrabMode},
 };
 
-use bevy_prototype_debug_lines::*;
+
 
 use std::f32::consts::PI;
 

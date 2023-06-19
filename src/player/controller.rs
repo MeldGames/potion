@@ -67,7 +67,7 @@ pub fn player_movement(
         desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
         //}
 
-        let spring = springy::Spring {
+        let _spring = springy::Spring {
             strength: 0.1,
             damp_ratio: 1.0,
         };
@@ -82,9 +82,9 @@ pub fn player_movement(
 pub fn teleport_player_back(
     mut players: Query<Entity, With<Player>>,
     kb: Res<Input<KeyCode>>,
-    names: Query<&Name>,
+    _names: Query<&Name>,
 
-    parents: Query<&Parent>,
+    _parents: Query<&Parent>,
     children: Query<&Children>,
     joint_children: Query<&JointChildren>,
     related: Query<Entity>,

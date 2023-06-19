@@ -61,12 +61,12 @@ pub fn setup_player(
     asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
 
-    mut server: Option<ResMut<RenetServer>>,
+    _server: Option<ResMut<RenetServer>>,
 ) {
     for (event, id) in player_reader.iter_with_id() {
         info!("player event {:?}: {:?}", id, event);
         match event {
-            &PlayerEvent::SetupLocal { id } => {
+            &PlayerEvent::SetupLocal { id: _ } => {
                 //let player_entity = *lobby.players.get(&id).expect("Expected a player");
                 //info!("setting up local entity: {:?}", player_entity);
             }
@@ -624,7 +624,7 @@ pub fn contact_filter(
         }
     };
 
-    for (entity, mut contact_filter, connected) in &mut connected {
+    for (_entity, mut contact_filter, connected) in &mut connected {
         let mut debug_connected = connected
             .iter()
             .map(|entity| debug_name(*entity))
