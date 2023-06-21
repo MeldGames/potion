@@ -1,7 +1,7 @@
 use bevy::{
+    asset::HandleId,
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
-    asset::HandleId,
 };
 
 #[derive(Resource)]
@@ -44,7 +44,7 @@ pub fn replace_blank_textures(
             HandleId::Id(_, id) if id == 0 => {
                 *handle = test_material.base.clone();
             }
-            _ => {},
+            _ => {}
         }
     }
 }

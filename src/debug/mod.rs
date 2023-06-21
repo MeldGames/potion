@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod physics_mesh;
 pub mod texture;
 
 pub use texture::TestMaterial;
@@ -49,5 +50,7 @@ impl Plugin for DebugPlugin {
 
         app.add_startup_system(texture::setup_test_texture);
         app.add_system(texture::replace_blank_textures);
+
+        app.add_system(physics_mesh::init_physics_meshes);
     }
 }

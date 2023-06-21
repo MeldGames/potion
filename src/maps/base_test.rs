@@ -34,7 +34,7 @@ pub fn setup(
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
             transform: Transform {
-                translation: Vec3::new(0.0, -3.0, 0.0),
+                translation: Vec3::new(0.0, -3.5, 0.0),
                 scale: Vec3::new(100.0, 2.0, 100.0),
                 ..default()
             },
@@ -50,12 +50,20 @@ pub fn setup(
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
             shadows_enabled: true,
             ..default()
         },
         transform: Transform {
             rotation: Quat::from_rotation_x(-0.2),
+            ..default()
+        },
+        ..default()
+    });
+
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 5000.0,
+            range: 50.0,
             ..default()
         },
         ..default()

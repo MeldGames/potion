@@ -8,10 +8,10 @@ pub mod objects;
 pub mod physics;
 pub mod player;
 
+use bevy_editor_pls::editor::Editor;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
-use bevy_editor_pls::editor::Editor;
 
 use self::{
     deposit::DepositPlugin,

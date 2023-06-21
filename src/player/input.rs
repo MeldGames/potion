@@ -403,8 +403,9 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(PlayerInput::default());
         app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
         app.configure_set(
-            CollectInputs.run_if(crate::window_focused)
-                        .run_if(not(crate::editor_active))
+            CollectInputs
+                .run_if(crate::window_focused)
+                .run_if(not(crate::editor_active)),
         );
         app.add_systems(
             (
