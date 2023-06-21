@@ -36,7 +36,7 @@ pub fn init_physics_meshes(
             .get(entity)
             .map(|name| name.as_str().to_owned())
             .unwrap_or(format!("{:?}", entity));
-        info!("adding physics debug mesh to {:?}", name);
+        //info!("adding physics debug mesh to {:?}", name);
 
         let as_mesh = match collider.raw.as_typed_shape() {
             TypedShape::Ball(ball) => {

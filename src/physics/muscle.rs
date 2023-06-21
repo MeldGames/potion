@@ -17,7 +17,8 @@ impl Plugin for MusclePlugin {
 #[reflect(Component)]
 pub struct Muscle {
     pub target: Option<Entity>,
-    pub spring: Spring,
+    //pub spring: Spring,
+    pub strength: f32,
     pub tense: bool,
 }
 
@@ -25,10 +26,13 @@ impl Muscle {
     pub fn new(target: Entity) -> Self {
         Self {
             target: Some(target),
+            /*
             spring: Spring {
                 strength: 0.75,
                 damp_ratio: 0.05,
             },
+            */
+            strength: 0.3,
             tense: true,
         }
     }
@@ -39,6 +43,8 @@ pub fn muscle_target(
     targets: Query<(Entity, &Muscle)>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
     particles: Query<RapierParticleQuery>,
+
+    names: Query<&Name>,
 ) {
     let dt = ctx.integration_parameters.dt;
 
@@ -69,8 +75,21 @@ pub fn muscle_target(
 
         let angular_instant = particle_a
             .angular(Vec3::Y)
-            .instant(&particle_b.angular(-Vec3::Y));
-        let angular_impulse = muscle.spring.impulse(dt, angular_instant);
+            .instant(&particle_b.angular(Vec3::Y));
+
+        let displacement = angular_instant.displacement;
+        let displacement_dir = displacement.normalize_or_zero();
+
+        let falloff = 0.2;
+        let strength = if displacement.length() < falloff {
+            let t = displacement.length() / falloff;
+
+            let falloff_percent = 1.0 - ((-t * 0.9 + 1.0).log10() + 1.0);
+            muscle.strength * falloff_percent
+        } else {
+            muscle.strength
+        };
+        let angular_impulse = strength * displacement_dir;
 
         if let Some(mut impulse_a) = impulse_a {
             impulse_a.torque_impulse += angular_impulse;

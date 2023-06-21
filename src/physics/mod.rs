@@ -6,11 +6,9 @@ pub mod contact_filter;
 pub mod joint_break;
 pub mod muscle;
 pub mod slot;
-pub mod spring;
 
 pub use contact_filter::*;
 pub use muscle::*;
-pub use spring::Spring;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {
