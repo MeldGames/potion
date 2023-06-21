@@ -11,6 +11,7 @@ pub mod player;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
+use bevy_editor_pls::editor::Editor;
 
 use self::{
     deposit::DepositPlugin,
@@ -86,7 +87,7 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
     //app.add_plugin(crate::egui::SetupEguiPlugin);
-    app.add_plugin(bevy_editor_pls::EditorPlugin);
+    app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
     app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
@@ -360,12 +361,10 @@ pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>
     }
 }
 
-/*
-pub fn editor_active(editor: Option<Res<EditorState>>) -> bool {
+pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
     if let Some(editor) = editor {
-        editor.active
+        editor.active()
     } else {
         false
     }
 }
- */

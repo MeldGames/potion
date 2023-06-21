@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
 use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
-use bevy_editor_pls::EditorState;
+use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::PI;
 
@@ -256,10 +256,10 @@ pub fn toggle_mouse_lock(
 
 pub fn mouse_lock(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
-    editor: Option<Res<EditorState>>,
+    editor: Option<Res<Editor>>,
     state: Res<State<MouseState>>,
 ) {
-    let editor_active = editor.map(|state| state.active).unwrap_or(false);
+    let editor_active = editor.map(|state| state.active()).unwrap_or(false);
     let locked = state.0 == MouseState::Locked && !editor_active;
 
     if let Ok(mut window) = windows.get_single_mut() {
@@ -403,8 +403,8 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(PlayerInput::default());
         app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
         app.configure_set(
-            CollectInputs.run_if(crate::window_focused), // TODO: fix this since bevy editor pls now works on multiple windows
-                                                         //.run_if(crate::editor_active)
+            CollectInputs.run_if(crate::window_focused)
+                        .run_if(not(crate::editor_active))
         );
         app.add_systems(
             (

@@ -17,6 +17,13 @@ use bevy::{
 
 use bevy_rapier3d::prelude::*;
 
+pub struct SetupPlugin;
+impl Plugin for SetupPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup);
+    }
+}
+
 pub fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,

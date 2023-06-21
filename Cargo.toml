@@ -25,7 +25,7 @@ bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlus
 bevy_mod_edge_detection = {git = "https://github.com/Aceeri/bevy_mod_edge_detection"}
 
 bevy-inspector-egui = "0.18"
-bevy_editor_pls = "0.3"
+bevy_editor_pls = "0.4"
 #bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
 bevy_framepace = "0.12"
 bevy_mod_inverse_kinematics = "0.3"
