@@ -26,8 +26,8 @@ impl Muscle {
         Self {
             target: Some(target),
             spring: Spring {
-                strength: 1.0,
-                damp_ratio: 0.3,
+                strength: 0.75,
+                damp_ratio: 0.05,
             },
             tense: true,
         }

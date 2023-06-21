@@ -101,12 +101,12 @@ pub fn setup_player(
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 1.0,
                             float_spring: Spring {
-                                strength: 80.0,
+                                strength: 180.0,
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 250.0,
-                                damping: 0.7,
+                                strength: 550.0,
+                                damping: 0.85,
                             },
                             opposing_movement_impulse_scale: 0.0,
                             ..default()
