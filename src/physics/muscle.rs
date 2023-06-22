@@ -13,12 +13,12 @@ impl Plugin for MusclePlugin {
     }
 }
 
-#[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[derive(Debug, Component, Clone, Copy, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct Muscle {
     pub target: Option<Entity>,
-    //pub spring: Spring,
     pub strength: f32,
+    pub falloff: f32,
     pub tense: bool,
 }
 
@@ -26,13 +26,17 @@ impl Muscle {
     pub fn new(target: Entity) -> Self {
         Self {
             target: Some(target),
-            /*
-            spring: Spring {
-                strength: 0.75,
-                damp_ratio: 0.05,
-            },
-            */
+            ..default()
+        }
+    }
+}
+
+impl Default for Muscle {
+    fn default() -> Self {
+        Self {
+            target: None,
             strength: 0.3,
+            falloff: 0.2,
             tense: true,
         }
     }
@@ -80,9 +84,8 @@ pub fn muscle_target(
         let displacement = angular_instant.displacement;
         let displacement_dir = displacement.normalize_or_zero();
 
-        let falloff = 0.2;
-        let strength = if displacement.length() < falloff {
-            let t = displacement.length() / falloff;
+        let strength = if displacement.length() < muscle.falloff {
+            let t = displacement.length() / muscle.falloff;
 
             let falloff_percent = 1.0 - ((-t * 0.9 + 1.0).log10() + 1.0);
             muscle.strength * falloff_percent

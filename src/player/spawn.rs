@@ -422,7 +422,7 @@ pub fn attach_arm(
         .motor_max_force(JointAxis::AngY, max_force)
         .motor_max_force(JointAxis::AngZ, max_force)
         .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-        .motor_position(JointAxis::AngZ, 0.0, 1.0, 1.0)
+        .motor_position(JointAxis::AngZ, 0.0, 0.0, 0.0)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     upperarm_joint.set_contacts_enabled(false);
@@ -446,7 +446,7 @@ pub fn attach_arm(
         .insert(Muscle {
             target: Some(upperarm_target),
             strength: 0.5,
-            tense: false,
+            ..default()
         })
         .insert(ColliderMassProperties::Density(arm_density))
         .id();
@@ -486,7 +486,7 @@ pub fn attach_arm(
         .insert(Muscle {
             target: Some(forearm_target),
             strength: 0.1,
-            tense: false,
+            ..default()
         })
         .insert(ColliderMassProperties::Density(arm_density))
         .id();
