@@ -6,7 +6,10 @@ use crate::{
         cauldron::Ingredient,
         store::{SecurityCheck, StoreItem},
     },
-    physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+    physics::{
+        slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+        ColliderBundle, RigidBodyBundle,
+    },
     player::grab::{AimPrimitive, AutoAim},
 };
 
@@ -118,18 +121,22 @@ pub fn setup(
             },
             ..default()
         })
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            friction: crate::DEFAULT_FRICTION,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.3, 0.3, 0.3),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        })
         .insert((
             Ingredient,
             crate::deposit::Value::new(1),
-            Collider::cuboid(0.3, 0.3, 0.3),
-            RigidBody::Dynamic,
             StoreItem,
             Slottable::default(),
-            ReadMassProperties::default(),
-            ExternalImpulse::default(),
             Name::new("Stone"),
-            Velocity::default(),
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -158,12 +165,21 @@ pub fn setup(
                 ..default()
             },
             Collider::cylinder(1.8, 1.3),
-            RigidBody::Dynamic,
             Name::new("cart collider"),
             ColliderMassProperties::Density(2.0),
             crate::physics::TERRAIN_GROUPING,
             crate::DEFAULT_FRICTION,
         ))
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            friction: crate::DEFAULT_FRICTION,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.3, 0.3, 0.3),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        })
         .with_children(|commands| {
             commands.spawn(SceneBundle {
                 scene: asset_server.load("models/cart.gltf#Scene0"),

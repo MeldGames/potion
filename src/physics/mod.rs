@@ -1,5 +1,8 @@
 /// Collision Grouping Flags
-use bevy::prelude::*;
+use bevy::{
+    ecs::{query::WorldQuery, system::EntityCommands},
+    prelude::*,
+};
 use bevy_rapier3d::prelude::*;
 
 pub mod contact_filter;
@@ -42,23 +45,150 @@ pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 pub struct RigidBodyBundle {
     pub rigid_body: RigidBody,
     pub velocity: Velocity,
+    pub external_force: ExternalForce,
+    pub external_impulse: ExternalImpulse,
     pub additional_mass_properties: AdditionalMassProperties,
     pub read_mass_properties: ReadMassProperties,
     pub locked_axes: LockedAxes,
-    pub external_force: ExternalForce,
-    pub external_impulse: ExternalImpulse,
     pub sleeping: Sleeping,
     pub damping: Damping,
     pub dominance: Dominance,
     pub ccd: Ccd,
     pub gravity_scale: GravityScale,
-    pub colliding_entities: CollidingEntities,
-    pub sensor: Sensor,
     pub friction: Friction,
     pub restitution: Restitution,
+}
+
+impl Default for RigidBodyBundle {
+    fn default() -> Self {
+        Self {
+            rigid_body: RigidBody::Dynamic,
+            velocity: Velocity::default(),
+            external_force: ExternalForce::default(),
+            external_impulse: ExternalImpulse::default(),
+            additional_mass_properties: AdditionalMassProperties::default(),
+            read_mass_properties: ReadMassProperties::default(),
+            locked_axes: LockedAxes::default(),
+            sleeping: Sleeping::default(),
+            damping: Damping::default(),
+            dominance: Dominance::default(),
+            ccd: Ccd::default(),
+            gravity_scale: GravityScale::default(),
+            friction: Friction::default(),
+            restitution: Restitution::default(),
+        }
+    }
+}
+
+#[derive(Bundle)]
+pub struct ColliderBundle {
+    pub collider: Collider,
+    pub collider_mass_properties: ColliderMassProperties,
+    pub colliding_entities: CollidingEntities,
     pub collision_groups: CollisionGroups,
     pub solver_groups: SolverGroups,
     pub contact_force_event_threshold: ContactForceEventThreshold,
+}
+
+impl Default for ColliderBundle {
+    fn default() -> Self {
+        Self {
+            collider: Collider::default(),
+            collider_mass_properties: ColliderMassProperties::default(),
+            colliding_entities: CollidingEntities::default(),
+            collision_groups: CollisionGroups::default(),
+            solver_groups: SolverGroups::default(),
+            contact_force_event_threshold: ContactForceEventThreshold::default(),
+        }
+    }
+}
+
+#[derive(WorldQuery)]
+pub struct FillRigidBodyComponents {
+    pub rigid_body: &'static RigidBody,
+    pub velocity: Option<&'static Velocity>,
+    pub additional_mass_properties: Option<&'static AdditionalMassProperties>,
+    pub read_mass_properties: Option<&'static ReadMassProperties>,
+    pub locked_axes: Option<&'static LockedAxes>,
+    pub external_force: Option<&'static ExternalForce>,
+    pub external_impulse: Option<&'static ExternalImpulse>,
+    pub sleeping: Option<&'static Sleeping>,
+    pub damping: Option<&'static Damping>,
+    pub dominance: Option<&'static Dominance>,
+    pub ccd: Option<&'static Ccd>,
+    pub gravity_scale: Option<&'static GravityScale>,
+    pub colliding_entities: Option<&'static CollidingEntities>,
+    pub friction: Option<&'static Friction>,
+    pub restitution: Option<&'static Restitution>,
+    pub collision_groups: Option<&'static CollisionGroups>,
+    pub solver_groups: Option<&'static SolverGroups>,
+    pub contact_force_event_threshold: Option<&'static ContactForceEventThreshold>,
+}
+
+impl<'a> FillRigidBodyComponentsItem<'a> {
+    pub fn fill_missing(&self, commands: &mut EntityCommands) {
+        if let None = self.velocity {
+            commands.insert(Velocity::default());
+        }
+        if let None = self.additional_mass_properties {
+            commands.insert(AdditionalMassProperties::default());
+        }
+        if let None = self.read_mass_properties {
+            commands.insert(ReadMassProperties::default());
+        }
+        if let None = self.locked_axes {
+            commands.insert(LockedAxes::default());
+        }
+        if let None = self.external_force {
+            commands.insert(ExternalForce::default());
+        }
+        if let None = self.external_impulse {
+            commands.insert(ExternalImpulse::default());
+        }
+        if let None = self.sleeping {
+            commands.insert(Sleeping::default());
+        }
+        if let None = self.damping {
+            commands.insert(Damping::default());
+        }
+        if let None = self.dominance {
+            commands.insert(Dominance::default());
+        }
+        if let None = self.ccd {
+            commands.insert(Ccd::default());
+        }
+        if let None = self.gravity_scale {
+            commands.insert(GravityScale::default());
+        }
+        if let None = self.colliding_entities {
+            commands.insert(CollidingEntities::default());
+        }
+        if let None = self.friction {
+            commands.insert(Friction::default());
+        }
+        if let None = self.restitution {
+            commands.insert(Restitution::default());
+        }
+        if let None = self.collision_groups {
+            commands.insert(CollisionGroups::default());
+        }
+        if let None = self.solver_groups {
+            commands.insert(SolverGroups::default());
+        }
+        if let None = self.contact_force_event_threshold {
+            commands.insert(ContactForceEventThreshold::default());
+        }
+    }
+}
+
+pub fn fill_missing(
+    mut commands: Commands,
+    to_fill: Query<(Entity, FillRigidBodyComponents), Added<RigidBody>>,
+) {
+    for (entity, components) in &to_fill {
+        info!("filling missing");
+        components.fill_missing(&mut commands.entity(entity));
+    }
 }
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
@@ -152,6 +282,7 @@ impl Plugin for PhysicsPlugin {
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
 
+        app.add_system(fill_missing);
         app.add_system(cap_velocity);
         app.add_system(prevent_oob);
         app.add_startup_system(modify_rapier_context);

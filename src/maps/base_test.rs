@@ -6,7 +6,10 @@ use crate::{
         cauldron::Ingredient,
         store::{SecurityCheck, StoreItem},
     },
-    physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+    physics::{
+        slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
+        ColliderBundle, RigidBodyBundle,
+    },
     player::grab::{AimPrimitive, AutoAim},
 };
 
@@ -41,12 +44,16 @@ pub fn setup(
             ..default()
         })
         .insert(Name::new("Ground"))
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(0.5, 0.5, 0.5),
-            crate::physics::TERRAIN_GROUPING,
-            crate::DEFAULT_FRICTION,
-        ));
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Fixed,
+            friction: crate::DEFAULT_FRICTION,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        });
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
