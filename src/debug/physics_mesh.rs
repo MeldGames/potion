@@ -1,14 +1,11 @@
 use bevy::{
     asset::HandleId,
     pbr::{NotShadowCaster, NotShadowReceiver},
-    render::{
-        mesh::Indices,
-        render_resource::PrimitiveTopology,
-    },
     prelude::*,
+    render::{mesh::Indices, render_resource::PrimitiveTopology},
 };
 
-use bevy_rapier3d::parry::shape::TypedShape;
+use bevy_rapier3d::parry::shape::{TypedShape, TriMesh};
 use bevy_rapier3d::prelude::*;
 
 #[derive(Component, Copy, Clone, Debug, Reflect, FromReflect, Default)]
@@ -17,6 +14,23 @@ pub struct PhysicsDebugMesh;
 
 pub trait AsMesh {
     fn as_meshes(&self) -> Vec<(Mesh, Transform)>;
+}
+
+pub fn trimesh_to_mesh(trimesh: &TriMesh) -> Mesh {
+    let points = trimesh.vertices();
+    let indices = trimesh.indices();
+    let points: Vec<[f32; 3]> = points
+        .iter()
+        .map(|point| [point.x, point.y, point.z])
+        .collect();
+    let indices: Vec<u32> = indices.iter().flatten().cloned().collect();
+
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
+    mesh.set_indices(Some(Indices::U32(indices)));
+    mesh.duplicate_vertices();
+    mesh.compute_flat_normals();
+    mesh
 }
 
 impl<'a> AsMesh for TypedShape<'a> {
@@ -45,10 +59,13 @@ impl<'a> AsMesh for TypedShape<'a> {
                     radius: capsule.radius,
                     ..default()
                 });
-                meshes.push((mesh, Transform {
-                    translation: midpoint,
-                    ..default()
-                }));
+                meshes.push((
+                    mesh,
+                    Transform {
+                        translation: midpoint,
+                        ..default()
+                    },
+                ));
             }
             TypedShape::Segment(segment) => {
                 info!("segment: {:?}", segment);
@@ -57,7 +74,8 @@ impl<'a> AsMesh for TypedShape<'a> {
                 info!("triangle: {:?}", triangle);
             }
             TypedShape::TriMesh(trimesh) => {
-                info!("trimesh");
+                let mesh = trimesh_to_mesh(trimesh);
+                meshes.push((mesh, Transform::default()));
             }
             TypedShape::Polyline(polyline) => {
                 info!("polyline");
@@ -85,14 +103,8 @@ impl<'a> AsMesh for TypedShape<'a> {
             }
             TypedShape::ConvexPolyhedron(convex_polyhedron) => {
                 let (points, indices) = convex_polyhedron.to_trimesh();
-                let points: Vec<[f32; 3]> = points.iter().map(|point| [point.x, point.y, point.z]).collect();
-                let indices: Vec<u32> = indices.iter().flatten().cloned().collect();
-
-                let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-                mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
-                mesh.set_indices(Some(Indices::U32(indices)));
-                mesh.duplicate_vertices();
-                mesh.compute_flat_normals();
+                let trimesh = TriMesh::new(points, indices);
+                let mesh = trimesh_to_mesh(&trimesh);
                 meshes.push((mesh, Transform::default()));
             }
             TypedShape::Cylinder(cylinder) => {
