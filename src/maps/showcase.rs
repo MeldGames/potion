@@ -164,11 +164,7 @@ pub fn setup(
                 },
                 ..default()
             },
-            Collider::cylinder(1.8, 1.3),
             Name::new("cart collider"),
-            ColliderMassProperties::Density(2.0),
-            crate::physics::TERRAIN_GROUPING,
-            crate::DEFAULT_FRICTION,
         ))
         .insert(RigidBodyBundle {
             rigid_body: RigidBody::Dynamic,
@@ -176,8 +172,9 @@ pub fn setup(
             ..default()
         })
         .insert(ColliderBundle {
-            collider: Collider::cuboid(0.3, 0.3, 0.3),
+            collider: Collider::cylinder(1.8, 1.3),
             collision_groups: crate::physics::TERRAIN_GROUPING,
+            collider_mass_properties: ColliderMassProperties::Density(2.0),
             ..default()
         })
         .with_children(|commands| {
@@ -190,16 +187,18 @@ pub fn setup(
                 },
                 ..default()
             });
-            commands.spawn((
-                SpatialBundle {
+            commands
+                .spawn(SpatialBundle {
                     transform: Transform {
                         translation: Vec3::new(-0.1, 0., -0.5),
                         ..default()
                     },
                     ..default()
-                },
-                Collider::cuboid(0.1, 1.2, 2.9),
-            ));
+                })
+                .insert(ColliderBundle {
+                    collider: Collider::cuboid(0.1, 1.2, 2.9),
+                    ..default()
+                });
         });
 
     let _sky = commands
