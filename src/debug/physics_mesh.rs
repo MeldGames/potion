@@ -1,7 +1,10 @@
 use bevy::{
     asset::HandleId,
     pbr::{NotShadowCaster, NotShadowReceiver},
-    render::render_resource::PrimitiveTopology,
+    render::{
+        mesh::Indices,
+        render_resource::PrimitiveTopology,
+    },
     prelude::*,
 };
 
@@ -81,8 +84,16 @@ impl<'a> AsMesh for TypedShape<'a> {
                 }
             }
             TypedShape::ConvexPolyhedron(convex_polyhedron) => {
-                let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
                 let (points, indices) = convex_polyhedron.to_trimesh();
+                let points: Vec<[f32; 3]> = points.iter().map(|point| [point.x, point.y, point.z]).collect();
+                let indices: Vec<u32> = indices.iter().flatten().cloned().collect();
+
+                let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+                mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
+                mesh.set_indices(Some(Indices::U32(indices)));
+                mesh.duplicate_vertices();
+                mesh.compute_flat_normals();
+                meshes.push((mesh, Transform::default()));
             }
             TypedShape::Cylinder(cylinder) => {
                 let mesh = Mesh::from(shape::Cylinder {
