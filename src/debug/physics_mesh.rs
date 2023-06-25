@@ -84,7 +84,10 @@ impl<'a> AsMesh for TypedShape<'a> {
                 info!("half_space: {:?}", half_space);
             }
             TypedShape::HeightField(height_field) => {
-                info!("height_field: {:?}", height_field);
+                let (points, indices) = height_field.to_trimesh();
+                let trimesh = TriMesh::new(points, indices);
+                let mesh = trimesh_to_mesh(&trimesh);
+                meshes.push((mesh, Transform::default()));
             }
             TypedShape::Compound(compound) => {
                 for (isometry, shape) in compound.shapes() {
