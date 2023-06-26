@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::player::prelude::*;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -46,7 +48,18 @@ pub fn store_item(
         };
 
         let mut hands = find_children_with(&hands, &children, &joint_children, entity);
-        hands.sort_by(|(_, a), (_, b)| b.0.cmp(&a.0));
+        hands.sort_by(|(a_entity, a), (b_entity, b)| {
+            let a_grab = grabbing.get(*a_entity).map(|grabbing| grabbing.trying_grab).unwrap_or(false);
+            let b_grab = grabbing.get(*b_entity).map(|grabbing| grabbing.trying_grab).unwrap_or(false);
+
+if a_grab && !b_grab {
+    Ordering::Less
+} else if b_grab && !a_grab {
+    Ordering::Greater
+} else {
+    b.0.cmp(&a.0)
+}
+        });
 
         let target = inventory.items[swap_index];
 
@@ -56,44 +69,22 @@ pub fn store_item(
         let hand = hands[0].0;
 
         info!("last active hand: {:?}", names.get(hand).unwrap().as_str());
-        /*
-        for (hand_entity, arm_id, last_active) in hands {
-            if arm_id.0 == 0 {
-                hand = Some(hand_entity);
-            }
-            /*
-            if let Ok(grabbing) = grabbing.get(hand_entity) {
-                // Prefer a hand that isn't holding anything.
-                if grabbing.grabbing.is_none() {
-                    hand = Some(hand_entity);
-                    break;
+        if let Ok(mut grabbing) = grabbing.get_mut(hand) {
+            match (grabbing.grabbing, inventory.items[swap_index]) {
+                (Some(grabbing), Some(item)) => {
+                    info!("Swapping {:?} and {:?}", grabbing, item);
                 }
+                (None, Some(item)) => {
+                    info!("Grabbing {:?} from inventory", item);
+                }
+                (Some(grabbing), None) => {
+                    info!("Storing {:?} in inventory", grabbing);
+                }
+                _ => {}
             }
 
-            // Fall back to one that is holding something.
-            if hand.is_none() {
-                hand = Some(hand_entity);
-            }
-            */
+            inventory.items[swap_index] = grabbing.grabbing;
+            grabbing.grabbing = target;
         }
- */
-            if let Ok(mut grabbing) = grabbing.get_mut(hand) {
-            info!("grabbing: {:?}", grabbing.grabbing);
-                match (grabbing.grabbing, inventory.items[swap_index]) {
-                    (Some(grabbing), Some(item)) => {
-                        info!("Swapping {:?} and {:?}", grabbing, item);
-                    }
-                    (None, Some(item)) => {
-                        info!("Grabbing {:?} from inventory", item);
-                    }
-                    (Some(grabbing), None) => {
-                        info!("Storing {:?} in inventory", grabbing);
-                    }
-                    _ => { }
-                }
-
-                inventory.items[swap_index] = grabbing.grabbing;
-                grabbing.grabbing = target;
-            }
     }
 }

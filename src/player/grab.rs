@@ -35,6 +35,7 @@ impl Plugin for GrabPlugin {
                 auto_aim_pull,
                 twist_grab,
                 update_grab_sphere,
+                last_active_arm,
             )
                 .in_set(GrabSet)
                 .in_schedule(CoreSchedule::FixedUpdate),
@@ -98,22 +99,6 @@ pub fn grab_collider(
 ) {
     for (hand, mut grabbing, global, children, character) in &mut hands {
         if grabbing.trying_grab {
-            /*
-            let mut already_grabbing = None;
-
-            if let Some(children) = children {
-                for child in children.iter() {
-                    if grab_joints.contains(*child) {
-                        // We are already grabbing something so just skip this hand.
-                        already_grabbing = Some();
-                        break;
-                    }
-                }
-            }
-
-            grabbing.grabbing = already_grabbing;
-            */
-
             if grabbing.grabbing.is_some() {
                 continue;
             }
@@ -522,12 +507,11 @@ pub fn player_extend_arm(
             &mut CollisionGroups,
             &ArmId,
             &MuscleIKTarget,
-            &mut LastActive,
         ),
         With<Hand>,
     >,
 ) {
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, mut last_active) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {
@@ -555,7 +539,6 @@ pub fn player_extend_arm(
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
 
         if input.extend_arm(arm_id.0) {
-            last_active.0 = std::time::Instant::now();
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
@@ -588,6 +571,29 @@ pub fn player_extend_arm(
         } else {
             grabbing.trying_grab = false;
             *collision_groups = REST_GROUPING;
+        }
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct PrevGrabbing(pub Grabbing);
+
+pub fn last_active_arm(
+    mut commands: Commands,
+    mut prev_grabbing: Query<&mut PrevGrabbing>,
+    mut hands: Query<(Entity, &Grabbing, &mut LastActive), With<Hand>>,
+) {
+    for (hand_entity, grabbing, mut last_active) in &mut hands {
+        if let Ok(mut prev_grabbing) = prev_grabbing.get_mut(hand_entity) {
+            if !prev_grabbing.0.trying_grab && grabbing.trying_grab {
+                last_active.0 = std::time::Instant::now();
+            }
+
+            prev_grabbing.0 = grabbing.clone();
+        } else {
+            commands
+                .entity(hand_entity)
+                .insert(PrevGrabbing(grabbing.clone()));
         }
     }
 }
