@@ -75,11 +75,10 @@ pub fn muscle_target(
                 continue;
             };
 
-        let angular_instant = particle_a
+        let displacement = particle_a
             .angular(Vec3::Y)
-            .instant(&particle_b.angular(Vec3::Y));
-
-        let displacement = angular_instant.displacement;
+            .instant(&particle_b.angular(Vec3::Y))
+            .displacement;
         let displacement_dir = displacement.normalize_or_zero();
 
         let mut angular_impulse = muscle.strength * displacement_dir;
