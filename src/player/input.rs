@@ -299,9 +299,6 @@ pub fn mouse_lock(
 }
 
 pub fn reset_inputs(mut player_input: ResMut<PlayerInput>) {
-    if player_input.inventory_swap.is_some() {
-        info!("inv: {:?}", player_input.inventory_swap);
-    }
     player_input.inventory_swap = None;
 }
 
