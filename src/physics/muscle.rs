@@ -84,6 +84,7 @@ pub fn muscle_target(
         let displacement = angular_instant.displacement;
         let displacement_dir = displacement.normalize_or_zero();
 
+/*
         let strength = if displacement.length() < muscle.falloff {
             let t = displacement.length() / muscle.falloff;
 
@@ -92,7 +93,35 @@ pub fn muscle_target(
         } else {
             muscle.strength
         };
-        let angular_impulse = strength * displacement_dir;
+        */
+        let strength = muscle.strength;
+        let mut angular_impulse = strength * displacement_dir;
+
+
+        // TODO: simplify this
+        if displacement.x > 0.0 && angular_impulse.x > -displacement.x {
+            angular_impulse.x = -displacement.x;
+        }
+
+        if displacement.x < 0.0 && angular_impulse.x < -displacement.x {
+            angular_impulse.x = -displacement.x;
+        }
+
+        if displacement.y > 0.0 && angular_impulse.y > -displacement.y {
+            angular_impulse.y = -displacement.y;
+        }
+
+        if displacement.y < 0.0 && angular_impulse.y < -displacement.y {
+            angular_impulse.y = -displacement.y;
+        }
+
+        if displacement.z > 0.0 && angular_impulse.z > -displacement.z {
+            angular_impulse.z = -displacement.z;
+        }
+
+        if displacement.z < 0.0 && angular_impulse.z < -displacement.z {
+            angular_impulse.z = -displacement.z;
+        }
 
         if let Some(mut impulse_a) = impulse_a {
             impulse_a.torque_impulse += angular_impulse;
