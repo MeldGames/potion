@@ -215,7 +215,7 @@ pub fn setup_player(
                     })
                     .insert(ZoomScroll {
                         current: 8.0,
-                        scroll_sensitivity: -0.5,
+                        scroll_sensitivity: -0.15,
                         min: 4.0,
                         max: 24.0,
                     })
