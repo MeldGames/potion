@@ -15,7 +15,10 @@ use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::physics::{Muscle, GRAB_GROUPING, REST_GROUPING};
+use crate::{
+    physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
+    FixedSet,
+};
 
 use super::input::PlayerInput;
 use super::prelude::*;
@@ -38,6 +41,7 @@ impl Plugin for GrabPlugin {
                 last_active_arm,
             )
                 .in_set(GrabSet)
+                .in_set(FixedSet::Update)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
     }

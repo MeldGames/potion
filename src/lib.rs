@@ -31,6 +31,13 @@ use bevy::{
     window::{CursorGrabMode, WindowPlugin},
 };
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum FixedSet {
+    First,
+    Update,
+    Last,
+}
+
 use bevy_prototype_debug_lines::*;
 
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
@@ -90,6 +97,12 @@ pub fn setup_app(app: &mut App) {
         enabled: 0,
         ..default()
     });
+
+    app.world
+        .resource_mut::<Schedules>()
+        .get_mut(&CoreSchedule::FixedUpdate)
+        .unwrap()
+        .configure_sets((FixedSet::First, FixedSet::Update, FixedSet::Last).chain());
 
     //app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))

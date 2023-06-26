@@ -87,6 +87,8 @@ pub struct PlayerInput {
     pub yaw: f32,
     /// Modifier for grabbing
     pub twist: bool,
+    /// Attempt to swap items from inventory <-> hands
+    pub inventory_swap: Option<u8>,
 }
 
 impl Debug for PlayerInput {
@@ -121,6 +123,7 @@ impl PlayerInput {
             pitch: 0.0,
             yaw: 0.0,
             twist: false,
+            inventory_swap: None,
         }
     }
 
@@ -150,6 +153,10 @@ impl PlayerInput {
 
     pub fn set_twist(&mut self, twist: bool) {
         self.twist = twist;
+    }
+
+    pub fn set_inventory_swap(&mut self, swap_index: Option<u8>) {
+        self.inventory_swap = swap_index;
     }
 
     pub fn forward(&self) -> bool {
@@ -182,6 +189,10 @@ impl PlayerInput {
 
     pub fn twist(&self) -> bool {
         self.twist
+    }
+
+    pub fn inventory_swap(&self) -> Option<u8> {
+        self.inventory_swap
     }
 }
 
@@ -287,6 +298,13 @@ pub fn mouse_lock(
     }
 }
 
+pub fn reset_inputs(mut player_input: ResMut<PlayerInput>) {
+    if player_input.inventory_swap.is_some() {
+        info!("inv: {:?}", player_input.inventory_swap);
+    }
+    player_input.inventory_swap = None;
+}
+
 pub fn player_binary_inputs(
     keyboard_input: Res<Input<KeyCode>>,
     mouse_input: Res<Input<MouseButton>>,
@@ -316,6 +334,22 @@ pub fn player_binary_inputs(
     );
 
     player_input.set_twist(keyboard_input.pressed(KeyCode::LControl));
+
+    let inv_swap = if keyboard_input.just_pressed(KeyCode::Key1) {
+        Some(0)
+    } else if keyboard_input.just_pressed(KeyCode::Key2) {
+        Some(1)
+    } else if keyboard_input.just_pressed(KeyCode::Key3) {
+        Some(2)
+    } else if keyboard_input.just_pressed(KeyCode::Key4) {
+        Some(3)
+    } else {
+        None
+    };
+
+    if inv_swap.is_some() {
+        player_input.set_inventory_swap(inv_swap);
+    }
 }
 
 #[derive(Debug, Clone, Component)]
@@ -398,6 +432,9 @@ pub struct CollectInputs;
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MetaInputs;
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TickEnd;
+
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
@@ -430,5 +467,8 @@ impl Plugin for PlayerInputPlugin {
             )
                 .in_set(MetaInputs),
         );
+
+        app.add_system(update_local_player_inputs.in_schedule(CoreSchedule::FixedUpdate))
+            .add_system(reset_inputs.in_schedule(CoreSchedule::FixedUpdate));
     }
 }

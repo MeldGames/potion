@@ -2,8 +2,11 @@ use bevy::prelude::*;
 
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
-use crate::attach::AttachPlugin;
-use crate::player::{inventory::InventoryPlugin, prelude::GrabJoint};
+use crate::{
+    attach::AttachPlugin,
+    player::{inventory::InventoryPlugin, prelude::GrabJoint},
+    FixedSet,
+};
 
 use self::prelude::{CharacterEntities, ConnectedEntities};
 
@@ -51,6 +54,8 @@ impl Plugin for PlayerPlugin {
         app.register_type::<spawn::Player>();
 
         app.insert_resource(Events::<spawn::PlayerEvent>::default());
+
+        app.configure_set(ControllerSet.in_set(FixedSet::Update));
 
         app.add_system(
             grab::player_extend_arm
