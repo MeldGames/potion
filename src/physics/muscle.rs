@@ -18,7 +18,6 @@ impl Plugin for MusclePlugin {
 pub struct Muscle {
     pub target: Option<Entity>,
     pub strength: f32,
-    pub falloff: f32,
     pub tense: bool,
 }
 
@@ -36,7 +35,6 @@ impl Default for Muscle {
         Self {
             target: None,
             strength: 0.3,
-            falloff: 0.2,
             tense: true,
         }
     }
@@ -84,19 +82,9 @@ pub fn muscle_target(
         let displacement = angular_instant.displacement;
         let displacement_dir = displacement.normalize_or_zero();
 
-        /*
-        let strength = if displacement.length() < muscle.falloff {
-            let t = displacement.length() / muscle.falloff;
+        let mut angular_impulse = muscle.strength * displacement_dir;
 
-            let falloff_percent = 1.0 - ((-t * 0.9 + 1.0).log10() + 1.0);
-            muscle.strength * falloff_percent
-        } else {
-            muscle.strength
-        };
-        */
-        let strength = muscle.strength;
-        let mut angular_impulse = strength * displacement_dir;
-
+        // Cap out the angular impulse to not be greater than the displacement so we don't constantly overshoot.
         // TODO: simplify this
         if (displacement.x > 0.0 && angular_impulse.x > displacement.x)
             || (displacement.x < 0.0 && angular_impulse.x < displacement.x)
