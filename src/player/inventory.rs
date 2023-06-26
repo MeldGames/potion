@@ -58,25 +58,32 @@ pub struct InventoryJoint;
 
 #[derive(Component, Debug, Copy, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct Stored;
+pub struct Stored {
+    pub prev_scale: Vec3,
+}
 
 pub fn transform_stored(
     mut commands: Commands,
     inventories: Query<(Entity, &Inventory)>,
     stored: Query<&Stored>,
+    mut transform: Query<&mut Transform>,
 ) {
     for (entity, inventory) in &inventories {
         for (index, item) in inventory.items.iter().enumerate() {
             if let Some(item) = item {
                 if !stored.contains(*item) {
                     let mut inventory_joint = FixedJointBuilder::new()
-                        .local_anchor1(Vec3::new(index as f32, 0.0, 2.0))
+                        .local_anchor1(Vec3::new(index as f32 / 2.0, 1.0, 0.5))
                         .build();
                     inventory_joint.set_contacts_enabled(false);
 
+                    let mut transform = transform.get_mut(*item).unwrap();
+                    let prev_scale = transform.scale;
+                    transform.scale = Vec3::splat(0.3);
+
                     commands.entity(*item)
-                    .insert(Stored)
-                    .with_children(|children| {
+                        .insert(Stored { prev_scale })
+                        .with_children(|children| {
                         children
                             .spawn(ImpulseJoint::new(entity, inventory_joint))
                             .insert(InventoryJoint)
