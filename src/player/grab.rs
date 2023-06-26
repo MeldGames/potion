@@ -306,6 +306,35 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     queried
 }
 
+pub fn find_children_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
+    query: &'a Query<Q, F>,
+    children: &'a Query<&Children>,
+    joint_children: &'a Query<&JointChildren>,
+    base: Entity,
+) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
+    let mut checked = HashSet::new();
+    let mut possibilities = vec![base];
+    let mut queried = Vec::new();
+
+    while let Some(possible) = possibilities.pop() {
+        checked.insert(possible);
+
+        if let Ok(query) = query.get(possible) {
+            queried.push(query);
+        }
+
+        if let Ok(children) = children.get(possible) {
+            possibilities.extend(children.iter());
+        }
+
+        if let Ok(joint_children) = joint_children.get(possible) {
+            possibilities.extend(joint_children.iter());
+        }
+    }
+
+    queried
+}
+
 pub fn tense_arms(
     hands: Query<(&Grabbing, &Forearm), With<Hand>>,
     mut muscles: Query<&mut Muscle>,
@@ -493,11 +522,12 @@ pub fn player_extend_arm(
             &mut CollisionGroups,
             &ArmId,
             &MuscleIKTarget,
+            &mut LastActive,
         ),
         With<Hand>,
     >,
 ) {
-    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
+    for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target, mut last_active) in &mut hands {
         let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {
@@ -525,6 +555,7 @@ pub fn player_extend_arm(
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
 
         if input.extend_arm(arm_id.0) {
+            last_active.0 = std::time::Instant::now();
             if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 

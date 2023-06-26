@@ -4,7 +4,10 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{
     attach::Attach,
-    physics::slot::{Slot, SlotDeposit},
+    physics::{
+        slot::{Slot, SlotDeposit},
+        ColliderBundle, RigidBodyBundle,
+    },
 };
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
@@ -28,17 +31,17 @@ pub fn spawn_cauldron(
             transform: position,
             ..default()
         })
-        .insert((
-            ColliderMassProperties::Density(5.0),
-            ReadMassProperties::default(),
-            RigidBody::Dynamic,
-            Velocity::default(),
-            ExternalImpulse::default(),
-            crate::objects::store::StoreItem,
-            Collider::cylinder(0.5, 0.75),
-            Name::new("Cauldron"),
-            crate::physics::TERRAIN_GROUPING,
-        ))
+        .insert(ColliderBundle {
+            collider: Collider::cylinder(0.5, 0.75),
+            collider_mass_properties: ColliderMassProperties::Density(5.0),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        })
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            ..default()
+        })
+        .insert((crate::objects::store::StoreItem, Name::new("Cauldron")))
         .insert(crate::DecompLoad("cauldron".to_owned()))
         .with_children(|builder| {
             let center = Vec3::new(0.0, 0.5, 0.0);

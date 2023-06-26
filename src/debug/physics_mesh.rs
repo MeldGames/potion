@@ -67,22 +67,14 @@ impl<'a> AsMesh for TypedShape<'a> {
                     },
                 ));
             }
-            TypedShape::Segment(segment) => {
-                info!("segment: {:?}", segment);
-            }
-            TypedShape::Triangle(triangle) => {
-                info!("triangle: {:?}", triangle);
-            }
+            TypedShape::Segment(segment) => {}
+            TypedShape::Triangle(triangle) => {}
             TypedShape::TriMesh(trimesh) => {
                 let mesh = trimesh_to_mesh(trimesh);
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Polyline(polyline) => {
-                info!("polyline");
-            }
-            TypedShape::HalfSpace(half_space) => {
-                info!("half_space: {:?}", half_space);
-            }
+            TypedShape::Polyline(polyline) => {}
+            TypedShape::HalfSpace(half_space) => {}
             TypedShape::HeightField(height_field) => {
                 let (points, indices) = height_field.to_trimesh();
                 let trimesh = TriMesh::new(points, indices);
@@ -118,30 +110,14 @@ impl<'a> AsMesh for TypedShape<'a> {
                 });
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Cone(cone) => {
-                info!("cone: {:?}", cone);
-            }
-            TypedShape::RoundCuboid(round_cuboid) => {
-                info!("round_cuboid: {:?}", round_cuboid);
-            }
-            TypedShape::RoundTriangle(round_triangle) => {
-                info!("round_triangle: {:?}", round_triangle);
-            }
-            TypedShape::RoundCylinder(round_cylinder) => {
-                info!("round_cylinder: {:?}", round_cylinder);
-            }
-            TypedShape::RoundCone(round_cone) => {
-                info!("round_cone: {:?}", round_cone);
-            }
-            TypedShape::RoundConvexPolyhedron(round_convex_polyhedron) => {
-                info!("round_convex_polyhedron");
-            }
-            TypedShape::Custom(id) => {
-                info!("custom: {:?}", id);
-            }
-            _ => {
-                info!("unknown shape");
-            }
+            TypedShape::Cone(cone) => {}
+            TypedShape::RoundCuboid(round_cuboid) => {}
+            TypedShape::RoundTriangle(round_triangle) => {}
+            TypedShape::RoundCylinder(round_cylinder) => {}
+            TypedShape::RoundCone(round_cone) => {}
+            TypedShape::RoundConvexPolyhedron(round_convex_polyhedron) => {}
+            TypedShape::Custom(id) => {}
+            _ => {}
         };
 
         meshes
@@ -173,7 +149,6 @@ pub fn init_physics_meshes(
             .get(entity)
             .map(|name| name.as_str().to_owned())
             .unwrap_or(format!("{:?}", entity));
-        info!("adding physics debug mesh to {:?}", name);
 
         for (mesh, transform) in collider.raw.as_typed_shape().as_meshes() {
             let handle = meshes.add(mesh);
@@ -184,6 +159,7 @@ pub fn init_physics_meshes(
                     ..default()
                 })
                 .insert(PhysicsDebugMesh)
+                .insert(Name::new("Physics debug mesh"))
                 .id();
 
             commands

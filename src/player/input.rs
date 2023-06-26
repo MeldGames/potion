@@ -304,11 +304,11 @@ pub fn player_binary_inputs(
         .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
     player_input.set_extend_arm(
         0,
-        mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::LShift),
+        mouse_input.pressed(MouseButton::Right) || keyboard_input.pressed(KeyCode::K) || keyboard_input.pressed(KeyCode::LShift),
     );
     player_input.set_extend_arm(
         1,
-        mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::LShift),
+        mouse_input.pressed(MouseButton::Left) || keyboard_input.pressed(KeyCode::J) || keyboard_input.pressed(KeyCode::LShift),
     );
 
     player_input.set_twist(keyboard_input.pressed(KeyCode::LControl));

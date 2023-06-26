@@ -18,6 +18,7 @@ use super::prelude::*;
 use crate::{
     attach::Attach,
     physics::{ContactFilter, Muscle},
+    player::inventory::Inventory,
     DebugVisible,
 };
 
@@ -28,6 +29,9 @@ pub struct Player {
 }
 #[derive(Component, Debug)]
 pub struct LocalPlayer;
+
+#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LastActive(pub std::time::Instant);
 
 #[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UpperArm;
@@ -130,6 +134,7 @@ pub fn setup_player(
                     //.insert(crate::deposit::Value::new(500))
                     .insert(ColliderMassProperties::Density(5.0))
                     .insert(PlayerInput::default())
+                    .insert(Inventory::default())
                     .insert(Player { id: id })
                     .insert(Name::new(format!("Player {}", id.to_string())))
                     .insert(ConnectedEntities::default())
@@ -551,6 +556,7 @@ pub fn attach_arm(
         //.insert(Muscle::new(hand_target))
         .insert(MuscleIKTarget::new(target))
         .insert(Forearm::new(forearm_entity))
+        .insert(LastActive(std::time::Instant::now()))
         .id();
 }
 

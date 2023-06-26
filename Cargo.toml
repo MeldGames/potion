@@ -37,7 +37,7 @@ egui = "0.21"
 leafwing-input-manager = "0.9"
 wgpu-types = "0.15"
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
-aery = "0.1.0"
+aery = "0.2.0"
  
 bevy_prototype_debug_lines = {version = "0.10", features = ["3d"]}
 bevy_renet = {git = "https://github.com/lucaspoffo/renet"}
