@@ -540,66 +540,20 @@ pub fn setup(
             ..default()
         })
         .insert((
-            Collider::cuboid(1.0, 1.0, 1.0),
-            RigidBody::Dynamic,
-            ColliderMassProperties::Density(10.0),
             Name::new("Door"),
-            Velocity::default(),
-            crate::DEFAULT_FRICTION,
             ImpulseJoint::new(walls, hinge_joint),
             crate::ColliderLoad,
             level_collision_mesh2,
         ))
-        /*
-               .insert(BreakableJoint {
-                   impulse: Vec3::splat(100.0),
-                   torque: Vec3::splat(100.0),
-               })
-        */
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            friction: crate::DEFAULT_FRICTION,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider_mass_properties: ColliderMassProperties::Density(10.0),
+            collider: Collider::cuboid(0.0, 0.0, 0.0),
+            ..default()
+        })
         .id();
-
-    // Bounds
-    /*
-    commands
-        .spawn(TransformBundle::from_transform(Transform::from_xyz(
-            0.0, 10.0, 50.0,
-        )))
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(50.0, 20.0, 1.0),
-            Name::new("Bound Wall"),
-            crate::physics::TERRAIN_GROUPING,
-        ));
-    commands
-        .spawn(TransformBundle::from_transform(Transform::from_xyz(
-            0.0, 10.0, -50.0,
-        )))
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(50.0, 20.0, 1.0),
-            Name::new("Bound Wall"),
-            crate::physics::TERRAIN_GROUPING,
-        ));
-
-    commands
-        .spawn(TransformBundle::from_transform(Transform::from_xyz(
-            50.0, 10.0, 0.0,
-        )))
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(1.0, 20.0, 50.0),
-            Name::new("Bound Wall"),
-            crate::physics::TERRAIN_GROUPING,
-        ));
-    commands
-        .spawn(TransformBundle::from_transform(Transform::from_xyz(
-            -50.0, 10.0, 0.0,
-        )))
-        .insert((
-            RigidBody::Fixed,
-            Collider::cuboid(1.0, 20.0, 50.0),
-            Name::new("Bound Wall"),
-            crate::physics::TERRAIN_GROUPING,
-        ));
-    */
 }

@@ -49,12 +49,6 @@ pub fn setup_app(app: &mut App) {
                     title: "Potion Cellar".into(),
                     resolution: default_res.into(),
                     position: WindowPosition::At(IVec2::ZERO),
-                    /*cursor: {
-                        let mut cursor = Cursor::default();
-                        cursor.grab_mode = CursorGrabMode::None;
-                        cursor.visible = true;
-                        cursor
-                    },*/
                     focused: true,
                     present_mode: bevy::window::PresentMode::Immediate,
                     ..default()
@@ -89,7 +83,9 @@ pub fn setup_app(app: &mut App) {
     //app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-    app.add_plugin(EdgeDetectionPlugin);
+
+    app.insert_resource(Msaa::Sample8);
+    //app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
         debug: 0,
         enabled: 0,
@@ -97,7 +93,6 @@ pub fn setup_app(app: &mut App) {
     });
 
     //app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(Msaa::Off);
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
         .add_plugin(SlotPlugin)
@@ -353,6 +348,13 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
         /// Default: 1024
         max_convex_hulls: 1024,
     });
+
+pub fn mouse_locked(windows: Query<&Window, With<bevy::window::PrimaryWindow>>) -> bool {
+    match windows.get_single().ok().map(|window| window.cursor.grab_mode == CursorGrabMode::Locked) {
+        Some(focused) => focused,
+        _ => false,
+    }
+}
 
 pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>) -> bool {
     match windows.get_single().ok().map(|window| window.focused) {

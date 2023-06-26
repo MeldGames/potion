@@ -241,6 +241,7 @@ pub fn spring_slot(
 
             let instant = particle_a.translation().instant(&particle_b.translation());
             let impulse = slot_settings.0.impulse(timestep, instant);
+            let impulse = impulse.clamp_length_max(slot_settings.0.strength);
 
             let ang_instant = particle_a
                 .angular(Vec3::Y)

@@ -404,6 +404,7 @@ impl Plugin for PlayerInputPlugin {
         app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
         app.configure_set(
             CollectInputs
+                .run_if(crate::mouse_locked)
                 .run_if(crate::window_focused)
                 .run_if(not(crate::editor_active)),
         );
