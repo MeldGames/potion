@@ -70,27 +70,25 @@ pub fn transform_stored(
 ) {
     for (entity, inventory) in &inventories {
         for (index, item) in inventory.items.iter().enumerate() {
-            if let Some(item) = item {
-                if !stored.contains(*item) {
-                    let mut inventory_joint = FixedJointBuilder::new()
-                        .local_anchor1(Vec3::new(index as f32 / 2.0, 1.0, 0.5))
-                        .build();
-                    inventory_joint.set_contacts_enabled(false);
+            let Some(item) = item else { continue };
+            if stored.contains(*item) { continue }
+            let mut inventory_joint = FixedJointBuilder::new()
+                .local_anchor1(Vec3::new(index as f32 / 2.0, 1.0, 0.5))
+                .build();
+            inventory_joint.set_contacts_enabled(false);
 
-                    let mut transform = transform.get_mut(*item).unwrap();
-                    let prev_scale = transform.scale;
-                    transform.scale = Vec3::splat(0.3);
+            let mut transform = transform.get_mut(*item).unwrap();
+            let prev_scale = transform.scale;
+            transform.scale = Vec3::splat(0.3);
 
-                    commands.entity(*item)
-                        .insert(Stored { prev_scale })
-                        .with_children(|children| {
-                        children
-                            .spawn(ImpulseJoint::new(entity, inventory_joint))
-                            .insert(InventoryJoint)
-                            .insert(Name::new("Inventory Joint"));
-                    });
-                }
-            }
+            commands.entity(*item)
+                .insert(Stored { prev_scale })
+                .with_children(|children| {
+                children
+                    .spawn(ImpulseJoint::new(entity, inventory_joint))
+                    .insert(InventoryJoint)
+                    .insert(Name::new("Inventory Joint"));
+            });
         }
     }
 }
@@ -137,29 +135,28 @@ pub fn store_item(
         // last active hand
         let hand = hands[0].0;
 
-        if let Ok(mut grabbing) = grabbing.get_mut(hand) {
-            if let Some(grabbing) = grabbing.grabbing {
-                if !storeable.contains(grabbing) {
-                    info!("Object is not storeable");
-                    continue;
-                }
+        let Ok(mut grabbing) = grabbing.get_mut(hand) else { continue };
+        if let Some(grabbing) = grabbing.grabbing {
+            if !storeable.contains(grabbing) {
+                info!("Object is not storeable");
+                continue;
             }
-
-            match (grabbing.grabbing, inventory.items[swap_index]) {
-                (Some(grabbing), Some(item)) => {
-                    info!("Swapping {:?} and {:?}", grabbing, item);
-                }
-                (None, Some(item)) => {
-                    info!("Grabbing {:?} from inventory", item);
-                }
-                (Some(grabbing), None) => {
-                    info!("Storing {:?} in inventory", grabbing);
-                }
-                _ => {}
-            }
-
-            inventory.items[swap_index] = grabbing.grabbing;
-            grabbing.grabbing = target;
         }
+
+        match (grabbing.grabbing, inventory.items[swap_index]) {
+            (Some(grabbing), Some(item)) => {
+                info!("Swapping {:?} and {:?}", grabbing, item);
+            }
+            (None, Some(item)) => {
+                info!("Grabbing {:?} from inventory", item);
+            }
+            (Some(grabbing), None) => {
+                info!("Storing {:?} in inventory", grabbing);
+            }
+            _ => {}
+        }
+
+        inventory.items[swap_index] = grabbing.grabbing;
+        grabbing.grabbing = target;
     }
 }
