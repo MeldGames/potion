@@ -83,7 +83,6 @@ pub fn setup_app(app: &mut App) {
     //app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-
     app.insert_resource(Msaa::Sample8);
     //app.add_plugin(EdgeDetectionPlugin);
     app.insert_resource(EdgeDetectionConfig {
@@ -350,7 +349,11 @@ pub const COMPUTE_SHAPE_PARAMS: ComputedColliderShape =
     });
 
 pub fn mouse_locked(windows: Query<&Window, With<bevy::window::PrimaryWindow>>) -> bool {
-    match windows.get_single().ok().map(|window| window.cursor.grab_mode == CursorGrabMode::Locked) {
+    match windows
+        .get_single()
+        .ok()
+        .map(|window| window.cursor.grab_mode == CursorGrabMode::Locked)
+    {
         Some(focused) => focused,
         _ => false,
     }

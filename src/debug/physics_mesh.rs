@@ -5,7 +5,7 @@ use bevy::{
     render::{mesh::Indices, render_resource::PrimitiveTopology},
 };
 
-use bevy_rapier3d::parry::shape::{TypedShape, TriMesh};
+use bevy_rapier3d::parry::shape::{TriMesh, TypedShape};
 use bevy_rapier3d::prelude::*;
 
 #[derive(Component, Copy, Clone, Debug, Reflect, FromReflect, Default)]
