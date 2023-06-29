@@ -3,7 +3,9 @@ use std::cmp::Ordering;
 use crate::{objects::cauldron::Ingredient, player::prelude::*, FixedSet};
 use bevy::prelude::*;
 use bevy_rapier3d::{
-    parry::shape::{Cylinder, Cuboid, SharedShape, Triangle, Cone, ConvexPolyhedron, RoundShape, TypedShape},
+    parry::shape::{
+        Cone, ConvexPolyhedron, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape,
+    },
     prelude::*,
 };
 
@@ -72,131 +74,133 @@ pub fn transform_stored(
     mut rapier: ResMut<RapierContext>,
     mut items: Query<(&mut Transform, &mut Collider, &RapierColliderHandle)>,
 ) {
-    let normalized_scale = 0.3;
-    let padding = 0.2;
+    // Scale of item when slotted in inventory hotswaps.
+    const NORMALIZED_SCALE: f32 = 0.3;
+    // Space inbetween items in inventory hotswaps
+    const PADDING: f32 = 0.1;
 
     for (entity, inventory) in &inventories {
         for (index, item) in inventory.items.iter().enumerate() {
             let Some(item) = item else { continue };
-            if stored.contains(*item) { continue }
-            if let Some(item) = item {
-                if !stored.contains(*item) {
-                    //let slots = inventory.len();
-                    let slots = 4;
-                    let left_align = (normalized_scale + padding) * ((slots / 2) as f32 - 0.5);
+            if stored.contains(*item) {
+                continue;
+            }
+            //let slots = inventory.len();
+            let slots = 4;
+            let left_align = (NORMALIZED_SCALE + PADDING) * ((slots / 2) as f32 - 0.5);
 
-                    let mut inventory_joint = FixedJointBuilder::new()
-                        .local_anchor1(Vec3::new(
-                            (index as f32 * (normalized_scale + padding)) - left_align,
-                            1.0,
-                            0.5,
-                        ))
-                        .build();
-                    inventory_joint.set_contacts_enabled(false);
+            let mut inventory_joint = FixedJointBuilder::new()
+                .local_anchor1(Vec3::new(
+                    (index as f32 * (NORMALIZED_SCALE + PADDING)) - left_align,
+                    1.0,
+                    0.5,
+                ))
+                .build();
+            inventory_joint.set_contacts_enabled(false);
 
-                    if let Ok((mut transform, mut collider, collider_handle)) = items.get_mut(*item)
-                    {
-                        let mut rapier_collider =
-                            rapier.colliders.get_mut(collider_handle.0).unwrap();
+            if let Ok((mut transform, mut collider, collider_handle)) = items.get_mut(*item) {
+                let mut rapier_collider = rapier.colliders.get_mut(collider_handle.0).unwrap();
 
-                        let mut extents: Vec3 = {
-                            let mut collider = rapier_collider.clone();
-                            collider.set_rotation(default());
-                            collider.set_translation(default());
-                            let aabb = collider.compute_aabb();
-                            let extents = aabb.extents();
-                            extents.into()
-                        };
+                let mut extents: Vec3 = {
+                    let mut collider = rapier_collider.clone();
+                    collider.set_rotation(default());
+                    collider.set_translation(default());
+                    let aabb = collider.compute_aabb();
+                    let extents = aabb.extents();
+                    extents.into()
+                };
 
-                        extents *= collider.scale();
+                extents *= collider.scale();
 
-                        let max = extents.x.max(extents.y).max(extents.z);
-                        let ratio = normalized_scale / max;
+                let max = extents.x.max(extents.y).max(extents.z);
+                let ratio = NORMALIZED_SCALE / max;
 
-                        let prev_scale = transform.scale;
-                        transform.scale *= ratio;
+                let prev_scale = transform.scale;
+                transform.scale *= ratio;
 
-                        let prev_border_radius = match collider.raw.as_typed_shape() {
-                            TypedShape::RoundCylinder(RoundShape {
-                                inner_shape:
-                                    Cylinder {
-                                        radius,
-                                        half_height,
-                                    },
-                                border_radius,
-                            }) => {
-                                let prev = *border_radius;
-                                let shape = collider.raw.make_mut();
-                                if let Some(round) = shape.as_round_cylinder_mut() {
-                                    round.border_radius = round.border_radius * ratio;
-                                    *collider = SharedShape::new(round.clone()).into();
-                                }
-                                Some(prev)
-                            }
-                            TypedShape::RoundCuboid(RoundShape {
-                                inner_shape: Cuboid { half_extents },
-                                border_radius,
-                            }) => {
-                                let prev = *border_radius;
-                                *collider = Collider::round_cuboid(
-                                    half_extents.x,
-                                    half_extents.y,
-                                    half_extents.z,
-                                    border_radius * ratio,
-                                );
-                                Some(prev)
-                            }
-                            TypedShape::RoundTriangle(RoundShape {
-                                inner_shape: Triangle { a, b, c },
-                                border_radius,
-                            }) => {
-                                let prev = *border_radius;
-                                *collider = Collider::round_triangle(
-                                    (*a).into(),(*b).into(),(*c).into(),
-                                    border_radius * ratio,
-                                );
-                                Some(prev)
-                            }
-                            TypedShape::RoundCone(RoundShape {
-                                inner_shape: Cone { half_height, radius},
-                                border_radius,
-                            }) => {
-                                let prev = *border_radius;
-                                *collider = Collider::round_cone(
-                                    *half_height, *radius,
-                                    border_radius * ratio,
-                                );
-                                Some(prev)
-                            }
-                            TypedShape::RoundConvexPolyhedron(RoundShape {
-                                inner_shape,
-                                border_radius,
-                            }) => {
-                                let prev = *border_radius;
-                                let shape = collider.raw.make_mut();
-                                if let Some(round) = shape.as_round_convex_polyhedron_mut() {
-                                    round.border_radius = round.border_radius * ratio;
-                                    *collider = SharedShape::new(round.clone()).into();
-                                }
-                                Some(prev)
-                            }
-                            _ => None,
-                        };
-
-                        commands
-                            .entity(*item)
-                            .insert(Stored {
-                                scale: prev_scale,
-                                border_radius: prev_border_radius,
-                            })
-                            .with_children(|children| {
-                                children
-                                    .spawn(ImpulseJoint::new(entity, inventory_joint))
-                                    .insert(InventoryJoint)
-                                    .insert(Name::new("Inventory Joint"));
-                            });
+                let prev_border_radius = match collider.raw.as_typed_shape() {
+                    TypedShape::RoundCylinder(RoundShape {
+                        inner_shape:
+                            Cylinder {
+                                radius,
+                                half_height,
+                            },
+                        border_radius,
+                    }) => {
+                        let prev = *border_radius;
+                        let shape = collider.raw.make_mut();
+                        if let Some(round) = shape.as_round_cylinder_mut() {
+                            round.border_radius = round.border_radius * ratio;
+                            *collider = SharedShape::new(round.clone()).into();
+                        }
+                        Some(prev)
                     }
-                }
+                    TypedShape::RoundCuboid(RoundShape {
+                        inner_shape: Cuboid { half_extents },
+                        border_radius,
+                    }) => {
+                        let prev = *border_radius;
+                        *collider = Collider::round_cuboid(
+                            half_extents.x,
+                            half_extents.y,
+                            half_extents.z,
+                            border_radius * ratio,
+                        );
+                        Some(prev)
+                    }
+                    TypedShape::RoundTriangle(RoundShape {
+                        inner_shape: Triangle { a, b, c },
+                        border_radius,
+                    }) => {
+                        let prev = *border_radius;
+                        *collider = Collider::round_triangle(
+                            (*a).into(),
+                            (*b).into(),
+                            (*c).into(),
+                            border_radius * ratio,
+                        );
+                        Some(prev)
+                    }
+                    TypedShape::RoundCone(RoundShape {
+                        inner_shape:
+                            Cone {
+                                half_height,
+                                radius,
+                            },
+                        border_radius,
+                    }) => {
+                        let prev = *border_radius;
+                        *collider =
+                            Collider::round_cone(*half_height, *radius, border_radius * ratio);
+                        Some(prev)
+                    }
+                    TypedShape::RoundConvexPolyhedron(RoundShape {
+                        inner_shape,
+                        border_radius,
+                    }) => {
+                        let prev = *border_radius;
+                        let shape = collider.raw.make_mut();
+                        if let Some(round) = shape.as_round_convex_polyhedron_mut() {
+                            round.border_radius = round.border_radius * ratio;
+                            *collider = SharedShape::new(round.clone()).into();
+                        }
+                        Some(prev)
+                    }
+                    _ => None,
+                };
+
+                commands
+                    .entity(*item)
+                    .insert(Stored {
+                        scale: prev_scale,
+                        border_radius: prev_border_radius,
+                    })
+                    .with_children(|children| {
+                        children
+                            .spawn(ImpulseJoint::new(entity, inventory_joint))
+                            .insert(InventoryJoint)
+                            .insert(Name::new("Inventory Joint"));
+                    });
             }
         }
     }
