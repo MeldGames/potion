@@ -140,6 +140,34 @@ pub fn setup(
         ))
         .id();
 
+    let _stone = commands
+        .spawn(SceneBundle {
+            scene: asset_server.load("models/rock1.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(-2.0, 5.0, 2.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            friction: crate::DEFAULT_FRICTION,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        })
+        .insert((
+            Ingredient,
+            crate::deposit::Value::new(1),
+            StoreItem,
+            Slottable::default(),
+            Name::new("Stone"),
+        ))
+        .id();
+
     let _cellar = commands
         .spawn((
             SceneBundle {
@@ -271,6 +299,7 @@ pub fn setup(
             Ingredient,
             crate::deposit::Value::new(5),
             Collider::round_cylinder(0.025, 0.4, 0.2),
+            //Collider::cylinder(1.0, 1.0),
             RigidBody::Dynamic,
             Name::new("Donut"),
             Velocity::default(),

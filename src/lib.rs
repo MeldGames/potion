@@ -84,6 +84,7 @@ pub fn setup_app(app: &mut App) {
         //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
     });
     app.insert_resource(FixedTime::new(crate::TICK_RATE));
+    app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
     app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
     app.add_plugin(DebugLinesPlugin::default());
@@ -120,7 +121,7 @@ pub fn setup_app(app: &mut App) {
             always_on_top: false,
             enabled: true,
             style: Default::default(),
-            mode: DebugRenderMode::COLLIDER_SHAPES,
+            mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
         })
         //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
         .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
