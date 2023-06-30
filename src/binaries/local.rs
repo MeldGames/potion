@@ -1,6 +1,7 @@
 use bevy_rapier3d::{
-    rapier::dynamics::{JointAxis, JointAxesMask},
-    prelude::*};
+    prelude::*,
+    rapier::dynamics::{JointAxesMask, JointAxis},
+};
 use potion::{
     physics::{ColliderBundle, RigidBodyBundle},
     player::prelude::{PlayerEvent, PlayerInputPlugin},
@@ -25,7 +26,7 @@ fn spawn_multibody(mut commands: Commands) {
     let mut joint = SphericalJointBuilder::new()
         .local_anchor1(Vec3::new(0.5, 0.0, 0.0))
         .local_anchor2(Vec3::new(-0.5, 0.0, 0.0))
-    .build();
+        .build();
     joint.set_contacts_enabled(false);
 
     let r1 = commands

@@ -12,8 +12,8 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
+use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_rapier3d::{prelude::*};
 
 use crate::{
     physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
@@ -60,9 +60,7 @@ pub fn joint_children(
     mut children: Query<&mut JointChildren>,
     joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
 ) {
-    let pairs = joints
-        .iter()
-        .map(|(entity, joint)| (entity, joint.parent));
+    let pairs = joints.iter().map(|(entity, joint)| (entity, joint.parent));
 
     for (entity, parent) in pairs {
         match children.get_mut(parent) {
@@ -544,16 +542,14 @@ pub fn player_extend_arm(
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let upper_arm =
-                    find_parent_with(&upper_arm, &parents, &joints,  hand_entity)
-                        .unwrap();
+                    find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
                 let Ok(joint) = joints.get(upper_arm) else { continue };
                 let Ok(upper_global) = globals.get(upper_arm) else { continue };
                 let shoulder = joint.data.local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
                 let grab_sphere =
-                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity)
-                        .unwrap();
+                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity).unwrap();
                 //info!("grab sphere: {:?}", grab_sphere);
 
                 let _sphere_offset = if let Some(_sphere) = grab_sphere.sphere {

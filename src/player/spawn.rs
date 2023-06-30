@@ -157,17 +157,15 @@ pub fn setup_player(
                     Vec3::new(distance_from_body, player_height, 0.0),
                     0,
                 );
-                /*
-                               attach_arm(
-                                   &mut commands,
-                                   &mut meshes,
-                                   &mut materials,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(-distance_from_body, player_height, 0.0),
-                                   1,
-                               );
-                */
+                attach_arm(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(-distance_from_body, player_height, 0.0),
+                    1,
+                );
                 // for some body horror
                 /*
                 attach_arm(
