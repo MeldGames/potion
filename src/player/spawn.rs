@@ -109,7 +109,7 @@ pub fn setup_player(
                                 damping: 0.7,
                             },
                             upright_spring: Spring {
-                                strength: 550.0,
+                                strength: 150.0,
                                 damping: 0.85,
                             },
                             opposing_movement_impulse_scale: 0.0,
@@ -128,7 +128,7 @@ pub fn setup_player(
                         ..default()
                     })
                     .insert(SceneBundle {
-                        scene: asset_server.load("models/skin.gltf#Scene0"),
+                        //scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
@@ -157,16 +157,17 @@ pub fn setup_player(
                     Vec3::new(distance_from_body, player_height, 0.0),
                     0,
                 );
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(-distance_from_body, player_height, 0.0),
-                    1,
-                );
-
+                /*
+                               attach_arm(
+                                   &mut commands,
+                                   &mut meshes,
+                                   &mut materials,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(-distance_from_body, player_height, 0.0),
+                                   1,
+                               );
+                */
                 // for some body horror
                 /*
                 attach_arm(
@@ -415,7 +416,7 @@ pub fn attach_arm(
     commands.entity(forearm_target).add_child(hand_target);
     commands.entity(to).add_child(pole_target);
 
-    let arm_density = 1.0;
+    let arm_density = 0.05;
 
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -534,13 +535,10 @@ pub fn attach_arm(
     let _hand_entity = commands
         .spawn(TransformBundle::default())
         .insert(Name::new(format!("Hand {}", index)))
-        //.insert(Attach::translation(hand_position))
         .insert(Hand)
         .insert(ConnectedEntities::default())
         .insert(CharacterEntities::default())
         .insert(ConnectedMass::default())
-        //.insert(GrabbedEntities::default())
-        //.insert(ColliderMassProperties::Density(10.0))
         .insert(Grabbing { ..default() })
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
@@ -550,10 +548,8 @@ pub fn attach_arm(
         .insert(Collider::ball(hand_radius))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
-        //.insert(ContactFilter::default())
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
-        //.insert(Muscle::new(hand_target))
         .insert(MuscleIKTarget::new(target))
         .insert(Forearm::new(forearm_entity))
         .insert(LastActive(std::time::Instant::now()))

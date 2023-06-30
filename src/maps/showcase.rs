@@ -402,6 +402,10 @@ pub fn setup(
             })),
             ..default()
         })
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::KinematicPositionBased,
+            ..default()
+        })
         .insert((
             TransformBundle::from_transform(Transform {
                 translation: Vec3::new(-2.5, 2.3, -0.075),

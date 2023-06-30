@@ -4,7 +4,7 @@ use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier3d::{
     prelude::*,
-    rapier::dynamics::{JointAxesMask, JointAxis},
+    rapier::dynamics::{JointAxesMask, JointAxis, MotorModel},
 };
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
@@ -158,6 +158,7 @@ pub fn insert_slot(
     mut slotted: Query<&mut Slottable>,
     mut slots: Query<(&mut Slot, &mut SlotGracePeriod, Option<&Children>)>,
     mut deposits: Query<&mut SlotDeposit>,
+    rigid: Query<Entity, &RigidBody>,
     names: Query<DebugName>,
 ) {
     for mut deposit in &mut deposits {
@@ -184,28 +185,71 @@ pub fn insert_slot(
                         info!("slotting {:?}", names.get(next_item).unwrap());
                         slot.containing = Some(next_item);
 
-                        let strength = 10000.0;
-                        let damping = 5.0;
-                        let mut slot_joint = GenericJointBuilder::new(JointAxesMask::empty())
-                            .motor_position(JointAxis::X, 0.0, strength, damping)
-                            .motor_position(JointAxis::Y, 0.0, strength, damping)
-                            .motor_position(JointAxis::Z, 0.0, strength, damping)
-                            .motor_position(JointAxis::AngX, 0.0, strength, damping)
-                            .motor_position(JointAxis::AngY, 0.0, strength, damping)
-                            .motor_position(JointAxis::AngZ, 0.0, strength, damping)
-                            .build();
-
-                        commands.entity(*slot_entity).with_children(|children| {
-                            children
-                                .spawn(ImpulseJoint::new(next_item, slot_joint))
-                                .insert(Name::new("Slot Joint"));
-                        });
-
                         grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
                         *slottable = Slottable::Slotted;
                         break;
                     }
                 }
+            }
+        }
+    }
+}
+
+pub fn slot_joints(
+    mut commands: Commands,
+    slots: Query<(Entity, &Slot)>,
+    joints: Query<(&ImpulseJoint, &RapierImpulseJointHandle)>,
+    rapier: Res<RapierContext>,
+    names: Query<&Name>,
+) {
+    for (entity, slot) in &slots {
+        match slot.containing {
+            Some(item) => {
+                if let Ok((joint, handle)) = joints.get(entity) {
+                    /*
+                    let name = names
+                        .get(entity)
+                        .map(|name| name.as_str())
+                        .unwrap_or("blah");
+
+                    let joint = rapier.impulse_joints.get(handle.0).unwrap();
+                    info!(
+                        "slot: {:?}, impulse: {:?}, motors: {:?}",
+                        name,
+                        joint.impulses,
+                        joint
+                            .data
+                            .motors
+                            .iter()
+                            .map(|motor| motor.impulse)
+                            .collect::<Vec<_>>()
+                    );
+                    */
+                } else {
+                    let strength = 5000.0;
+                    let damping = 5.0;
+                    /*
+                                    let mut slot_joint = FixedJointBuilder::new()
+                                        .build();
+                    */
+                    let slot_joint = GenericJointBuilder::new(JointAxesMask::empty())
+                        .motor_position(JointAxis::X, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::X, 300.0)
+                        .motor_position(JointAxis::Y, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::Y, 300.0)
+                        .motor_position(JointAxis::Z, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::Z, 300.0)
+                        .motor_position(JointAxis::AngX, 0.0, strength, damping)
+                        .motor_position(JointAxis::AngY, 0.0, strength, damping)
+                        .motor_position(JointAxis::AngZ, 0.0, strength, damping)
+                        .build();
+                    commands
+                        .entity(entity)
+                        .insert(ImpulseJoint::new(item, slot_joint));
+                }
+            }
+            None => {
+                commands.entity(entity).remove::<ImpulseJoint>();
             }
         }
     }
@@ -225,6 +269,7 @@ impl Plugin for SlotPlugin {
                 pending_slot,
                 insert_slot.after(pending_slot),
                 tick_grace_period.before(insert_slot),
+                slot_joints.after(insert_slot),
             )
                 .before(PhysicsSet::SyncBackend)
                 .in_schedule(CoreSchedule::FixedUpdate),

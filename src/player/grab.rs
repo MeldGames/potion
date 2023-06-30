@@ -12,8 +12,8 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
-use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
+use bevy_rapier3d::{prelude::*};
 
 use crate::{
     physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
@@ -60,18 +60,20 @@ pub fn joint_children(
     mut children: Query<&mut JointChildren>,
     joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
 ) {
-    for (entity, joint) in &joints {
-        match children.get_mut(joint.parent) {
+    let pairs = joints
+        .iter()
+        .map(|(entity, joint)| (entity, joint.parent));
+
+    for (entity, parent) in pairs {
+        match children.get_mut(parent) {
             Ok(mut children) => {
                 if !children.contains(&entity) {
                     children.push(entity);
                 }
             }
             _ => {
-                if entities.contains(joint.parent) {
-                    commands
-                        .entity(joint.parent)
-                        .insert(JointChildren(vec![entity]));
+                if entities.contains(parent) {
+                    commands.entity(parent).insert(JointChildren(vec![entity]));
                 }
             }
         }
@@ -161,7 +163,6 @@ pub fn grab_collider(
                             5.0,
                             Color::RED,
                         );
-                        println!("auto aim anchor: {:?}", closest_point);
                         closest_point
                     } else {
                         None
@@ -175,18 +176,14 @@ pub fn grab_collider(
                         closest_point
                     };
 
-                    println!("contact anchor: {:?}", closest_point);
-
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
                     let other_matrix = other_global.compute_matrix();
                     let anchor1 =
                         other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
 
-                    println!("localspace anchor1: {:?}", anchor1);
-
                     let name = name.get(other_rigidbody).unwrap();
-                    info!("grabbing {:?}", name);
+                    //info!("grabbing {:?}", name);
 
                     let motor_model = MotorModel::ForceBased;
                     let max_force = 1000.0;
@@ -218,7 +215,7 @@ pub fn grab_collider(
             }
         } else {
             if let Some(grabbing) = grabbing.grabbing.take() {
-                info!("letting go of {:?}", name.get(grabbing).unwrap());
+                //info!("letting go of {:?}", name.get(grabbing).unwrap());
             }
 
             // clean up joints if we aren't grabbing anymore
@@ -268,7 +265,7 @@ impl Default for GrabSphere {
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     query: &'a Query<Q, F>,
     parents: &'a Query<&Parent>,
-    joints: &'a Query<&ImpulseJoint>,
+    impulse: &'a Query<&ImpulseJoint>,
     base: Entity,
 ) -> Option<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
     let mut checked = HashSet::new();
@@ -287,7 +284,7 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
             possibilities.push(parent.get());
         }
 
-        if let Ok(joint) = joints.get(possible) {
+        if let Ok(joint) = impulse.get(possible) {
             possibilities.push(joint.parent);
         }
     }
@@ -547,14 +544,16 @@ pub fn player_extend_arm(
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let upper_arm =
-                    find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
-                let joint = joints.get(upper_arm).unwrap();
-                let upper_global = globals.get(upper_arm).unwrap();
+                    find_parent_with(&upper_arm, &parents, &joints,  hand_entity)
+                        .unwrap();
+                let Ok(joint) = joints.get(upper_arm) else { continue };
+                let Ok(upper_global) = globals.get(upper_arm) else { continue };
                 let shoulder = joint.data.local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
                 let grab_sphere =
-                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity).unwrap();
+                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity)
+                        .unwrap();
                 //info!("grab sphere: {:?}", grab_sphere);
 
                 let _sphere_offset = if let Some(_sphere) = grab_sphere.sphere {
