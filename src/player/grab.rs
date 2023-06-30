@@ -13,7 +13,7 @@ use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_rapier3d::{prelude::*, rapier::prelude::Multibody};
+use bevy_rapier3d::{prelude::*};
 
 use crate::{
     physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
@@ -59,16 +59,10 @@ pub fn joint_children(
     entities: &Entities,
     mut children: Query<&mut JointChildren>,
     joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
-    multibody: Query<(Entity, &MultibodyJoint), Without<GrabJoint>>,
 ) {
     let pairs = joints
         .iter()
-        .map(|(entity, joint)| (entity, joint.parent))
-        .chain(
-            multibody
-                .iter()
-                .map(|(entity, joint)| (entity, joint.parent)),
-        );
+        .map(|(entity, joint)| (entity, joint.parent));
 
     for (entity, parent) in pairs {
         match children.get_mut(parent) {
@@ -95,7 +89,6 @@ pub fn grab_collider(
     rigid_bodies: Query<Entity, With<RigidBody>>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    multibody: Query<&MultibodyJoint>,
     mut hands: Query<
         (
             Entity,
@@ -124,7 +117,7 @@ pub fn grab_collider(
                 };
 
                 let other_rigidbody = if let Some(entity) =
-                    find_parent_with(&rigid_bodies, &parents, &joints, &multibody, other_collider)
+                    find_parent_with(&rigid_bodies, &parents, &joints, other_collider)
                 {
                     entity
                 } else {
@@ -273,7 +266,6 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     query: &'a Query<Q, F>,
     parents: &'a Query<&Parent>,
     impulse: &'a Query<&ImpulseJoint>,
-    multibody: &'a Query<&MultibodyJoint>,
     base: Entity,
 ) -> Option<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
     let mut checked = HashSet::new();
@@ -293,10 +285,6 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
         }
 
         if let Ok(joint) = impulse.get(possible) {
-            possibilities.push(joint.parent);
-        }
-
-        if let Ok(joint) = multibody.get(possible) {
             possibilities.push(joint.parent);
         }
     }
@@ -513,7 +501,6 @@ pub fn player_extend_arm(
     upper_arm: Query<Entity, With<UpperArm>>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    multibody: Query<&MultibodyJoint>,
     mut hands: Query<
         (
             Entity,
@@ -526,7 +513,7 @@ pub fn player_extend_arm(
     >,
 ) {
     for (hand_entity, mut grabbing, mut collision_groups, arm_id, muscle_ik_target) in &mut hands {
-        let input = find_parent_with(&inputs, &parents, &joints, &multibody, hand_entity);
+        let input = find_parent_with(&inputs, &parents, &joints, hand_entity);
 
         let (input, cam, neck) = if let Some(input) = input {
             input
@@ -557,15 +544,15 @@ pub fn player_extend_arm(
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let upper_arm =
-                    find_parent_with(&upper_arm, &parents, &joints, &multibody, hand_entity)
+                    find_parent_with(&upper_arm, &parents, &joints,  hand_entity)
                         .unwrap();
-                let Ok(joint) = multibody.get(upper_arm) else { continue };
+                let Ok(joint) = joints.get(upper_arm) else { continue };
                 let Ok(upper_global) = globals.get(upper_arm) else { continue };
                 let shoulder = joint.data.local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
                 let grab_sphere =
-                    find_parent_with(&grab_sphere, &parents, &joints, &multibody, hand_entity)
+                    find_parent_with(&grab_sphere, &parents, &joints, hand_entity)
                         .unwrap();
                 //info!("grab sphere: {:?}", grab_sphere);
 
