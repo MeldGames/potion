@@ -159,6 +159,7 @@ pub fn insert_slot(
     for mut deposit in &mut deposits {
         if deposit.slots.len() == 0 {
             warn!("no slots specified in slot deposit");
+            continue;
         }
 
         let SlotDeposit {
@@ -166,24 +167,22 @@ pub fn insert_slot(
             attempting,
         } = deposit.as_mut();
 
-        for slot_entity in deposit_slots {
-            if attempting.len() == 0 {
-                break;
-            }
+        if attempting.len() == 0 {
+            continue;
+        }
 
-            if let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) {
-                if slot.containing.is_none() {
-                    while let Some(next_item) = attempting.pop_front() {
-                        if let Ok(mut slottable) = slotted.get_mut(next_item) {
-                            if *slottable == Slottable::Free {
-                                info!("slotting {:?}", names.get(next_item).unwrap());
-                                slot.containing = Some(next_item);
-                                grace_period.0 =
-                                    Timer::new(Duration::from_secs(1), TimerMode::Once);
-                                *slottable = Slottable::Slotted;
-                                break;
-                            }
-                        }
+        for slot_entity in deposit_slots {
+            let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) else { continue };
+            if slot.containing.is_none() {
+                while let Some(next_item) = attempting.pop_front() {
+                    let Ok(mut slottable) = slotted.get_mut(next_item) else { continue };
+                    if *slottable == Slottable::Free {
+                        info!("slotting {:?}", names.get(next_item).unwrap());
+                        slot.containing = Some(next_item);
+                        grace_period.0 =
+                            Timer::new(Duration::from_secs(1), TimerMode::Once);
+                        *slottable = Slottable::Slotted;
+                        break;
                     }
                 }
             }
