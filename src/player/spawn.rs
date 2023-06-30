@@ -11,7 +11,7 @@ use std::f32::consts::PI;
 
 use bevy_mod_wanderlust::{ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring};
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
+use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel, Multibody};
 use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
@@ -157,17 +157,15 @@ pub fn setup_player(
                     Vec3::new(distance_from_body, player_height, 0.0),
                     0,
                 );
-                /*
-                               attach_arm(
-                                   &mut commands,
-                                   &mut meshes,
-                                   &mut materials,
-                                   player_entity,
-                                   global_transform.compute_transform(),
-                                   Vec3::new(-distance_from_body, player_height, 0.0),
-                                   1,
-                               );
-                */
+                attach_arm(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    player_entity,
+                    global_transform.compute_transform(),
+                    Vec3::new(-distance_from_body, player_height, 0.0),
+                    1,
+                );
                 // for some body horror
                 /*
                 attach_arm(
@@ -443,6 +441,7 @@ pub fn attach_arm(
         .insert(ReadMassProperties::default())
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, upperarm_height, arm_radius))
+        //.insert(MultibodyJoint::new(to, upperarm_joint))
         .insert(ImpulseJoint::new(to, upperarm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -483,6 +482,7 @@ pub fn attach_arm(
         .insert(ReadMassProperties::default())
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::capsule(Vec3::ZERO, forearm_height, arm_radius))
+        //.insert(MultibodyJoint::new(upperarm_entity, forearm_joint))
         .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -546,6 +546,7 @@ pub fn attach_arm(
         .insert(RigidBody::Dynamic)
         .insert(crate::physics::REST_GROUPING)
         .insert(Collider::ball(hand_radius))
+        //.insert(MultibodyJoint::new(forearm_entity, hand_joint))
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         //.insert(crate::Slottable) // kind of funny lol
@@ -562,6 +563,7 @@ pub fn related_entities<R, JointFilter>(
     parents: Query<&Parent>,
     joint_childrens: Query<&JointChildren>,
     joints: Query<&ImpulseJoint, JointFilter>,
+    multibody: Query<&MultibodyJoint, JointFilter>,
 ) where
     R: std::ops::DerefMut<Target = HashSet<Entity>> + Component,
     JointFilter: ReadOnlyWorldQuery,
@@ -591,6 +593,13 @@ pub fn related_entities<R, JointFilter>(
                 }
 
                 if let Ok(joint) = joints.get(*entity) {
+                    let entity = joint.parent;
+                    if related_entities.insert(entity) {
+                        new_stack.insert(entity);
+                    }
+                }
+
+                if let Ok(joint) = multibody.get(*entity) {
                     let entity = joint.parent;
                     if related_entities.insert(entity) {
                         new_stack.insert(entity);
