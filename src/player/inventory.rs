@@ -79,11 +79,7 @@ pub fn scale_border_radius(collider: &mut Collider, ratio: f32) {
                 },
             border_radius,
         }) => {
-            *collider = Collider::round_cylinder(
-                *half_height,
-                *radius,
-                border_radius * ratio,
-            );
+            *collider = Collider::round_cylinder(*half_height, *radius, border_radius * ratio);
             //collider.set_scale(prev_scale * ratio, 32);
         }
         TypedShape::RoundCuboid(RoundShape {

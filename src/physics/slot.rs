@@ -2,7 +2,10 @@ use std::{collections::VecDeque, time::Duration};
 
 use bevy::{ecs::entity::Entities, prelude::*};
 use bevy_prototype_debug_lines::DebugLines;
-use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::{
+    prelude::*,
+    rapier::dynamics::{JointAxesMask, JointAxis},
+};
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
 #[reflect(Component)]
@@ -151,8 +154,9 @@ pub fn tick_grace_period(mut slots: Query<&mut SlotGracePeriod>) {
 }
 
 pub fn insert_slot(
+    mut commands: Commands,
     mut slotted: Query<&mut Slottable>,
-    mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
+    mut slots: Query<(&mut Slot, &mut SlotGracePeriod, Option<&Children>)>,
     mut deposits: Query<&mut SlotDeposit>,
     names: Query<DebugName>,
 ) {
@@ -171,121 +175,37 @@ pub fn insert_slot(
             continue;
         }
 
-        for slot_entity in deposit_slots {
-            let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) else { continue };
+        for slot_entity in &*deposit_slots {
+            let Ok((mut slot, mut grace_period, children)) = slots.get_mut(*slot_entity) else { continue };
             if slot.containing.is_none() {
                 while let Some(next_item) = attempting.pop_front() {
                     let Ok(mut slottable) = slotted.get_mut(next_item) else { continue };
                     if *slottable == Slottable::Free {
                         info!("slotting {:?}", names.get(next_item).unwrap());
                         slot.containing = Some(next_item);
-                        grace_period.0 =
-                            Timer::new(Duration::from_secs(1), TimerMode::Once);
+
+                        let strength = 10000.0;
+                        let damping = 5.0;
+                        let mut slot_joint = GenericJointBuilder::new(JointAxesMask::empty())
+                            .motor_position(JointAxis::X, 0.0, strength, damping)
+                            .motor_position(JointAxis::Y, 0.0, strength, damping)
+                            .motor_position(JointAxis::Z, 0.0, strength, damping)
+                            .motor_position(JointAxis::AngX, 0.0, strength, damping)
+                            .motor_position(JointAxis::AngY, 0.0, strength, damping)
+                            .motor_position(JointAxis::AngZ, 0.0, strength, damping)
+                            .build();
+
+                        commands.entity(*slot_entity).with_children(|children| {
+                            children
+                                .spawn(ImpulseJoint::new(next_item, slot_joint))
+                                .insert(Name::new("Slot Joint"));
+                        });
+
+                        grace_period.0 = Timer::new(Duration::from_secs(1), TimerMode::Once);
                         *slottable = Slottable::Slotted;
                         break;
                     }
                 }
-            }
-        }
-    }
-}
-
-/// Keep the item in the slot with spring forces.
-///
-/// This adds/removes the spring force to the item.
-pub fn spring_slot(
-    entities: &Entities,
-    particles: Query<springy::RapierParticleQuery>,
-    mut impulses: Query<Option<&mut ExternalImpulse>>,
-    //mut slottables: Query<&mut Slottable>,
-    mut slots: Query<(Entity, &mut Slot, &SlotSettings, &SlotGracePeriod)>,
-    names: Query<DebugName>,
-    mut lines: ResMut<DebugLines>,
-) {
-    let timestep = crate::TICK_RATE.as_secs_f32();
-
-    for (slot_entity, mut slot, slot_settings, _grace_period) in &mut slots {
-        if let Some(particle_entity) = slot.containing {
-            if !entities.contains(particle_entity) {
-                warn!(
-                    "contained entity is no longer alive: {:?}",
-                    names.get(particle_entity).unwrap()
-                );
-                slot.containing = None;
-                continue;
-            }
-
-            if particle_entity == slot_entity {
-                warn!(
-                    "Slot cannot contain itself: {:?}",
-                    names.get(slot_entity).unwrap()
-                );
-                slot.containing = None;
-                continue;
-            }
-
-            let [particle_a, particle_b] =
-                if let Ok(particles) = particles.get_many([slot_entity, particle_entity]) {
-                    particles
-                } else {
-                    warn!("Particle does not contain all necessary components");
-                    continue;
-                };
-
-            let translation_a = particle_a.global_transform.translation();
-            let translation_b = particle_b.global_transform.translation();
-
-            let rigid_body_a = particle_a.rigid_body.cloned();
-            let rigid_body_b = particle_a.rigid_body.cloned();
-
-            let instant = particle_a.translation().instant(&particle_b.translation());
-            let impulse = slot_settings.0.impulse(timestep, instant);
-            let impulse = impulse.clamp_length_max(slot_settings.0.strength);
-
-            let ang_instant = particle_a
-                .angular(Vec3::Y)
-                .instant(&particle_b.angular(Vec3::Y));
-            let ang_impulse = -slot_settings.0.impulse(timestep, ang_instant);
-
-            let [slot_impulse, particle_impulse] = impulses
-                .get_many_mut([slot_entity, particle_entity])
-                .unwrap();
-
-            let impulse_error = |entity: Entity, rigid_body: Option<RigidBody>| {
-                if let Some(RigidBody::Dynamic) = rigid_body {
-                    warn!(
-                        "Particle {:?} does not have an `ExternalImpulse` component",
-                        names.get(entity).unwrap()
-                    );
-                }
-            };
-
-            if let Some(mut slot_impulse) = slot_impulse {
-                slot_impulse.impulse += impulse;
-                slot_impulse.torque_impulse += ang_impulse;
-
-                lines.line_colored(
-                    translation_a,
-                    translation_a - impulse,
-                    crate::TICK_RATE.as_secs_f32(),
-                    Color::BLUE,
-                );
-            } else {
-                impulse_error(slot_entity, rigid_body_a);
-            }
-
-            if let Some(mut particle_impulse) = particle_impulse {
-                particle_impulse.impulse -= impulse;
-                particle_impulse.torque_impulse -= ang_impulse;
-
-                lines.line_colored(
-                    translation_b,
-                    translation_b + impulse,
-                    crate::TICK_RATE.as_secs_f32(),
-                    Color::RED,
-                );
-            } else {
-                impulse_error(particle_entity, rigid_body_b);
             }
         }
     }
@@ -305,7 +225,6 @@ impl Plugin for SlotPlugin {
                 pending_slot,
                 insert_slot.after(pending_slot),
                 tick_grace_period.before(insert_slot),
-                spring_slot.after(insert_slot),
             )
                 .before(PhysicsSet::SyncBackend)
                 .in_schedule(CoreSchedule::FixedUpdate),

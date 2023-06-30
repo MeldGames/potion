@@ -288,12 +288,12 @@ pub fn setup(
     let _donut = commands
         .spawn(PbrBundle {
             /*
-            mesh: meshes.add(Mesh::from(shape::Torus {
-                radius: 0.4,
-                ring_radius: 0.2,
-                ..default()
-            })),
- */
+                       mesh: meshes.add(Mesh::from(shape::Torus {
+                           radius: 0.4,
+                           ring_radius: 0.2,
+                           ..default()
+                       })),
+            */
             transform: Transform::from_xyz(1.0, 6.0, -2.0),
             ..default()
         })
