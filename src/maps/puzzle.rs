@@ -1,20 +1,4 @@
-use std::f32::consts::PI;
-
-use crate::{
-    attach::Attach,
-    objects::{
-        cauldron::Ingredient,
-        store::{SecurityCheck, StoreItem},
-    },
-    physics::slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
-    player::grab::{AimPrimitive, AutoAim},
-};
-
-use bevy::{
-    pbr::{NotShadowCaster, NotShadowReceiver},
-    prelude::*,
-};
-
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 pub struct SetupPlugin;
@@ -25,11 +9,7 @@ impl Plugin for SetupPlugin {
     }
 }
 
-pub fn cube(
-    mut commands: &mut Commands,
-    meshes: &mut Assets<Mesh>,
-    transform: Transform,
-) -> Entity {
+pub fn cube(commands: &mut Commands, transform: Transform) -> Entity {
     commands
         .spawn(TransformBundle::from_transform(transform))
         .insert((
@@ -41,15 +21,9 @@ pub fn cube(
         .id()
 }
 
-pub fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+pub fn setup(mut commands: Commands) {
     cube(
         &mut commands,
-        &mut *meshes,
         Transform {
             translation: Vec3::new(-10., 0., 3.),
             scale: Vec3::new(15.0, 10.0, 0.5),
@@ -59,7 +33,6 @@ pub fn setup(
 
     cube(
         &mut commands,
-        &mut *meshes,
         Transform {
             translation: Vec3::new(-10., 0., -3.),
             scale: Vec3::new(15.0, 10.0, 0.5),
@@ -69,7 +42,6 @@ pub fn setup(
 
     cube(
         &mut commands,
-        &mut *meshes,
         Transform {
             translation: Vec3::new(-17.5, 0., 0.),
             scale: Vec3::new(0.5, 10.0, 6.0),

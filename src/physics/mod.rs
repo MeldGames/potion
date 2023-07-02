@@ -10,8 +10,14 @@ pub mod joint_break;
 pub mod muscle;
 pub mod slot;
 
-pub use contact_filter::*;
-pub use muscle::*;
+pub mod prelude {
+    pub use super::{
+        contact_filter::*, joint_break::*, muscle::*, slot::*, GRAB_GROUPING, PLAYER_GROUPING,
+        REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING,
+    };
+}
+
+use prelude::*;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {
@@ -233,7 +239,6 @@ pub fn prevent_oob(
 }
 
 pub struct PhysicsPlugin;
-
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(RapierConfiguration {
@@ -291,5 +296,9 @@ impl Plugin for PhysicsPlugin {
         app.add_system(cap_velocity);
         app.add_system(prevent_oob);
         app.add_startup_system(modify_rapier_context);
+
+        app.add_plugin(MusclePlugin);
+        app.add_plugin(BreakJointPlugin);
+        app.add_plugin(SlotPlugin);
     }
 }

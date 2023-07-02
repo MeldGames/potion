@@ -8,6 +8,10 @@ use bevy_rapier3d::{
     rapier::dynamics::{JointAxesMask, JointAxis},
 };
 
+pub mod prelude {
+    pub use super::{Inventory, Storeable};
+}
+
 #[derive(Component, Clone, Debug, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct Inventory {
@@ -365,8 +369,7 @@ pub fn store_item(
             } else if b_grab && !a_grab {
                 Ordering::Greater
             } else {
-                Ordering::Greater
-                //b.0.cmp(&a.0)
+                b.0.cmp(&a.0)
             }
         });
 

@@ -4,7 +4,6 @@ use std::{
 };
 
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
 
 use crate::attach::Attach;

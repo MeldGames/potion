@@ -2,10 +2,6 @@ use bevy::prelude::*;
 
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
-use crate::{ attach::AttachPlugin, };
-
-use self::prelude::{CharacterEntities, ConnectedEntities};
-
 pub mod controller;
 pub mod grab;
 pub mod input;
@@ -13,12 +9,11 @@ pub mod inventory;
 pub mod spawn;
 
 pub mod prelude {
-    pub use super::{controller::*, grab::*, input::*, spawn::*};
+    pub use super::{controller::*, grab::*, input::*, inventory::prelude::*, spawn::*};
     pub use super::{CustomWanderlustPlugin, PlayerBundle, PlayerPlugin};
 }
 
 pub struct CustomWanderlustPlugin;
-
 impl Plugin for CustomWanderlustPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ControllerState>()
@@ -44,6 +39,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugin(CustomWanderlustPlugin);
+
         app.add_plugin(inventory::InventoryPlugin);
         app.add_plugin(grab::GrabPlugin);
         app.add_plugin(controller::ControllerPlugin);

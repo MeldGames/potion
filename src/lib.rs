@@ -8,7 +8,13 @@ pub mod objects;
 pub mod physics;
 pub mod player;
 pub mod traversal;
-pub mod prelude;
+
+pub mod prelude {
+    pub use super::{
+        attach::Attach, debug::prelude::*, physics::prelude::*, player::prelude::*,
+        traversal::prelude::*, FixedSet,
+    };
+}
 
 use bevy_editor_pls::editor::Editor;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
@@ -17,9 +23,7 @@ use bevy_rapier3d::prelude::*;
 use traversal::HierarchyTraversalPlugin;
 
 use self::{
-    deposit::DepositPlugin,
-    objects::store::StorePlugin,
-    physics::{joint_break::BreakJointPlugin, slot::SlotPlugin},
+    deposit::DepositPlugin, objects::store::StorePlugin, physics::PhysicsPlugin,
     player::PlayerPlugin,
 };
 
@@ -30,7 +34,6 @@ pub use debug::DebugVisible;
 //use crate::network::NetworkPlugin;
 use bevy::{
     prelude::*,
-    scene::SceneInstance,
     window::{CursorGrabMode, WindowPlugin},
 };
 
@@ -94,13 +97,17 @@ pub fn setup_app(app: &mut App) {
     //app.add_plugin(crate::egui::SetupEguiPlugin);
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-    app.insert_resource(Msaa::Sample8);
-    //app.add_plugin(EdgeDetectionPlugin);
-    app.insert_resource(EdgeDetectionConfig {
-        debug: 0,
-        enabled: 0,
-        ..default()
-    });
+    const MSAA: bool = true;
+    if MSAA {
+        app.insert_resource(Msaa::Sample8);
+    } else {
+        app.add_plugin(EdgeDetectionPlugin);
+        app.insert_resource(EdgeDetectionConfig {
+            debug: 0,
+            enabled: 1,
+            ..default()
+        });
+    }
 
     app.world
         .resource_mut::<Schedules>()
@@ -112,16 +119,13 @@ pub fn setup_app(app: &mut App) {
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
         .add_plugin(attach::AttachPlugin)
-        .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
         .add_plugin(HierarchyTraversalPlugin)
-        .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
         .add_plugin(crate::debug::DebugPlugin)
         //.add_plugin(TreesPlugin)
-        .add_plugin(crate::physics::PhysicsPlugin)
-        .add_plugin(crate::physics::MusclePlugin)
+        .add_plugin(PhysicsPlugin)
         .add_plugin(RapierDebugRenderPlugin {
             always_on_top: false,
             enabled: true,
@@ -142,8 +146,6 @@ pub fn setup_app(app: &mut App) {
     app.add_system(decomp_load);
     app.add_system(edge_detect_swap);
     //app.add_system(prepare_scene);
-
-    app.add_plugin(crate::player::CustomWanderlustPlugin);
 }
 
 fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionConfig>) {

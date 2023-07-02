@@ -1,10 +1,9 @@
 use bevy::{
-    asset::HandleId,
-    pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::{mesh::Indices, render_resource::PrimitiveTopology},
 };
 
+use crate::prelude::*;
 use bevy_rapier3d::parry::shape::{TriMesh, TypedShape};
 use bevy_rapier3d::prelude::*;
 
@@ -74,14 +73,14 @@ impl<'a> AsMesh for ColliderView<'a> {
                     },
                 ));
             }
-            ColliderView::Segment(segment) => {}
-            ColliderView::Triangle(triangle) => {}
+            ColliderView::Segment(_segment) => {}
+            ColliderView::Triangle(_triangle) => {}
             ColliderView::TriMesh(shape_views::TriMeshView { raw: trimesh }) => {
                 let mesh = trimesh_to_mesh(trimesh);
                 meshes.push((mesh, Transform::default()));
             }
-            ColliderView::Polyline(polyline) => {}
-            ColliderView::HalfSpace(half_space) => {}
+            ColliderView::Polyline(_polyline) => {}
+            ColliderView::HalfSpace(_half_space) => {}
             ColliderView::HeightField(shape_views::HeightFieldView { raw: height_field }) => {
                 let (points, indices) = height_field.to_trimesh();
                 let trimesh = TriMesh::new(points, indices);
@@ -119,19 +118,19 @@ impl<'a> AsMesh for ColliderView<'a> {
                 });
                 meshes.push((mesh, Transform::default()));
             }
-            ColliderView::Cone(cone) => {}
-            ColliderView::RoundCuboid(round_cuboid) => {}
-            ColliderView::RoundTriangle(round_triangle) => {}
-            ColliderView::RoundCylinder(round_cylinder) => {}
-            ColliderView::RoundCone(round_cone) => {}
-            ColliderView::RoundConvexPolyhedron(round_convex_polyhedron) => {}
-            _ => {}
+            ColliderView::Cone(_cone) => {}
+            ColliderView::RoundCuboid(_round_cuboid) => {}
+            ColliderView::RoundTriangle(_round_triangle) => {}
+            ColliderView::RoundCylinder(_round_cylinder) => {}
+            ColliderView::RoundCone(_round_cone) => {}
+            ColliderView::RoundConvexPolyhedron(_round_convex_polyhedron) => {}
         };
 
         meshes
     }
 }
 
+/// If the collider has changed, then produce a new debug mesh for it.
 pub fn init_physics_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -140,10 +139,8 @@ pub fn init_physics_meshes(
         (With<RigidBody>, Changed<Collider>),
     >,
     physics_mesh: Query<&PhysicsDebugMesh>,
-    names: Query<&Name>,
 ) {
     for (entity, children, collider) in &rigid_bodies {
-        let mut found = false;
         if let Some(children) = children {
             for child in children.iter() {
                 if physics_mesh.get(*child).is_ok() {
@@ -151,15 +148,6 @@ pub fn init_physics_meshes(
                 }
             }
         }
-
-        if found {
-            //continue;
-        }
-
-        let name = names
-            .get(entity)
-            .map(|name| name.as_str().to_owned())
-            .unwrap_or(format!("{:?}", entity));
 
         for (mesh, transform) in collider.as_unscaled_typed_shape().as_meshes() {
             let handle = meshes.add(mesh);
@@ -170,6 +158,7 @@ pub fn init_physics_meshes(
                     ..default()
                 })
                 .insert(PhysicsDebugMesh)
+                .insert(DebugVisible)
                 .insert(Name::new("Physics debug mesh"))
                 .id();
 

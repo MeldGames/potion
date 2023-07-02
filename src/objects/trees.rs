@@ -88,7 +88,6 @@ pub struct LeafMaterial {
     #[texture(1)]
     #[sampler(2)]
     color_texture: Option<Handle<Image>>,
-    alpha_mode: AlphaMode,
 }
 
 impl Material for BarkMaterial {
@@ -131,7 +130,6 @@ fn mod_scene(
             let custom_material = custom_materials.add(LeafMaterial {
                 color: Color::YELLOW_GREEN,
                 color_texture: Some(asset_server.load("shaders/leaves.png")),
-                alpha_mode: AlphaMode::Mask(1.0),
             });
             commands.entity(e).remove::<Handle<StandardMaterial>>();
             commands

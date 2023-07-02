@@ -5,6 +5,10 @@ pub mod texture;
 
 pub use texture::TestMaterial;
 
+pub mod prelude {
+    pub use super::DebugVisible;
+}
+
 #[derive(Debug, Clone, Resource)]
 pub struct Debug(bool);
 
@@ -40,7 +44,6 @@ pub fn debug_visible(debug: Res<Debug>, mut visibility: Query<(&mut Visibility, 
 }
 
 pub struct DebugPlugin;
-
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Debug(true));

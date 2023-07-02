@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use bevy::{
     ecs::{
         entity::Entities,
@@ -7,7 +8,6 @@ use bevy::{
     utils::HashSet,
 };
 use bevy_rapier3d::prelude::*;
-use crate::prelude::*;
 
 pub struct HierarchyTraversalPlugin;
 
@@ -15,19 +15,12 @@ impl Plugin for HierarchyTraversalPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<JointChildren>();
 
-        app.add_system(
-            joint_children
-                .in_schedule(CoreSchedule::FixedUpdate),
-        );
+        app.add_system(joint_children.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
 pub mod prelude {
-    pub use super::{
-        find_parent_with,
-        find_children_with,
-        JointChildren,
-    };
+    pub use super::{find_children_with, find_parent_with, JointChildren};
 }
 
 pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
@@ -121,4 +114,3 @@ pub fn joint_children(
         }
     }
 }
-

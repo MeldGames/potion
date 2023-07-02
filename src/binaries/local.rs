@@ -1,7 +1,4 @@
-use bevy_rapier3d::{
-    prelude::*,
-    rapier::dynamics::{JointAxesMask, JointAxis},
-};
+use bevy_rapier3d::prelude::*;
 use potion::{
     physics::{ColliderBundle, RigidBodyBundle},
     player::{
@@ -46,7 +43,7 @@ fn spawn_multibody(mut commands: Commands) {
         .insert(Name::new("r1"))
         .id();
 
-    let r2 = commands
+    let _r2 = commands
         .spawn(TransformBundle::from_transform(Transform {
             translation: Vec3::new(0.0, 2.0, -10.0),
             ..default()

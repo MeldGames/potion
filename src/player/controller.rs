@@ -83,12 +83,12 @@ pub fn player_movement(
         controller.jumping = player_input.jump();
 
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
-        let mut desired_dir = Vec2::new(dir.x, dir.z);
+        //let mut desired_dir = Vec2::new(dir.x, dir.z);
 
         // If we are grabby then make the character face the way we are grabbing.
         //if player_input.any_extend_arm() {
         let camera_dir = rotation * -Vec3::Z;
-        desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
+        let desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
         //}
 
         let _spring = springy::Spring {

@@ -1,28 +1,14 @@
 use std::fmt::Debug;
 
-use bevy::{
-    ecs::{
-        entity::Entities,
-        query::{ReadOnlyWorldQuery, WorldQuery},
-    },
-    input::mouse::MouseMotion,
-};
+use bevy::input::mouse::MouseMotion;
 
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use bevy_prototype_debug_lines::DebugLines;
 
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::{
-    physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
-    FixedSet,
-    prelude::*,
-};
-
-use super::input::PlayerInput;
-use super::prelude::*;
+use crate::prelude::*;
 
 pub struct GrabPlugin;
 
@@ -90,12 +76,11 @@ pub fn grab_joint(
         &Grabbing,
         Option<&Children>,
         &GlobalTransform,
-        &Collider,
     )>,
     mut transforms: Query<&mut Transform>,
     grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
 ) {
-    for (grabber, grabbing, children, global, collider) in &grabbers {
+    for (grabber, grabbing, children, global) in &grabbers {
         let joint = if let Some(children) = children {
             let mut joint = None;
             for child in children.iter() {
@@ -141,6 +126,7 @@ pub fn grab_joint(
                 let damping = 0.4;
                 let mut grab_joint = SphericalJointBuilder::new()
                     .local_anchor1(grab_point)
+                    // use the center of the hand instead of exact grab point
                     .local_anchor2(Vec3::ZERO)
                     .motor_model(JointAxis::AngX, motor_model)
                     .motor_model(JointAxis::AngY, motor_model)
@@ -175,7 +161,6 @@ pub fn grab_joint(
 }
 
 pub fn grab_collider(
-    mut commands: Commands,
     name: Query<DebugName>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
@@ -183,18 +168,9 @@ pub fn grab_collider(
     rigid_bodies: Query<Entity, With<RigidBody>>,
     parents: Query<&Parent>,
     joints: Query<&ImpulseJoint>,
-    mut hands: Query<
-        (
-            Entity,
-            &mut Grabbing,
-            &GlobalTransform,
-            Option<&Children>,
-            &CharacterEntities,
-        ),
-        With<Hand>,
-    >,
+    mut hands: Query<(Entity, &mut Grabbing, &GlobalTransform, &CharacterEntities), With<Hand>>,
 ) {
-    for (hand, mut grabbing, global, children, character) in &mut hands {
+    for (hand, mut grabbing, global, character) in &mut hands {
         if grabbing.trying_grab {
             // Don't replace the grabbed entity if we already have one grabbed.
             if grabbing.grabbed.is_some() {
@@ -245,7 +221,6 @@ pub fn grab_collider(
                 }
 
                 if let Ok(other_global) = globals.get(other_rigidbody) {
-                    let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
                     let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
                         let closest_point = auto_aim.closest_point(other_global, closest_point);

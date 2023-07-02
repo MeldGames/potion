@@ -12,16 +12,8 @@ use std::f32::consts::PI;
 use bevy_mod_wanderlust::{ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring};
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
-use bevy_renet::renet::RenetServer;
 
-use super::prelude::*;
-use crate::{
-    prelude::*,
-    attach::Attach,
-    physics::{ContactFilter, Muscle},
-    player::inventory::Inventory,
-    DebugVisible,
-};
+use crate::prelude::*;
 
 pub struct PlayerSpawnPlugin;
 

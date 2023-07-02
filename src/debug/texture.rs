@@ -1,6 +1,5 @@
 use bevy::{
     asset::HandleId,
-    pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
 };
 
@@ -13,7 +12,6 @@ pub struct TestMaterial {
 pub fn setup_test_texture(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let base_material = StandardMaterial {

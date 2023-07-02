@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use bevy::prelude::*;
 
 use bevy_rapier3d::prelude::*;
-use springy::{RapierParticleQuery, Spring};
+use springy::RapierParticleQuery;
 
 pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
@@ -41,15 +41,10 @@ impl Default for Muscle {
 }
 
 pub fn muscle_target(
-    ctx: Res<RapierContext>,
     targets: Query<(Entity, &Muscle)>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
     particles: Query<RapierParticleQuery>,
-
-    names: Query<&Name>,
 ) {
-    let dt = ctx.integration_parameters.dt;
-
     for (current_entity, muscle) in &targets {
         if !muscle.tense {
             continue;

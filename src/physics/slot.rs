@@ -1,10 +1,9 @@
 use std::{collections::VecDeque, time::Duration};
 
-use bevy::{ecs::entity::Entities, prelude::*};
-use bevy_prototype_debug_lines::DebugLines;
+use bevy::prelude::*;
 use bevy_rapier3d::{
     prelude::*,
-    rapier::dynamics::{JointAxesMask, JointAxis, MotorModel},
+    rapier::dynamics::{JointAxesMask, JointAxis},
 };
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
@@ -154,11 +153,9 @@ pub fn tick_grace_period(mut slots: Query<&mut SlotGracePeriod>) {
 }
 
 pub fn insert_slot(
-    mut commands: Commands,
     mut slotted: Query<&mut Slottable>,
-    mut slots: Query<(&mut Slot, &mut SlotGracePeriod, Option<&Children>)>,
+    mut slots: Query<(&mut Slot, &mut SlotGracePeriod)>,
     mut deposits: Query<&mut SlotDeposit>,
-    rigid: Query<Entity, &RigidBody>,
     names: Query<DebugName>,
 ) {
     for mut deposit in &mut deposits {
@@ -177,7 +174,7 @@ pub fn insert_slot(
         }
 
         for slot_entity in &*deposit_slots {
-            let Ok((mut slot, mut grace_period, children)) = slots.get_mut(*slot_entity) else { continue };
+            let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) else { continue };
             if slot.containing.is_none() {
                 while let Some(next_item) = attempting.pop_front() {
                     let Ok(mut slottable) = slotted.get_mut(next_item) else { continue };
@@ -199,13 +196,13 @@ pub fn slot_joints(
     mut commands: Commands,
     slots: Query<(Entity, &Slot)>,
     joints: Query<(&ImpulseJoint, &RapierImpulseJointHandle)>,
-    rapier: Res<RapierContext>,
-    names: Query<&Name>,
+    //rapier: Res<RapierContext>,
+    //names: Query<&Name>,
 ) {
     for (entity, slot) in &slots {
         match slot.containing {
             Some(item) => {
-                if let Ok((joint, handle)) = joints.get(entity) {
+                if let Ok((_joint, _handle)) = joints.get(entity) {
                     /*
                     let name = names
                         .get(entity)

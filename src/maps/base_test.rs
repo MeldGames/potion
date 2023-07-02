@@ -1,22 +1,6 @@
-use std::f32::consts::PI;
+use crate::physics::{ColliderBundle, RigidBodyBundle};
 
-use crate::{
-    attach::Attach,
-    objects::{
-        cauldron::Ingredient,
-        store::{SecurityCheck, StoreItem},
-    },
-    physics::{
-        slot::{Slot, SlotGracePeriod, SlotSettings, Slottable},
-        ColliderBundle, RigidBodyBundle,
-    },
-    player::grab::{AimPrimitive, AutoAim},
-};
-
-use bevy::{
-    pbr::{NotShadowCaster, NotShadowReceiver},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use bevy_rapier3d::prelude::*;
 
@@ -27,12 +11,7 @@ impl Plugin for SetupPlugin {
     }
 }
 
-pub fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
