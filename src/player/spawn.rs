@@ -22,6 +22,32 @@ use crate::{
     DebugVisible,
 };
 
+pub struct PlayerSpawnPlugin;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PlayerSpawnSet;
+
+impl Plugin for PlayerSpawnPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Player>();
+
+        app.insert_resource(Events::<PlayerEvent>::default());
+        app.add_systems(
+            (
+                related_entities::<CharacterEntities, Without<GrabJoint>>,
+                related_entities::<ConnectedEntities, ()>,
+                contact_filter,
+                setup_player,
+                setup_ik,
+                Events::<PlayerEvent>::update_system,
+            )
+                .in_set(PlayerSpawnSet)
+                //.in_set(crate::FixedSet::First)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+    }
+}
+
 #[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
 pub struct Player {

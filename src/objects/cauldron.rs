@@ -41,6 +41,7 @@ pub fn spawn_cauldron(
             rigid_body: RigidBody::Dynamic,
             ..default()
         })
+        .insert(crate::player::inventory::Storeable)
         .insert((crate::objects::store::StoreItem, Name::new("Cauldron")))
         .insert(crate::DecompLoad("cauldron".to_owned()))
         .with_children(|builder| {

@@ -11,6 +11,30 @@ use bevy_rapier3d::prelude::*;
 use super::input::PlayerInput;
 use super::prelude::*;
 
+pub struct ControllerPlugin;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ControllerSet;
+
+impl Plugin for ControllerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            (
+                player_movement,
+                avoid_intersecting,
+                character_crouch,
+                controller_exclude,
+                player_swivel_and_tilt,
+                teleport_player_back,
+            )
+                .in_set(ControllerSet)
+                .before(bevy_mod_wanderlust::movement)
+                .in_set(crate::FixedSet::Update)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+    }
+}
+
 /// Entities that should be considered as part of the controlled character, not including grabbed.
 #[derive(Deref, DerefMut, Component, Clone, Default, Reflect)]
 #[reflect(Component)]

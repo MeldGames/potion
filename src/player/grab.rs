@@ -46,6 +46,23 @@ impl Plugin for GrabPlugin {
                 .in_set(FixedSet::Update)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
+
+        app.add_system(
+            player_extend_arm
+                .in_set(GrabSet)
+                .after(super::controller::player_movement)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            joint_children
+                .in_set(GrabSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+        app.add_system(
+            tense_arms
+                .in_set(GrabSet)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
     }
 }
 

@@ -35,21 +35,28 @@ pub fn trimesh_to_mesh(trimesh: &TriMesh) -> Mesh {
 
 impl<'a> AsMesh for TypedShape<'a> {
     fn as_meshes(&self) -> Vec<(Mesh, Transform)> {
+        let view: ColliderView = (*self).into();
+        view.as_meshes()
+    }
+}
+
+impl<'a> AsMesh for ColliderView<'a> {
+    fn as_meshes(&self) -> Vec<(Mesh, Transform)> {
         let mut meshes = Vec::new();
         match self {
-            TypedShape::Ball(ball) => {
+            ColliderView::Ball(shape_views::BallView { raw: ball }) => {
                 let mesh = Mesh::from(shape::UVSphere {
                     radius: ball.radius,
                     ..default()
                 });
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Cuboid(cuboid) => {
+            ColliderView::Cuboid(shape_views::CuboidView { raw: cuboid }) => {
                 let dim = cuboid.half_extents * 2.0;
                 let mesh = Mesh::from(shape::Box::new(dim.x, dim.y, dim.z));
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Capsule(capsule) => {
+            ColliderView::Capsule(shape_views::CapsuleView { raw: capsule }) => {
                 let a: Vec3 = capsule.segment.a.into();
                 let b: Vec3 = capsule.segment.b.into();
                 let midpoint = a * 0.5 + b * 0.5;
@@ -67,21 +74,21 @@ impl<'a> AsMesh for TypedShape<'a> {
                     },
                 ));
             }
-            TypedShape::Segment(segment) => {}
-            TypedShape::Triangle(triangle) => {}
-            TypedShape::TriMesh(trimesh) => {
+            ColliderView::Segment(segment) => {}
+            ColliderView::Triangle(triangle) => {}
+            ColliderView::TriMesh(shape_views::TriMeshView { raw: trimesh }) => {
                 let mesh = trimesh_to_mesh(trimesh);
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Polyline(polyline) => {}
-            TypedShape::HalfSpace(half_space) => {}
-            TypedShape::HeightField(height_field) => {
+            ColliderView::Polyline(polyline) => {}
+            ColliderView::HalfSpace(half_space) => {}
+            ColliderView::HeightField(shape_views::HeightFieldView { raw: height_field }) => {
                 let (points, indices) = height_field.to_trimesh();
                 let trimesh = TriMesh::new(points, indices);
                 let mesh = trimesh_to_mesh(&trimesh);
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Compound(compound) => {
+            ColliderView::Compound(shape_views::CompoundView { raw: compound }) => {
                 for (isometry, shape) in compound.shapes() {
                     let compound_transform = Transform {
                         translation: isometry.translation.into(),
@@ -96,13 +103,15 @@ impl<'a> AsMesh for TypedShape<'a> {
                     }
                 }
             }
-            TypedShape::ConvexPolyhedron(convex_polyhedron) => {
+            ColliderView::ConvexPolyhedron(shape_views::ConvexPolyhedronView {
+                raw: convex_polyhedron,
+            }) => {
                 let (points, indices) = convex_polyhedron.to_trimesh();
                 let trimesh = TriMesh::new(points, indices);
                 let mesh = trimesh_to_mesh(&trimesh);
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Cylinder(cylinder) => {
+            ColliderView::Cylinder(shape_views::CylinderView { raw: cylinder }) => {
                 let mesh = Mesh::from(shape::Cylinder {
                     radius: cylinder.radius,
                     height: cylinder.half_height * 2.0,
@@ -110,13 +119,12 @@ impl<'a> AsMesh for TypedShape<'a> {
                 });
                 meshes.push((mesh, Transform::default()));
             }
-            TypedShape::Cone(cone) => {}
-            TypedShape::RoundCuboid(round_cuboid) => {}
-            TypedShape::RoundTriangle(round_triangle) => {}
-            TypedShape::RoundCylinder(round_cylinder) => {}
-            TypedShape::RoundCone(round_cone) => {}
-            TypedShape::RoundConvexPolyhedron(round_convex_polyhedron) => {}
-            TypedShape::Custom(id) => {}
+            ColliderView::Cone(cone) => {}
+            ColliderView::RoundCuboid(round_cuboid) => {}
+            ColliderView::RoundTriangle(round_triangle) => {}
+            ColliderView::RoundCylinder(round_cylinder) => {}
+            ColliderView::RoundCone(round_cone) => {}
+            ColliderView::RoundConvexPolyhedron(round_convex_polyhedron) => {}
             _ => {}
         };
 
@@ -127,7 +135,10 @@ impl<'a> AsMesh for TypedShape<'a> {
 pub fn init_physics_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    rigid_bodies: Query<(Entity, Option<&Children>, &Collider), With<RigidBody>>,
+    rigid_bodies: Query<
+        (Entity, Option<&Children>, &Collider),
+        (With<RigidBody>, Changed<Collider>),
+    >,
     physics_mesh: Query<&PhysicsDebugMesh>,
     names: Query<&Name>,
 ) {
@@ -136,13 +147,13 @@ pub fn init_physics_meshes(
         if let Some(children) = children {
             for child in children.iter() {
                 if physics_mesh.get(*child).is_ok() {
-                    found = true;
+                    commands.entity(*child).despawn_recursive();
                 }
             }
         }
 
         if found {
-            continue;
+            //continue;
         }
 
         let name = names
@@ -150,7 +161,7 @@ pub fn init_physics_meshes(
             .map(|name| name.as_str().to_owned())
             .unwrap_or(format!("{:?}", entity));
 
-        for (mesh, transform) in collider.raw.as_typed_shape().as_meshes() {
+        for (mesh, transform) in collider.as_unscaled_typed_shape().as_meshes() {
             let handle = meshes.add(mesh);
             let physics_mesh = commands
                 .spawn(PbrBundle {
