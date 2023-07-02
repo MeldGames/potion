@@ -90,7 +90,7 @@ pub fn grab_joint(
         &Collider,
     )>,
     mut transforms: Query<&mut Transform>,
-    grab_joints: Query<(Entity, &GrabJoint, &ImpulseJoint)>,
+    grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
 ) {
     for (grabber, grabbing, children, global, collider) in &grabbers {
         let joint = if let Some(children) = children {
@@ -112,8 +112,8 @@ pub fn grab_joint(
                 grab_point,
                 teleport_entity,
             }) => {
-                if let Some((joint_entity, joint, impulse)) = joint {
-                    if grabbed_entity == impulse.parent {
+                if let Some((joint_entity, joint)) = joint {
+                    if grabbed_entity == joint.parent {
                         //info!("grab joint already exists");
                         continue;
                     } else {
@@ -134,8 +134,8 @@ pub fn grab_joint(
                 info!("adding grab joint");
                 let motor_model = MotorModel::ForceBased;
                 let max_force = 1000.0;
-                let _stiffness = 20.0;
-                let _damping = 0.4;
+                let stiffness = 20.0;
+                let damping = 0.4;
                 let mut grab_joint = SphericalJointBuilder::new()
                     .local_anchor1(grab_point)
                     .local_anchor2(Vec3::ZERO)
@@ -145,9 +145,9 @@ pub fn grab_joint(
                     .motor_max_force(JointAxis::AngX, max_force)
                     .motor_max_force(JointAxis::AngY, max_force)
                     .motor_max_force(JointAxis::AngZ, max_force)
-                    //.motor_position(JointAxis::AngX, 0.0, stiffness, damping)
-                    //.motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
-                    //.motor_position(JointAxis::AngY, 0.0, stiffness, damping)
+                    .motor_position(JointAxis::AngX, 0.0, stiffness, damping)
+                    .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
+                    .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
                     .build();
                 grab_joint.set_contacts_enabled(false);
 
@@ -159,7 +159,7 @@ pub fn grab_joint(
                 });
             }
             None => {
-                if let Some((joint_entity, _, _)) = joint {
+                if let Some((joint_entity, _)) = joint {
                     info!("cleaning up joint entity");
                     commands
                         .entity(joint_entity)

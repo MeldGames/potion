@@ -326,9 +326,9 @@ pub fn attach_arm(
 ) {
     let max_force = 100.0;
     let twist_stiffness = 20.0;
-    let twist_damping = 9.0;
-    let resting_stiffness = 15.0;
-    let resting_damping = 8.0;
+    let twist_damping = 1.0;
+    let resting_stiffness = 10.0;
+    let resting_damping = 1.0;
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
@@ -427,7 +427,8 @@ pub fn attach_arm(
         .motor_max_force(JointAxis::AngY, max_force)
         .motor_max_force(JointAxis::AngZ, max_force)
         .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-        .motor_position(JointAxis::AngZ, 0.0, 0.0, 0.0)
+        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        //.motor_position(JointAxis::AngZ, 0.0, 0.0, 0.0)
         .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     upperarm_joint.set_contacts_enabled(false);
