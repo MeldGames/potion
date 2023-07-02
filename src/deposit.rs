@@ -136,7 +136,10 @@ pub fn spawn_deposit_box(
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Crate"),
             crate::physics::TERRAIN_GROUPING,
-            crate::player::inventory::Storeable,
+            // This requires a good bit of work for it to work properly.
+            // Ideally the joints would work the same as they normally do,
+            // but rapier breaks easily with transforms to this one specifically.
+            //crate::player::inventory::Storeable,
         ))
         .insert(crate::DecompLoad("crate".to_owned()))
         .insert(VisibilityBundle::default())
