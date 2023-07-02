@@ -129,10 +129,7 @@ pub fn scale_border_radius(collider: &mut Collider, ratio: f32) {
         }) => {
             *collider = Collider::round_cone(*half_height, *radius, border_radius * ratio);
         }
-        TypedShape::RoundConvexPolyhedron(RoundShape {
-            inner_shape,
-            border_radius,
-        }) => {
+        TypedShape::RoundConvexPolyhedron(..) => {
             let shape = collider.raw.make_mut();
             if let Some(round) = shape.as_round_convex_polyhedron_mut() {
                 round.border_radius = round.border_radius * ratio;
@@ -154,8 +151,8 @@ pub fn transform_stored(
     mut multibody_joints: Query<&mut MultibodyJoint>,
 
     mut transforms: Query<&mut Transform>,
-    mut rapier: ResMut<RapierContext>,
-    mut colliders: Query<(&mut Collider, &RapierColliderHandle)>,
+    rapier: Res<RapierContext>,
+    colliders: Query<&RapierColliderHandle>,
 
     names: Query<&Name>,
 ) {
@@ -183,7 +180,6 @@ pub fn transform_stored(
             info!("removing from storage");
 
             let Ok(mut transform) = transforms.get_mut(entity) else { continue };
-            let Ok((mut collider, collider_handle)) = colliders.get_mut(entity) else { continue };
 
             let ratio = 1.0 / stored.scaled_ratio;
             transform.scale *= ratio;
@@ -243,7 +239,7 @@ pub fn transform_stored(
                 continue;
             }
             let Ok(mut transform) = transforms.get_mut(item.entity) else { continue };
-            let Ok((mut collider, collider_handle)) = colliders.get_mut(item.entity) else { continue };
+            let Ok(collider_handle) = colliders.get(item.entity) else { continue };
 
             //let slots = inventory.len();
             let slots = 4;
@@ -266,9 +262,9 @@ pub fn transform_stored(
                 .build();
             inventory_joint.set_contacts_enabled(false);
 
-            let mut rapier_collider = rapier.colliders.get_mut(collider_handle.0).unwrap();
-
             let extents: Vec3 = {
+                let Some(rapier_collider) = rapier.colliders.get(collider_handle.0) else { continue };
+
                 let mut collider = rapier_collider.clone();
                 collider.set_rotation(default());
                 collider.set_translation(default());
@@ -334,14 +330,12 @@ pub fn transform_stored(
 pub fn store_item(
     children: Query<&Children>,
     joint_children: Query<&JointChildren>,
-    mut inventories: Query<(Entity, &mut Inventory, &mut PlayerInput)>,
-    mut hands: Query<(Entity, &LastActive), With<Hand>>,
+    mut inventories: Query<(Entity, &mut Inventory, &PlayerInput)>,
+    hands: Query<(Entity, &LastActive), With<Hand>>,
     mut grabbing: Query<&mut Grabbing>,
     storeable: Query<&Storeable>,
-
-    names: Query<&Name>,
 ) {
-    for (entity, mut inventory, mut input) in &mut inventories {
+    for (entity, mut inventory, input) in &mut inventories {
         let swap_index = if let Some(swap_index) = input.inventory_swap() {
             swap_index as usize
         } else {

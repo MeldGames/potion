@@ -144,7 +144,8 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
-        .local_anchor1(Vec3::new(-0.05, 1.65, -0.73))
+        .motor_max_force(0.0)
+        .local_anchor1(Vec3::new(-0.05, 1.5, -0.73))
         .limits([0.0, PI / 1.04]);
     let mut lid_hinge = lid_hinge.build();
     lid_hinge.set_contacts_enabled(false);
@@ -160,7 +161,7 @@ pub fn spawn_deposit_box(
         ))
         .insert(crate::DecompLoad("crate_lid".to_owned()))
         .insert(VisibilityBundle::default())
-        .insert(MultibodyJoint::new(deposit, lid_hinge))
+        .insert(ImpulseJoint::new(deposit, lid_hinge))
         .add_child(lid_model)
         .id();
 

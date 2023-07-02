@@ -53,17 +53,5 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(grab::GrabPlugin);
         app.add_plugin(controller::ControllerPlugin);
         app.add_plugin(spawn::PlayerSpawnPlugin);
-
-        /*
-               app.register_type::<spawn::Player>();
-               app.insert_resource(Events::<spawn::PlayerEvent>::default());
-
-               app.add_system(spawn::related_entities::<CharacterEntities, Without<GrabJoint>>);
-               app.add_system(spawn::related_entities::<ConnectedEntities, ()>);
-               app.add_system(spawn::contact_filter);
-               app.add_system(spawn::setup_player);
-               app.add_system(spawn::setup_ik);
-               app.add_system(Events::<spawn::PlayerEvent>::update_system);
-        */
     }
 }
