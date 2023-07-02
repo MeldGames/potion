@@ -95,13 +95,15 @@ impl Plugin for PotionCellarPlugin {
         app.add_plugin(bevy_framepace::FramepacePlugin);
         app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
         app.add_plugin(DebugLinesPlugin::default());
+        app.add_system((|mut lines: ResMut<DebugLines>| lines.enabled = false));
         //app.add_plugin(crate::egui::SetupEguiPlugin);
         app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-        const MSAA: bool = true;
+        const MSAA: bool = false;
         if MSAA {
             app.insert_resource(Msaa::Sample8);
         } else {
+            app.insert_resource(Msaa::Off);
             app.add_plugin(EdgeDetectionPlugin);
             app.insert_resource(EdgeDetectionConfig {
                 debug: 0,
@@ -129,7 +131,7 @@ impl Plugin for PotionCellarPlugin {
             .add_plugin(PhysicsPlugin)
             .add_plugin(RapierDebugRenderPlugin {
                 always_on_top: false,
-                enabled: true,
+                enabled: false,
                 style: Default::default(),
                 mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
             })
@@ -145,7 +147,7 @@ impl Plugin for PotionCellarPlugin {
         app.add_system(update_level_collision);
         app.add_system(active_cameras);
         app.add_system(decomp_load);
-        app.add_system(edge_detect_swap);
+        //app.add_system(edge_detect_swap);
         //app.add_system(prepare_scene);
     }
 }

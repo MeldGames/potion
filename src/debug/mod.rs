@@ -27,6 +27,7 @@ pub struct DebugVisible;
 
 pub fn toggle_debug(kb: Res<Input<KeyCode>>, mut debug: ResMut<Debug>) {
     if kb.just_pressed(KeyCode::P) {
+        info!("toggling debug");
         debug.toggle();
     }
 }
@@ -37,7 +38,7 @@ pub fn debug_visible(debug: Res<Debug>, mut visibility: Query<(&mut Visibility, 
             if debug.visible() {
                 *visibility = Visibility::Visible;
             } else {
-                *visibility = Visibility::Inherited;
+                *visibility = Visibility::Hidden;
             }
         }
     }
@@ -49,7 +50,7 @@ impl Plugin for DebugPlugin {
         app.insert_resource(Debug(true));
 
         app.add_system(toggle_debug);
-        app.add_system(debug_visible);
+        app.add_system(debug_visible.after(toggle_debug));
 
         app.add_startup_system(texture::setup_test_texture);
         app.add_system(texture::replace_blank_textures);
