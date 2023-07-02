@@ -10,7 +10,7 @@ use sabi::{
     stage::NetworkSimulationInfo,
 };
 
-use crate::player::prelude::{PlayerEvent, PlayerInput};
+use crate::prelude::*;
 
 pub mod ui;
 

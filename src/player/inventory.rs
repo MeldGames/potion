@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::{objects::cauldron::Ingredient, player::prelude::*};
+use crate::{objects::cauldron::Ingredient, prelude::*};
 use bevy::prelude::*;
 use bevy_rapier3d::{
     parry::shape::{Cone, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape},
@@ -35,6 +35,7 @@ impl Inventory {
     }
 }
 
+/// Item is allowed to the scaled and fitted into an [`Inventory`].
 #[derive(Component, Clone, Debug, Reflect, FromReflect, Default)]
 #[reflect(Component)]
 pub struct Storeable;
@@ -45,6 +46,7 @@ impl Plugin for InventoryPlugin {
         app.register_type::<Storeable>()
             .register_type::<Ingredient>()
             .register_type::<Inventory>();
+
         // Core
         app.add_system(
             store_item
@@ -73,18 +75,21 @@ pub fn ingredients_are_storable(
     }
 }
 
+/// Joint forcing an item into a slot in an [`Inventory`].
 #[derive(Component, Debug, Copy, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct InventoryJoint;
 
+/// Contains information for the item to know how much it was scaled down
+/// to fit the [`Inventory`]'s requirements.
 #[derive(Component, Debug, Copy, Clone)]
 pub struct Stored {
     pub inventory: Entity,
     pub scaled_ratio: f32,
 }
 
-// scaling border radius is awkward and hard to reverse right now
-// so this is just kind of a dead function for now
+/// Scaling border radius is awkward and hard to reverse right now
+/// so this is just kind of a dead function for now
 pub fn scale_border_radius(collider: &mut Collider, ratio: f32) {
     match collider.raw.as_typed_shape() {
         TypedShape::RoundCylinder(RoundShape {
@@ -140,6 +145,7 @@ pub fn scale_border_radius(collider: &mut Collider, ratio: f32) {
     };
 }
 
+/// Scale/apply a joint to stored items so they fit and stay in an inventory.
 pub fn transform_stored(
     mut commands: Commands,
     inventories: Query<(Entity, &Inventory)>,
@@ -327,6 +333,7 @@ pub fn transform_stored(
     }
 }
 
+/// Manage the meta information about an [`Inventory`] based on input from the player.
 pub fn store_item(
     children: Query<&Children>,
     joint_children: Query<&JointChildren>,
@@ -358,10 +365,12 @@ pub fn store_item(
             } else if b_grab && !a_grab {
                 Ordering::Greater
             } else {
-                b.0.cmp(&a.0)
+                Ordering::Greater
+                //b.0.cmp(&a.0)
             }
         });
 
+        info!("hands: {:?}", hands);
         // last active hand
         let Some(hand) = hands.get(0) else { continue };
         let hand = hand.0;

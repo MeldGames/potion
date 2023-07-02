@@ -2,11 +2,7 @@ use bevy::prelude::*;
 
 use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
 
-use crate::{
-    attach::AttachPlugin,
-    player::{inventory::InventoryPlugin, prelude::GrabJoint},
-    FixedSet,
-};
+use crate::{ attach::AttachPlugin, };
 
 use self::prelude::{CharacterEntities, ConnectedEntities};
 
@@ -48,8 +44,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(AttachPlugin);
-        app.add_plugin(InventoryPlugin);
+        app.add_plugin(inventory::InventoryPlugin);
         app.add_plugin(grab::GrabPlugin);
         app.add_plugin(controller::ControllerPlugin);
         app.add_plugin(spawn::PlayerSpawnPlugin);

@@ -42,7 +42,6 @@ pub const REST_GROUPING: CollisionGroups = CollisionGroups::new(
 );
 pub const GRAB_GROUPING: CollisionGroups = PLAYER_GROUPING;
 
-
 pub const STORED_GROUPING: CollisionGroups = CollisionGroups::new(
     Group::from_bits_truncate(Groups::STORED.bits()),
     Group::from_bits_truncate(0),
@@ -193,7 +192,6 @@ pub fn fill_missing(
     to_fill: Query<(Entity, FillRigidBodyComponents), Added<RigidBody>>,
 ) {
     for (entity, components) in &to_fill {
-        info!("filling missing");
         components.fill_missing(&mut commands.entity(entity));
     }
 }

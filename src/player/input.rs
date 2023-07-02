@@ -8,6 +8,60 @@ use std::f32::consts::PI;
 
 use super::prelude::*;
 
+pub mod prelude {
+    pub use super::PlayerInput;
+}
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InputSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CollectInputs;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MetaInputs;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TickEnd;
+
+pub struct PlayerInputPlugin;
+impl Plugin for PlayerInputPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_state::<MouseState>();
+        app.insert_resource(LockToggle::default());
+        app.insert_resource(MouseSensitivity::default());
+        app.insert_resource(PlayerInput::default());
+        app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
+        app.configure_set(
+            CollectInputs
+                .run_if(crate::mouse_locked)
+                .run_if(crate::window_focused)
+                .run_if(not(crate::editor_active)),
+        );
+        app.add_systems(
+            (
+                player_binary_inputs,
+                zoom_on_scroll,
+                zoom_scroll_for_toi,
+                player_mouse_inputs,
+            )
+                .in_set(CollectInputs),
+        )
+        .add_systems(
+            (
+                initial_mouse_click,
+                toggle_mouse_lock,
+                mouse_lock,
+                update_local_player_inputs,
+            )
+                .in_set(MetaInputs),
+        );
+
+        app.add_system(update_local_player_inputs.in_schedule(CoreSchedule::FixedUpdate))
+            .add_system(reset_inputs.in_schedule(CoreSchedule::FixedUpdate));
+    }
+}
+
 #[derive(Resource, Debug)]
 pub struct MouseSensitivity(f32);
 
@@ -111,9 +165,6 @@ impl Debug for PlayerInput {
             .finish()
     }
 }
-
-#[derive(Debug, Clone, Copy, Default, Component, Serialize, Deserialize)]
-pub struct CastInput {}
 
 impl PlayerInput {
     pub fn new() -> Self {
@@ -417,55 +468,5 @@ pub fn update_local_player_inputs(
         *input = player_input.clone();
     } else {
         //warn!("no player to provide input for");
-    }
-}
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct InputSet;
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct CollectInputs;
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct MetaInputs;
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct TickEnd;
-
-pub struct PlayerInputPlugin;
-impl Plugin for PlayerInputPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_state::<MouseState>();
-        app.insert_resource(LockToggle::default());
-        app.insert_resource(MouseSensitivity::default());
-        app.insert_resource(PlayerInput::default());
-        app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
-        app.configure_set(
-            CollectInputs
-                .run_if(crate::mouse_locked)
-                .run_if(crate::window_focused)
-                .run_if(not(crate::editor_active)),
-        );
-        app.add_systems(
-            (
-                player_binary_inputs,
-                zoom_on_scroll,
-                zoom_scroll_for_toi,
-                player_mouse_inputs,
-            )
-                .in_set(CollectInputs),
-        )
-        .add_systems(
-            (
-                initial_mouse_click,
-                toggle_mouse_lock,
-                mouse_lock,
-                update_local_player_inputs,
-            )
-                .in_set(MetaInputs),
-        );
-
-        app.add_system(update_local_player_inputs.in_schedule(CoreSchedule::FixedUpdate))
-            .add_system(reset_inputs.in_schedule(CoreSchedule::FixedUpdate));
     }
 }

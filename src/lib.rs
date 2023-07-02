@@ -7,11 +7,14 @@ pub mod maps;
 pub mod objects;
 pub mod physics;
 pub mod player;
+pub mod traversal;
+pub mod prelude;
 
 use bevy_editor_pls::editor::Editor;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use bevy_rapier3d::prelude::*;
+use traversal::HierarchyTraversalPlugin;
 
 use self::{
     deposit::DepositPlugin,
@@ -108,9 +111,11 @@ pub fn setup_app(app: &mut App) {
     //app.add_plugin(bevy_framepace::FramepacePlugin);
     app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
         .add_plugin(PlayerPlugin)
+        .add_plugin(attach::AttachPlugin)
         .add_plugin(SlotPlugin)
         .add_plugin(StorePlugin)
         .add_plugin(DepositPlugin)
+        .add_plugin(HierarchyTraversalPlugin)
         .add_plugin(BreakJointPlugin)
         .add_plugin(InverseKinematicsPlugin)
         .add_plugin(crate::debug::DebugPlugin)
@@ -180,42 +185,6 @@ pub fn active_cameras(_names: Query<&Name>, cameras: Query<(Entity, &Camera)>) {
 
 #[derive(Component)]
 pub struct SpawnedScene;
-
-fn prepare_scene(
-    mut commands: Commands,
-    mut ev_asset: EventReader<AssetEvent<Scene>>,
-    scene_root_nodes: Query<&Children>,
-    objects: Query<(Entity, &Name)>,
-    scenes: Query<&Children, With<SceneInstance>>,
-) {
-    for _event in ev_asset.iter() {
-        for scene_root in scenes.iter() {
-            info!("finished loading scene");
-            for &root_node in scene_root.iter() {
-                dbg!(root_node);
-                for &scene_objects in scene_root_nodes.get(root_node).unwrap() {
-                    if let Ok((e, name)) = objects.get(scene_objects) {
-                        if name.contains("Light") {
-                            let point_light = commands
-                                .spawn(PointLightBundle {
-                                    point_light: PointLight {
-                                        range: 2000.,
-                                        intensity: 800.0,
-                                        color: Color::rgb(0.9, 0.4, 0.1),
-                                        shadows_enabled: true,
-                                        ..default()
-                                    },
-                                    ..default()
-                                })
-                                .id();
-                            commands.entity(e).add_child(point_light);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 #[derive(Debug, Component, Clone, Reflect)]
 #[reflect(Component)]

@@ -9,7 +9,7 @@ use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
 use super::input::PlayerInput;
-use super::prelude::*;
+use crate::prelude::*;
 
 pub struct ControllerPlugin;
 

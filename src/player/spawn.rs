@@ -16,6 +16,7 @@ use bevy_renet::renet::RenetServer;
 
 use super::prelude::*;
 use crate::{
+    prelude::*,
     attach::Attach,
     physics::{ContactFilter, Muscle},
     player::inventory::Inventory,
@@ -89,10 +90,9 @@ pub fn setup_player(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 
-    asset_server: ResMut<AssetServer>,
+    //asset_server: ResMut<AssetServer>,
     mut player_reader: EventReader<PlayerEvent>,
-
-    _server: Option<ResMut<RenetServer>>,
+    //server: Option<ResMut<RenetServer>>,
 ) {
     for (event, id) in player_reader.iter_with_id() {
         info!("player event {:?}: {:?}", id, event);
@@ -341,6 +341,7 @@ impl Forearm {
     }
 }
 
+/// Create a functioning arm for a character.
 pub fn attach_arm(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -564,7 +565,6 @@ pub fn attach_arm(
         .insert(Hand)
         .insert(ConnectedEntities::default())
         .insert(CharacterEntities::default())
-        .insert(ConnectedMass::default())
         .insert(Grabbing { ..default() })
         .insert(ExternalImpulse::default())
         .insert(Velocity::default())
@@ -637,15 +637,6 @@ pub fn related_entities<R, JointFilter>(
         }
 
         **related = related_entities;
-    }
-}
-
-#[derive(Component, Debug, Copy, Clone)]
-pub struct ConnectedMass(pub f32);
-
-impl Default for ConnectedMass {
-    fn default() -> Self {
-        Self(0.0)
     }
 }
 

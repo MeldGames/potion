@@ -18,6 +18,7 @@ use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 use crate::{
     physics::{Muscle, GRAB_GROUPING, REST_GROUPING},
     FixedSet,
+    prelude::*,
 };
 
 use super::input::PlayerInput;
@@ -34,8 +35,7 @@ impl Plugin for GrabPlugin {
             .register_type::<GrabJoint>()
             .register_type::<Option<Grabbed>>()
             .register_type::<Grabbed>()
-            .register_type::<Grabbing>()
-            .register_type::<JointChildren>();
+            .register_type::<Grabbing>();
 
         app.add_systems(
             (
@@ -56,11 +56,6 @@ impl Plugin for GrabPlugin {
             player_extend_arm
                 .in_set(GrabSet)
                 .after(super::controller::player_movement)
-                .in_schedule(CoreSchedule::FixedUpdate),
-        );
-        app.add_system(
-            joint_children
-                .in_set(GrabSet)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
         app.add_system(
@@ -87,38 +82,6 @@ impl Plugin for GrabPlugin {
 )]
 #[reflect(Component)]
 pub struct GrabJoint;
-
-#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect, FromReflect)]
-#[reflect(Component)]
-pub struct JointChildren(pub Vec<Entity>);
-
-pub fn joint_children(
-    mut commands: Commands,
-    entities: &Entities,
-    mut children: Query<&mut JointChildren>,
-    joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
-    multibody: Query<(Entity, &MultibodyJoint)>,
-) {
-    let pairs = joints.iter().map(|(entity, joint)| (entity, joint.parent))
-        .chain(
-            multibody.iter().map(|(entity, joint)| (entity, joint.parent))
-        );
-
-    for (entity, parent) in pairs {
-        match children.get_mut(parent) {
-            Ok(mut children) => {
-                if !children.contains(&entity) {
-                    children.push(entity);
-                }
-            }
-            _ => {
-                if entities.contains(parent) {
-                    commands.entity(parent).insert(JointChildren(vec![entity]));
-                }
-            }
-        }
-    }
-}
 
 pub fn grab_joint(
     mut commands: Commands,
@@ -335,20 +298,22 @@ pub struct Grabbed {
 
 #[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
 pub struct Grabbing {
-    // Attempting to grab something.
+    /// Attempting to grab something.
     pub trying_grab: bool,
-    // Which entity we have a hold of currently.
+    /// Which entity we have a hold of currently.
     pub grabbed: Option<Grabbed>,
-    // Rotation on the grab sphere we are currently oriented on.
+
+    /// Rotation on the grab sphere we are currently oriented on.
+    /// Currently unused
     pub rotation: Quat,
     pub point: Vec3,
 }
 
 #[derive(Default, Debug, Clone, Copy, Reflect, FromReflect)]
 pub struct Sphere {
-    // Center of sphere in world space.
+    /// Center of sphere in world space.
     pub center: Vec3,
-    // Radius of the sphere.
+    /// Radius of the sphere.
     pub radius: f32,
 }
 
@@ -362,62 +327,6 @@ impl Default for GrabSphere {
     fn default() -> Self {
         Self { sphere: None }
     }
-}
-
-pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
-    query: &'a Query<Q, F>,
-    parents: &'a Query<&Parent>,
-    impulse: &'a Query<&ImpulseJoint>,
-    base: Entity,
-) -> Option<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
-    let mut checked = HashSet::new();
-    let mut possibilities = vec![base];
-    let mut queried = None;
-
-    while let Some(possible) = possibilities.pop() {
-        checked.insert(possible);
-
-        queried = query.get(possible).ok();
-        if queried.is_some() {
-            break;
-        }
-
-        if let Ok(parent) = parents.get(possible) {
-            possibilities.push(parent.get());
-        }
-
-        if let Ok(joint) = impulse.get(possible) {
-            possibilities.push(joint.parent);
-        }
-    }
-
-    queried
-}
-
-pub fn find_children_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
-    query: &'a Query<Q, F>,
-    children: &'a Query<&Children>,
-    joint_children: &'a Query<&JointChildren>,
-    base: Entity,
-) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
-    let mut queried = Vec::new();
-    let mut possibilities = vec![base];
-
-    while let Some(possible) = possibilities.pop() {
-        if let Ok(query) = query.get(possible) {
-            queried.push(query);
-        }
-
-        if let Ok(children) = children.get(possible) {
-            possibilities.extend(children.iter());
-        }
-
-        if let Ok(joint_children) = joint_children.get(possible) {
-            possibilities.extend(joint_children.iter());
-        }
-    }
-
-    queried
 }
 
 pub fn tense_arms(
