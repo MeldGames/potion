@@ -1,30 +1,41 @@
 use std::cmp::Ordering;
 
-use crate::{objects::cauldron::Ingredient, player::prelude::*, FixedSet};
+use crate::{objects::cauldron::Ingredient, player::prelude::*};
 use bevy::prelude::*;
 use bevy_rapier3d::{
-    parry::shape::{
-        Cone, ConvexPolyhedron, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape,
-    },
+    parry::shape::{Cone, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape},
     prelude::*,
     rapier::dynamics::{JointAxesMask, JointAxis},
 };
 
-#[derive(Component, Clone, Debug, Reflect)]
+#[derive(Component, Clone, Debug, Reflect, FromReflect)]
 pub struct Inventory {
-    pub items: Vec<Option<Entity>>,
+    pub items: Vec<Option<Grabbed>>,
 }
-
-#[derive(Component, Clone, Debug, Reflect)]
-pub struct Storeable;
 
 impl Default for Inventory {
     fn default() -> Self {
         Self {
-            items: vec![None; 8],
+            items: vec![None; 4],
         }
     }
 }
+
+impl Inventory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn contains(&self, entity: Entity) -> bool {
+        self.items
+            .iter()
+            .find(|item| item.is_some_and(|item| item.entity == entity))
+            .is_some()
+    }
+}
+
+#[derive(Component, Clone, Debug, Reflect)]
+pub struct Storeable;
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
@@ -145,11 +156,7 @@ pub fn transform_stored(
     // If item was in an inventory and was removed, then unscale it and unjoint it.
     for (entity, children, stored) in &stored {
         let still_stored = if let Ok((_, inventory)) = inventories.get(stored.inventory) {
-            if inventory.items.contains(&Some(entity)) {
-                true
-            } else {
-                false
-            }
+            inventory.contains(entity)
         } else {
             false
         };
@@ -179,11 +186,11 @@ pub fn transform_stored(
     for (entity, inventory) in &inventories {
         for (index, item) in inventory.items.iter().enumerate() {
             let Some(item) = item else { continue };
-            if stored.contains(*item) {
+            if stored.contains(item.entity) {
                 continue;
             }
-            let Ok(mut transform) = transforms.get_mut(*item) else { continue };
-            let Ok((mut collider, collider_handle)) = colliders.get_mut(*item) else { continue };
+            let Ok(mut transform) = transforms.get_mut(item.entity) else { continue };
+            let Ok((mut collider, collider_handle)) = colliders.get_mut(item.entity) else { continue };
 
             //let slots = inventory.len();
             let slots = 4;
@@ -224,7 +231,7 @@ pub fn transform_stored(
             //scale_border_radius(&mut collider, ratio);
 
             commands
-                .entity(*item)
+                .entity(item.entity)
                 .insert(Stored {
                     inventory: entity,
                     scaled_ratio: ratio,
@@ -282,14 +289,14 @@ pub fn store_item(
         let hand = hands[0].0;
 
         let Ok(mut grabbing) = grabbing.get_mut(hand) else { continue };
-        if let Some(grabbing) = grabbing.grabbing {
-            if !storeable.contains(grabbing) {
+        if let Some(grabbed) = grabbing.grabbed {
+            if !storeable.contains(grabbed.entity) {
                 info!("Object is not storeable");
                 continue;
             }
         }
 
-        match (grabbing.grabbing, inventory.items[swap_index]) {
+        match (grabbing.grabbed, inventory.items[swap_index]) {
             (Some(grabbing), Some(item)) => {
                 info!("Swapping {:?} and {:?}", grabbing, item);
             }
@@ -302,7 +309,7 @@ pub fn store_item(
             _ => {}
         }
 
-        inventory.items[swap_index] = grabbing.grabbing;
-        grabbing.grabbing = target;
+        inventory.items[swap_index] = grabbing.grabbed;
+        grabbing.grabbed = target;
     }
 }

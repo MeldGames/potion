@@ -4,7 +4,10 @@ use bevy_rapier3d::{
 };
 use potion::{
     physics::{ColliderBundle, RigidBodyBundle},
-    player::prelude::{PlayerEvent, PlayerInputPlugin},
+    player::{
+        inventory::Storeable,
+        prelude::{PlayerEvent, PlayerInputPlugin},
+    },
 };
 
 use bevy::prelude::*;
@@ -14,9 +17,9 @@ fn main() {
     potion::setup_app(&mut app);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);
-    //app.add_plugin(potion::maps::showcase::SetupPlugin);
+    app.add_plugin(potion::maps::showcase::SetupPlugin);
     //app.add_plugin(potion::maps::puzzle::SetupPlugin);
-    app.add_plugin(potion::maps::base_test::SetupPlugin);
+    //app.add_plugin(potion::maps::base_test::SetupPlugin);
     app.add_startup_system(spawn_multibody);
 
     app.run();
@@ -30,16 +33,30 @@ fn spawn_multibody(mut commands: Commands) {
     joint.set_contacts_enabled(false);
 
     let r1 = commands
-        .spawn(TransformBundle::default())
+        .spawn(TransformBundle::from_transform(Transform {
+            translation: Vec3::new(0.0, 2.0, -10.0),
+            ..default()
+        }))
         .insert(RigidBodyBundle::default())
-        .insert(ColliderBundle { ..default() })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            ..default()
+        })
+        .insert(Storeable)
         .insert(Name::new("r1"))
         .id();
 
     let r2 = commands
-        .spawn(TransformBundle::default())
+        .spawn(TransformBundle::from_transform(Transform {
+            translation: Vec3::new(0.0, 2.0, -10.0),
+            ..default()
+        }))
         .insert(RigidBodyBundle::default())
-        .insert(ColliderBundle { ..default() })
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            ..default()
+        })
+        .insert(Storeable)
         .insert(Name::new("r2"))
         .insert(MultibodyJoint::new(r1, joint))
         .id();

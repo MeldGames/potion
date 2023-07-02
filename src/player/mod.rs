@@ -73,11 +73,6 @@ impl Plugin for PlayerPlugin {
                 .in_set(ControllerSet)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
-        app.add_system(
-            grab::grab_collider
-                .in_set(ControllerSet)
-                .in_schedule(CoreSchedule::FixedUpdate),
-        );
 
         app.add_system(
             controller::player_movement

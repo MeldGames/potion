@@ -332,6 +332,7 @@ pub fn attach_arm(
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
+    //let motor_model = MotorModel::AccelerationBased;
     let debug_mesh = meshes.add(Mesh::from(shape::UVSphere {
         radius: 0.04,
         ..default()
@@ -414,7 +415,7 @@ pub fn attach_arm(
     commands.entity(forearm_target).add_child(hand_target);
     commands.entity(to).add_child(pole_target);
 
-    let arm_density = 0.05;
+    let arm_density = 1.0;
 
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local

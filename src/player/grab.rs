@@ -38,6 +38,8 @@ impl Plugin for GrabPlugin {
                 auto_aim_pull,
                 twist_grab,
                 update_grab_sphere,
+                grab_collider,
+                grab_joint,
                 last_active_arm,
             )
                 .in_set(GrabSet)
@@ -78,6 +80,90 @@ pub fn joint_children(
     }
 }
 
+pub fn grab_joint(
+    mut commands: Commands,
+    grabbers: Query<(
+        Entity,
+        &Grabbing,
+        Option<&Children>,
+        &GlobalTransform,
+        &Collider,
+    )>,
+    grab_joints: Query<&GrabJoint>,
+    rapier_ctx: Res<RapierContext>,
+) {
+    for (grabber, grabbing, children, global, collider) in &grabbers {
+        let joint_entity = if let Some(children) = children {
+            let mut joint_entity = None;
+            for child in children.iter() {
+                if grab_joints.contains(*child) {
+                    joint_entity = Some(child);
+                    break;
+                }
+            }
+            joint_entity
+        } else {
+            None
+        };
+
+        match grabbing.grabbed {
+            Some(Grabbed {
+                entity: grabbed_entity,
+                grab_point,
+            }) => {
+                if let Some(joint_entity) = joint_entity {
+                    if grabbed_entity == *joint_entity {
+                        info!("grab joint already exists");
+                        continue;
+                    } else {
+                        info!("joint entity isnt the same as the grabbed, cleaning up");
+                        commands
+                            .entity(*joint_entity)
+                            .remove::<ImpulseJoint>()
+                            .remove::<GrabJoint>();
+                    }
+                }
+
+                info!("adding grab joint");
+                let motor_model = MotorModel::ForceBased;
+                let max_force = 1000.0;
+                let _stiffness = 20.0;
+                let _damping = 0.4;
+                let mut grab_joint = SphericalJointBuilder::new()
+                    .local_anchor1(grab_point)
+                    .local_anchor2(Vec3::ZERO)
+                    .motor_model(JointAxis::AngX, motor_model)
+                    .motor_model(JointAxis::AngY, motor_model)
+                    .motor_model(JointAxis::AngZ, motor_model)
+                    .motor_max_force(JointAxis::AngX, max_force)
+                    .motor_max_force(JointAxis::AngY, max_force)
+                    .motor_max_force(JointAxis::AngZ, max_force)
+                    //.motor_position(JointAxis::AngX, 0.0, stiffness, damping)
+                    //.motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
+                    //.motor_position(JointAxis::AngY, 0.0, stiffness, damping)
+                    .build();
+                grab_joint.set_contacts_enabled(false);
+
+                commands.entity(grabber).with_children(|children| {
+                    children
+                        .spawn(ImpulseJoint::new(grabbed_entity, grab_joint))
+                        .insert(GrabJoint)
+                        .insert(Name::new("Grab Joint"));
+                });
+            }
+            None => {
+                if let Some(joint_entity) = joint_entity {
+                    info!("cleaning up joint entity");
+                    commands
+                        .entity(*joint_entity)
+                        .remove::<ImpulseJoint>()
+                        .remove::<GrabJoint>();
+                }
+            }
+        }
+    }
+}
+
 pub fn grab_collider(
     mut commands: Commands,
     name: Query<DebugName>,
@@ -103,7 +189,7 @@ pub fn grab_collider(
 ) {
     for (hand, mut grabbing, global, children, character) in &mut hands {
         if grabbing.trying_grab {
-            if grabbing.grabbing.is_some() {
+            if grabbing.grabbed.is_some() {
                 continue;
             }
 
@@ -153,23 +239,15 @@ pub fn grab_collider(
                 if let Ok(other_global) = globals.get(other_rigidbody) {
                     let anchor2 = Vec3::ZERO; // use the center of the hand instead of exact grab point
 
-                    let anchor1 = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
+                    let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
                         let closest_point = auto_aim.closest_point(other_global, closest_point);
-                        lines.line_colored(
-                            closest_point.unwrap(),
-                            closest_point.unwrap() + Vec3::Y * 2.0,
-                            5.0,
-                            Color::RED,
-                        );
                         closest_point
                     } else {
                         None
                     };
 
-                    //let anchor1 = None;
-
-                    let anchor1 = if let Some(anchor1) = anchor1 {
-                        anchor1
+                    let anchor1 = if let Some(auto_anchor) = auto_anchor {
+                        auto_anchor
                     } else {
                         closest_point
                     };
@@ -181,62 +259,40 @@ pub fn grab_collider(
                         other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
 
                     let name = name.get(other_rigidbody).unwrap();
-                    //info!("grabbing {:?}", name);
+                    info!("grabbing {:?}", name);
 
-                    let motor_model = MotorModel::ForceBased;
-                    let max_force = 1000.0;
-                    let _stiffness = 20.0;
-                    let _damping = 0.4;
-                    let mut grab_joint = SphericalJointBuilder::new()
-                        .local_anchor1(anchor1)
-                        .local_anchor2(anchor2)
-                        .motor_model(JointAxis::AngX, motor_model)
-                        .motor_model(JointAxis::AngY, motor_model)
-                        .motor_model(JointAxis::AngZ, motor_model)
-                        .motor_max_force(JointAxis::AngX, max_force)
-                        .motor_max_force(JointAxis::AngY, max_force)
-                        .motor_max_force(JointAxis::AngZ, max_force)
-                        //.motor_position(JointAxis::AngX, 0.0, stiffness, damping)
-                        //.motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
-                        //.motor_position(JointAxis::AngY, 0.0, stiffness, damping)
-                        .build();
-                    grab_joint.set_contacts_enabled(false);
-
-                    commands.entity(hand).with_children(|children| {
-                        children
-                            .spawn(ImpulseJoint::new(other_rigidbody, grab_joint))
-                            .insert(GrabJoint)
-                            .insert(Name::new("Grab Joint"));
+                    grabbing.grabbed = Some(Grabbed {
+                        entity: other_rigidbody,
+                        grab_point: anchor1,
                     });
-                    grabbing.grabbing = Some(other_rigidbody);
                 }
             }
         } else {
-            if let Some(grabbing) = grabbing.grabbing.take() {
-                //info!("letting go of {:?}", name.get(grabbing).unwrap());
+            if let Some(grabbed) = grabbing.grabbed.take() {
+                info!("letting go of {:?}", name.get(grabbed.entity).unwrap());
             }
 
             // clean up joints if we aren't grabbing anymore
-            if let Some(children) = children {
-                for child in children.iter() {
-                    if grab_joints.contains(*child) {
-                        commands.entity(*child).despawn_recursive();
-                    }
-                }
-            }
         }
     }
 }
 
-#[derive(Default, Debug, Component, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Reflect, FromReflect)]
+pub struct Grabbed {
+    pub entity: Entity,
+
+    /// Local space point where the grabbed entity is being grabbed.
+    pub grab_point: Vec3,
+}
+
+#[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
 pub struct Grabbing {
     // Attempting to grab something.
     pub trying_grab: bool,
     // Which entity we have a hold of currently.
-    pub grabbing: Option<Entity>,
+    pub grabbed: Option<Grabbed>,
     // Rotation on the grab sphere we are currently oriented on.
     pub rotation: Quat,
-
     pub point: Vec3,
 }
 
@@ -366,7 +422,7 @@ pub fn twist_grab(
         }
         */
 
-        if grabbing.grabbing.is_none() {
+        if grabbing.grabbed.is_none() {
             grabbing.rotation = Quat::IDENTITY;
         } else {
             if !kb.pressed(KeyCode::RControl) {
@@ -560,7 +616,7 @@ pub fn player_extend_arm(
 
                 target_position.translation = shoulder_worldspace + direction * 2.0;
 
-                if grabbing.grabbing.is_none() {
+                if grabbing.grabbed.is_none() {
                     target_position.translation += pull_offset.0;
                 }
             }
