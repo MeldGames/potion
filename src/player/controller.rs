@@ -105,7 +105,7 @@ pub fn teleport_player_back(
         }
 
         if should_teleport {
-            let results = children_with_recursive(&related, &children, &joint_children, entity);
+            let results = find_children_with(&related, &children, &joint_children, entity);
 
             let mut relative_positions = bevy::utils::HashMap::new();
             for result in results {

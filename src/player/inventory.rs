@@ -283,7 +283,10 @@ pub fn store_item(
             }
         });
 
-        let target = inventory.items[swap_index];
+        let target = inventory.items[swap_index].map(|mut target| {
+            target.teleport_entity = true;
+            target
+        });
 
         // last active hand
         let hand = hands[0].0;

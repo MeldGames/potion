@@ -89,19 +89,19 @@ pub fn grab_joint(
         &GlobalTransform,
         &Collider,
     )>,
-    grab_joints: Query<&GrabJoint>,
-    rapier_ctx: Res<RapierContext>,
+    mut transforms: Query<&mut Transform>,
+    grab_joints: Query<(Entity, &GrabJoint, &ImpulseJoint)>,
 ) {
     for (grabber, grabbing, children, global, collider) in &grabbers {
-        let joint_entity = if let Some(children) = children {
-            let mut joint_entity = None;
+        let joint = if let Some(children) = children {
+            let mut joint = None;
             for child in children.iter() {
-                if grab_joints.contains(*child) {
-                    joint_entity = Some(child);
+                if let Ok(grab_joint) = grab_joints.get(*child) {
+                    joint = Some(grab_joint);
                     break;
                 }
             }
-            joint_entity
+            joint
         } else {
             None
         };
@@ -110,17 +110,24 @@ pub fn grab_joint(
             Some(Grabbed {
                 entity: grabbed_entity,
                 grab_point,
+                teleport_entity,
             }) => {
-                if let Some(joint_entity) = joint_entity {
-                    if grabbed_entity == *joint_entity {
-                        info!("grab joint already exists");
+                if let Some((joint_entity, joint, impulse)) = joint {
+                    if grabbed_entity == impulse.parent {
+                        //info!("grab joint already exists");
                         continue;
                     } else {
-                        info!("joint entity isnt the same as the grabbed, cleaning up");
+                        //info!("joint entity {:?} isnt the same as the grabbed {:?}, cleaning up", joint_entity, grabbed_entity);
                         commands
-                            .entity(*joint_entity)
+                            .entity(joint_entity)
                             .remove::<ImpulseJoint>()
                             .remove::<GrabJoint>();
+                    }
+                }
+
+                if teleport_entity {
+                    if let Ok(mut transform) = transforms.get_mut(grabbed_entity) {
+                        transform.translation = global.translation();
                     }
                 }
 
@@ -152,10 +159,10 @@ pub fn grab_joint(
                 });
             }
             None => {
-                if let Some(joint_entity) = joint_entity {
+                if let Some((joint_entity, _, _)) = joint {
                     info!("cleaning up joint entity");
                     commands
-                        .entity(*joint_entity)
+                        .entity(joint_entity)
                         .remove::<ImpulseJoint>()
                         .remove::<GrabJoint>();
                 }
@@ -183,12 +190,10 @@ pub fn grab_collider(
         ),
         With<Hand>,
     >,
-    grab_joints: Query<(&ImpulseJoint, &GrabJoint)>,
-
-    mut lines: ResMut<DebugLines>,
 ) {
     for (hand, mut grabbing, global, children, character) in &mut hands {
         if grabbing.trying_grab {
+            // Don't replace the grabbed entity if we already have one grabbed.
             if grabbing.grabbed.is_some() {
                 continue;
             }
@@ -264,6 +269,7 @@ pub fn grab_collider(
                     grabbing.grabbed = Some(Grabbed {
                         entity: other_rigidbody,
                         grab_point: anchor1,
+                        teleport_entity: false,
                     });
                 }
             }
@@ -271,18 +277,20 @@ pub fn grab_collider(
             if let Some(grabbed) = grabbing.grabbed.take() {
                 info!("letting go of {:?}", name.get(grabbed.entity).unwrap());
             }
-
-            // clean up joints if we aren't grabbing anymore
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, Reflect, FromReflect)]
 pub struct Grabbed {
+    /// Entity currently grabbed onto.
     pub entity: Entity,
-
     /// Local space point where the grabbed entity is being grabbed.
     pub grab_point: Vec3,
+    /// Entity should be teleported to a position near the grab point.
+    ///
+    /// Typically this is from the inventory so we don't jerk the player around.
+    pub teleport_entity: bool,
 }
 
 #[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
@@ -352,13 +360,10 @@ pub fn find_children_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     joint_children: &'a Query<&JointChildren>,
     base: Entity,
 ) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
-    let mut checked = HashSet::new();
-    let mut possibilities = vec![base];
     let mut queried = Vec::new();
+    let mut possibilities = vec![base];
 
     while let Some(possible) = possibilities.pop() {
-        checked.insert(possible);
-
         if let Ok(query) = query.get(possible) {
             queried.push(query);
         }
@@ -439,32 +444,6 @@ pub fn twist_grab(
     }
 }
 
-pub fn children_with_recursive<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
-    query: &'a Query<Q, F>,
-    children: &'a Query<&Children>,
-    joint_children: &'a Query<&JointChildren>,
-    base: Entity,
-) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
-    let mut results = Vec::new();
-    let mut possibilities = vec![base];
-
-    while let Some(possible) = possibilities.pop() {
-        if let Ok(result) = query.get(possible) {
-            results.push(result);
-        }
-
-        if let Ok(children) = children.get(possible) {
-            possibilities.extend(children);
-        }
-
-        if let Ok(children) = joint_children.get(possible) {
-            possibilities.extend(&children.0);
-        }
-    }
-
-    results
-}
-
 pub fn update_grab_sphere(
     mut grab_spheres: Query<(Entity, &mut GrabSphere)>,
     mut grabbing: Query<&mut Grabbing>,
@@ -479,7 +458,7 @@ pub fn update_grab_sphere(
     for (entity, mut grab_sphere) in &mut grab_spheres {
         let mut anchors = Vec::new();
 
-        let results = children_with_recursive(&grab_joints, &children, &joint_children, entity);
+        let results = find_children_with(&grab_joints, &children, &joint_children, entity);
         for (joint_entity, joint) in &results {
             // we need to get translate from the joints local space to the spheres local space
             let joint: &ImpulseJoint = joint;
