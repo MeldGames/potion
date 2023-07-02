@@ -30,7 +30,12 @@ pub struct GrabSet;
 
 impl Plugin for GrabPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<AutoAim>();
+        app.register_type::<AutoAim>()
+            .register_type::<GrabJoint>()
+            .register_type::<Option<Grabbed>>()
+            .register_type::<Grabbed>()
+            .register_type::<Grabbing>()
+            .register_type::<JointChildren>();
 
         app.add_systems(
             (
@@ -66,10 +71,24 @@ impl Plugin for GrabPlugin {
     }
 }
 
-#[derive(Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Default,
+    Component,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Reflect,
+    FromReflect,
+)]
+#[reflect(Component)]
 pub struct GrabJoint;
 
-#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
+#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect, FromReflect)]
 #[reflect(Component)]
 pub struct JointChildren(pub Vec<Entity>);
 
@@ -78,8 +97,12 @@ pub fn joint_children(
     entities: &Entities,
     mut children: Query<&mut JointChildren>,
     joints: Query<(Entity, &ImpulseJoint), Without<GrabJoint>>,
+    multibody: Query<(Entity, &MultibodyJoint)>,
 ) {
-    let pairs = joints.iter().map(|(entity, joint)| (entity, joint.parent));
+    let pairs = joints.iter().map(|(entity, joint)| (entity, joint.parent))
+        .chain(
+            multibody.iter().map(|(entity, joint)| (entity, joint.parent))
+        );
 
     for (entity, parent) in pairs {
         match children.get_mut(parent) {

@@ -42,7 +42,7 @@ impl Plugin for PlayerSpawnPlugin {
                 Events::<PlayerEvent>::update_system,
             )
                 .in_set(PlayerSpawnSet)
-                //.in_set(crate::FixedSet::First)
+                .in_set(crate::FixedSet::First)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
     }

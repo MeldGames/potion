@@ -72,8 +72,6 @@ impl Plugin for DepositPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Value>();
 
-        //app.add_system(display_money);
-
         app.add_system(deposit);
     }
 }
@@ -108,15 +106,6 @@ pub fn deposit(
     }
 }
 
-pub fn display_money(mut egui_context: EguiContexts, value: Res<Value>) {
-    egui::Window::new("Value")
-        .min_width(0.0)
-        .default_width(1.0)
-        .show(egui_context.ctx_mut(), |ui| {
-            ui.label(format!("Tendies: {:?}", value.get()));
-        });
-}
-
 pub fn spawn_deposit_box(
     commands: &mut Commands,
     asset_server: &AssetServer,
@@ -147,6 +136,7 @@ pub fn spawn_deposit_box(
             Collider::cuboid(0.7, 0.55, 0.55),
             Name::new("Crate"),
             crate::physics::TERRAIN_GROUPING,
+            crate::player::inventory::Storeable,
         ))
         .insert(crate::DecompLoad("crate".to_owned()))
         .insert(VisibilityBundle::default())
@@ -154,8 +144,7 @@ pub fn spawn_deposit_box(
         .id();
 
     let lid_hinge = RevoluteJointBuilder::new(Vec3::X)
-        .motor_max_force(0.0)
-        .local_anchor1(Vec3::new(-0.05, 1.5, -0.73))
+        .local_anchor1(Vec3::new(-0.05, 1.65, -0.73))
         .limits([0.0, PI / 1.04]);
     let mut lid_hinge = lid_hinge.build();
     lid_hinge.set_contacts_enabled(false);
@@ -171,7 +160,7 @@ pub fn spawn_deposit_box(
         ))
         .insert(crate::DecompLoad("crate_lid".to_owned()))
         .insert(VisibilityBundle::default())
-        .insert(ImpulseJoint::new(deposit, lid_hinge))
+        .insert(MultibodyJoint::new(deposit, lid_hinge))
         .add_child(lid_model)
         .id();
 

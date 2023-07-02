@@ -9,6 +9,7 @@ use bevy_rapier3d::{
 };
 
 #[derive(Component, Clone, Debug, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct Inventory {
     pub items: Vec<Option<Grabbed>>,
 }
@@ -34,12 +35,16 @@ impl Inventory {
     }
 }
 
-#[derive(Component, Clone, Debug, Reflect)]
+#[derive(Component, Clone, Debug, Reflect, FromReflect, Default)]
+#[reflect(Component)]
 pub struct Storeable;
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Storeable>()
+            .register_type::<Ingredient>()
+            .register_type::<Inventory>();
         // Core
         app.add_system(
             store_item
@@ -143,15 +148,28 @@ pub fn transform_stored(
     inventories: Query<(Entity, &Inventory)>,
     stored: Query<(Entity, Option<&Children>, &Stored)>,
     inventory_joints: Query<&InventoryJoint>,
+    joint_children: Query<&JointChildren>,
+
+    mut impulse_joints: Query<&mut ImpulseJoint>,
+    mut multibody_joints: Query<&mut MultibodyJoint>,
 
     mut transforms: Query<&mut Transform>,
     mut rapier: ResMut<RapierContext>,
     mut colliders: Query<(&mut Collider, &RapierColliderHandle)>,
+
+    names: Query<&Name>,
 ) {
     // Scale of item when slotted in inventory hotswaps.
     const NORMALIZED_SCALE: f32 = 0.3;
     // Space inbetween items in inventory hotswaps
     const PADDING: f32 = 0.1;
+
+    let debug_name = |entity: Entity| {
+        names
+            .get(entity)
+            .map(|name| name.as_str().to_owned())
+            .unwrap_or(format!("{:?}", entity))
+    };
 
     // If item was in an inventory and was removed, then unscale it and unjoint it.
     for (entity, children, stored) in &stored {
@@ -162,12 +180,47 @@ pub fn transform_stored(
         };
 
         if !still_stored {
+            info!("removing from storage");
+
             let Ok(mut transform) = transforms.get_mut(entity) else { continue };
             let Ok((mut collider, collider_handle)) = colliders.get_mut(entity) else { continue };
 
             let ratio = 1.0 / stored.scaled_ratio;
             transform.scale *= ratio;
             //scale_border_radius(&mut collider, ratio);
+
+            let mut joint_attached = Vec::new();
+            if let Ok(joint_children) = joint_children.get(entity) {
+                joint_attached.extend(joint_children.0.iter());
+            }
+
+            if let Ok(joint) = impulse_joints.get(entity) {
+                joint_attached.push(joint.parent);
+            }
+
+            for child in &joint_attached {
+                info!("joint child: {:?}", debug_name(*child));
+
+                if let Ok(mut transform) = transforms.get_mut(*child) {
+                    transform.scale *= ratio;
+                }
+
+                if let Ok(mut impulse) = impulse_joints.get_mut(*child) {
+                    let anchor1 = impulse.data.local_anchor1();
+                    impulse.data.set_local_anchor1(anchor1 * ratio);
+
+                    let anchor2 = impulse.data.local_anchor2();
+                    impulse.data.set_local_anchor2(anchor2 * ratio);
+                }
+
+                if let Ok(mut multibody) = multibody_joints.get_mut(*child) {
+                    let anchor1 = multibody.data.local_anchor1();
+                    multibody.data.set_local_anchor1(anchor1 * ratio);
+
+                    let anchor2 = multibody.data.local_anchor2();
+                    multibody.data.set_local_anchor2(anchor2 * ratio);
+                }
+            }
 
             // remove joint
             if let Some(children) = children {
@@ -183,7 +236,7 @@ pub fn transform_stored(
     }
 
     // If item is now in an inventory, then scale it and joint it.
-    for (entity, inventory) in &inventories {
+    for (inventory_entity, inventory) in &inventories {
         for (index, item) in inventory.items.iter().enumerate() {
             let Some(item) = item else { continue };
             if stored.contains(item.entity) {
@@ -215,7 +268,7 @@ pub fn transform_stored(
 
             let mut rapier_collider = rapier.colliders.get_mut(collider_handle.0).unwrap();
 
-            let mut extents: Vec3 = {
+            let extents: Vec3 = {
                 let mut collider = rapier_collider.clone();
                 collider.set_rotation(default());
                 collider.set_translation(default());
@@ -230,15 +283,47 @@ pub fn transform_stored(
             transform.scale *= ratio;
             //scale_border_radius(&mut collider, ratio);
 
+            let mut joint_attached = Vec::new();
+            if let Ok(joint_children) = joint_children.get(item.entity) {
+                joint_attached.extend(joint_children.0.iter());
+            }
+
+            if let Ok(joint) = impulse_joints.get(item.entity) {
+                joint_attached.push(joint.parent);
+            }
+
+            for child in &joint_attached {
+                info!("joint child: {:?}", debug_name(*child));
+                if let Ok(mut transform) = transforms.get_mut(*child) {
+                    transform.scale *= ratio;
+                }
+
+                if let Ok(mut impulse) = impulse_joints.get_mut(*child) {
+                    let anchor1 = impulse.data.local_anchor1();
+                    impulse.data.set_local_anchor1(anchor1 * ratio);
+
+                    let anchor2 = impulse.data.local_anchor2();
+                    impulse.data.set_local_anchor2(anchor2 * ratio);
+                }
+
+                if let Ok(mut multibody) = multibody_joints.get_mut(*child) {
+                    let anchor1 = multibody.data.local_anchor1();
+                    multibody.data.set_local_anchor1(anchor1 * ratio);
+
+                    let anchor2 = multibody.data.local_anchor2();
+                    multibody.data.set_local_anchor2(anchor2 * ratio);
+                }
+            }
+
             commands
                 .entity(item.entity)
                 .insert(Stored {
-                    inventory: entity,
+                    inventory: inventory_entity,
                     scaled_ratio: ratio,
                 })
                 .with_children(|children| {
                     children
-                        .spawn(ImpulseJoint::new(entity, inventory_joint))
+                        .spawn(ImpulseJoint::new(inventory_entity, inventory_joint))
                         .insert(InventoryJoint)
                         .insert(Name::new("Inventory Joint"));
                 });
@@ -283,13 +368,14 @@ pub fn store_item(
             }
         });
 
+        // last active hand
+        let Some(hand) = hands.get(0) else { continue };
+        let hand = hand.0;
+
         let target = inventory.items[swap_index].map(|mut target| {
             target.teleport_entity = true;
             target
         });
-
-        // last active hand
-        let hand = hands[0].0;
 
         let Ok(mut grabbing) = grabbing.get_mut(hand) else { continue };
         if let Some(grabbed) = grabbing.grabbed {
