@@ -71,12 +71,7 @@ pub struct GrabJoint;
 
 pub fn grab_joint(
     mut commands: Commands,
-    grabbers: Query<(
-        Entity,
-        &Grabbing,
-        Option<&Children>,
-        &GlobalTransform,
-    )>,
+    grabbers: Query<(Entity, &Grabbing, Option<&Children>, &GlobalTransform)>,
     mut transforms: Query<&mut Transform>,
     grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
 ) {
@@ -221,7 +216,6 @@ pub fn grab_collider(
                 }
 
                 if let Ok(other_global) = globals.get(other_rigidbody) {
-
                     let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
                         let closest_point = auto_aim.closest_point(other_global, closest_point);
                         closest_point

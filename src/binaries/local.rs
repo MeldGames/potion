@@ -1,17 +1,8 @@
-use bevy_rapier3d::prelude::*;
-use potion::{
-    physics::{ColliderBundle, RigidBodyBundle},
-    player::{
-        inventory::Storeable,
-        prelude::{PlayerEvent, PlayerInputPlugin},
-    },
-};
-
-use bevy::prelude::*;
+use potion::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    potion::setup_app(&mut app);
+    app.add_plugin(PotionCellarPlugin);
     app.add_plugin(PlayerInputPlugin);
     app.add_startup_system(spawn_local_player);
     app.add_plugin(potion::maps::showcase::SetupPlugin);

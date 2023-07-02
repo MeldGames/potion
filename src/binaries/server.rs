@@ -1,11 +1,8 @@
-use bevy::prelude::*;
-
-use potion::player::prelude::LockToggle;
+use potion::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
-    potion::setup_app(&mut app);
-
+    app.add_plugin(PotionCellarPlugin);
     app.insert_resource(LockToggle::default());
 
     /*

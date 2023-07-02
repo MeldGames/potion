@@ -1,7 +1,4 @@
-use bevy::{
-    asset::HandleId,
-    prelude::*,
-};
+use bevy::{asset::HandleId, prelude::*};
 
 #[derive(Resource)]
 pub struct TestMaterial {

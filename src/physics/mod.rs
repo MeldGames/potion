@@ -13,7 +13,7 @@ pub mod slot;
 pub mod prelude {
     pub use super::{
         contact_filter::*, joint_break::*, muscle::*, slot::*, GRAB_GROUPING, PLAYER_GROUPING,
-        REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING,
+        REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING, RigidBodyBundle, ColliderBundle,
     };
 }
 

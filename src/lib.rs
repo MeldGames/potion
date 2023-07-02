@@ -12,29 +12,30 @@ pub mod traversal;
 pub mod prelude {
     pub use super::{
         attach::Attach, debug::prelude::*, physics::prelude::*, player::prelude::*,
-        traversal::prelude::*, FixedSet,
+        traversal::prelude::*, FixedSet, PotionCellarPlugin,
     };
+
+    pub use bevy::prelude::*;
+    pub use bevy_rapier3d::prelude::*;
 }
+
+use crate::prelude::*;
+
+use bevy::window::{CursorGrabMode, WindowPlugin};
 
 use bevy_editor_pls::editor::Editor;
 use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
-use bevy_rapier3d::prelude::*;
-use traversal::HierarchyTraversalPlugin;
-
-use self::{
-    deposit::DepositPlugin, objects::store::StorePlugin, physics::PhysicsPlugin,
-    player::PlayerPlugin,
-};
-
+use bevy_prototype_debug_lines::*;
 use obj::Obj;
 
-pub use debug::DebugVisible;
-
-//use crate::network::NetworkPlugin;
-use bevy::{
-    prelude::*,
-    window::{CursorGrabMode, WindowPlugin},
+use self::{
+    deposit::DepositPlugin,
+    objects::store::StorePlugin,
+    physics::PhysicsPlugin,
+    player::PlayerPlugin,
+    traversal::HierarchyTraversalPlugin,
+    //network::NetworkPlugin,
 };
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -44,108 +45,109 @@ pub enum FixedSet {
     Last,
 }
 
-use bevy_prototype_debug_lines::*;
-
 pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 pub const TICK_RATE: std::time::Duration = std::time::Duration::from_millis(16);
 
-pub fn setup_app(app: &mut App) {
-    //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
-    let default_res = (1000.0, 600.0);
-    //let default_res = (800.0, 500.0);
-    //let default_res = (1920.0, 1080.0);
-    //let half_width = ((default_res.0 / 2.0), default_res.1);
-    app.add_plugins(
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Potion Cellar".into(),
-                    resolution: default_res.into(),
-                    position: WindowPosition::At(IVec2::ZERO),
-                    focused: true,
-                    present_mode: bevy::window::PresentMode::Immediate,
+pub struct PotionCellarPlugin;
+impl Plugin for PotionCellarPlugin {
+    fn build(&self, app: &mut App) {
+        //app.insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities);
+        let default_res = (1000.0, 600.0);
+        //let default_res = (800.0, 500.0);
+        //let default_res = (1920.0, 1080.0);
+        //let half_width = ((default_res.0 / 2.0), default_res.1);
+        app.add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Potion Cellar".into(),
+                        resolution: default_res.into(),
+                        position: WindowPosition::At(IVec2::ZERO),
+                        focused: true,
+                        present_mode: bevy::window::PresentMode::Immediate,
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(AssetPlugin {
+                    watch_for_changes: true,
                     ..default()
                 }),
-                ..default()
-            })
-            .set(AssetPlugin {
-                watch_for_changes: true,
-                ..default()
-            }),
-    );
+        );
 
-    app.add_startup_system(
-        move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>| {
-            if let Ok(mut window) = windows.get_single_mut() {
-                let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
-                window.set_cursor_position(Some(center_cursor));
-                window.cursor.grab_mode = CursorGrabMode::Locked;
-            }
-        },
-    );
+        app.add_startup_system(
+            move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>| {
+                if let Ok(mut window) = windows.get_single_mut() {
+                    let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
+                    window.set_cursor_position(Some(center_cursor));
+                    window.cursor.grab_mode = CursorGrabMode::Locked;
+                }
+            },
+        );
 
-    app.insert_resource(bevy_framepace::FramepaceSettings {
-        //limiter: bevy_framepace::Limiter::Off,
-        limiter: bevy_framepace::Limiter::Auto,
-        //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
-    });
-    app.insert_resource(FixedTime::new(crate::TICK_RATE));
-    app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
-    app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
-    app.add_plugin(DebugLinesPlugin::default());
-    //app.add_plugin(crate::egui::SetupEguiPlugin);
-    app.add_plugin(bevy_editor_pls::EditorPlugin::default());
-
-    const MSAA: bool = true;
-    if MSAA {
-        app.insert_resource(Msaa::Sample8);
-    } else {
-        app.add_plugin(EdgeDetectionPlugin);
-        app.insert_resource(EdgeDetectionConfig {
-            debug: 0,
-            enabled: 1,
-            ..default()
+        app.insert_resource(bevy_framepace::FramepaceSettings {
+            //limiter: bevy_framepace::Limiter::Off,
+            limiter: bevy_framepace::Limiter::Auto,
+            //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
         });
+        app.insert_resource(FixedTime::new(crate::TICK_RATE));
+        app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
+        app.add_plugin(bevy_framepace::FramepacePlugin);
+        app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
+        app.add_plugin(DebugLinesPlugin::default());
+        //app.add_plugin(crate::egui::SetupEguiPlugin);
+        app.add_plugin(bevy_editor_pls::EditorPlugin::default());
+
+        const MSAA: bool = true;
+        if MSAA {
+            app.insert_resource(Msaa::Sample8);
+        } else {
+            app.add_plugin(EdgeDetectionPlugin);
+            app.insert_resource(EdgeDetectionConfig {
+                debug: 0,
+                enabled: 1,
+                ..default()
+            });
+        }
+
+        app.world
+            .resource_mut::<Schedules>()
+            .get_mut(&CoreSchedule::FixedUpdate)
+            .unwrap()
+            .configure_sets((FixedSet::First, FixedSet::Update, FixedSet::Last).chain());
+
+        //app.add_plugin(bevy_framepace::FramepacePlugin);
+        app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
+            .add_plugin(PlayerPlugin)
+            .add_plugin(attach::AttachPlugin)
+            .add_plugin(StorePlugin)
+            .add_plugin(DepositPlugin)
+            .add_plugin(HierarchyTraversalPlugin)
+            .add_plugin(InverseKinematicsPlugin)
+            .add_plugin(crate::debug::DebugPlugin)
+            //.add_plugin(TreesPlugin)
+            .add_plugin(PhysicsPlugin)
+            .add_plugin(RapierDebugRenderPlugin {
+                always_on_top: false,
+                enabled: true,
+                style: Default::default(),
+                mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
+            })
+            //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
+            .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
+
+        //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
+
+        app.add_event::<AssetEvent<Mesh>>();
+
+        app.add_startup_system(fallback_camera);
+
+        app.add_system(update_level_collision);
+        app.add_system(active_cameras);
+        app.add_system(decomp_load);
+        app.add_system(edge_detect_swap);
+        //app.add_system(prepare_scene);
     }
-
-    app.world
-        .resource_mut::<Schedules>()
-        .get_mut(&CoreSchedule::FixedUpdate)
-        .unwrap()
-        .configure_sets((FixedSet::First, FixedSet::Update, FixedSet::Last).chain());
-
-    //app.add_plugin(bevy_framepace::FramepacePlugin);
-    app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
-        .add_plugin(PlayerPlugin)
-        .add_plugin(attach::AttachPlugin)
-        .add_plugin(StorePlugin)
-        .add_plugin(DepositPlugin)
-        .add_plugin(HierarchyTraversalPlugin)
-        .add_plugin(InverseKinematicsPlugin)
-        .add_plugin(crate::debug::DebugPlugin)
-        //.add_plugin(TreesPlugin)
-        .add_plugin(PhysicsPlugin)
-        .add_plugin(RapierDebugRenderPlugin {
-            always_on_top: false,
-            enabled: true,
-            style: Default::default(),
-            mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
-        })
-        //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
-        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
-
-    //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
-
-    app.add_event::<AssetEvent<Mesh>>();
-
-    app.add_startup_system(fallback_camera);
-
-    app.add_system(update_level_collision);
-    app.add_system(active_cameras);
-    app.add_system(decomp_load);
-    app.add_system(edge_detect_swap);
-    //app.add_system(prepare_scene);
 }
 
 fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionConfig>) {
