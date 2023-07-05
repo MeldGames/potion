@@ -182,14 +182,28 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachRotation>()
             .register_type::<AttachScale>();
 
-        app.add_systems(
-            (velocity_nonphysics, update_attach)
+        app.add_system(
+            velocity_nonphysics
+                .in_set(crate::FixedSet::Update)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+
+        app.add_system(
+            update_attach
                 .in_set(crate::FixedSet::First)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
-        app.add_systems(
-            (velocity_nonphysics, update_attach)
-                .in_set(crate::FixedSet::Last)
+        app.add_system(
+            update_attach
+                //.in_set(crate::FixedSet::Last)
+                .before(PhysicsSet::StepSimulation)
+                .in_schedule(CoreSchedule::FixedUpdate),
+        );
+
+        app.add_system(
+            update_attach
+                //.in_set(crate::FixedSet::Last)
+                .after(PhysicsSet::Writeback)
                 .in_schedule(CoreSchedule::FixedUpdate),
         );
     }

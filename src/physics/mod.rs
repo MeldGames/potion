@@ -12,8 +12,8 @@ pub mod slot;
 
 pub mod prelude {
     pub use super::{
-        contact_filter::*, joint_break::*, muscle::*, slot::*, ColliderBundle, RigidBodyBundle,
-        GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING,
+        contact_filter::*, joint_break::*, muscle::*, slot::*, GRAB_GROUPING, PLAYER_GROUPING,
+        REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING, RigidBodyBundle, ColliderBundle,
     };
 }
 
@@ -71,6 +71,36 @@ pub struct RigidBodyBundle {
     pub restitution: Restitution,
 }
 
+impl RigidBodyBundle {
+    pub fn dynamic() -> Self {
+        Self {
+            rigid_body: RigidBody::Dynamic,
+            ..default()
+        }
+    }
+
+    pub fn fixed() -> Self {
+        Self {
+            rigid_body: RigidBody::Fixed,
+            ..default()
+        }
+    }
+
+    pub fn kinematic_position() -> Self {
+        Self {
+            rigid_body: RigidBody::KinematicPositionBased,
+            ..default()
+        }
+    }
+
+    pub fn kinematic_velocity() -> Self {
+        Self {
+            rigid_body: RigidBody::KinematicVelocityBased,
+            ..default()
+        }
+    }
+}
+
 impl Default for RigidBodyBundle {
     fn default() -> Self {
         Self {
@@ -95,7 +125,7 @@ impl Default for RigidBodyBundle {
 #[derive(Bundle)]
 pub struct ColliderBundle {
     pub collider: Collider,
-    pub collider_mass_properties: ColliderMassProperties,
+    pub mass_properties: ColliderMassProperties,
     pub colliding_entities: CollidingEntities,
     pub collision_groups: CollisionGroups,
     pub solver_groups: SolverGroups,
@@ -106,7 +136,7 @@ impl Default for ColliderBundle {
     fn default() -> Self {
         Self {
             collider: Collider::default(),
-            collider_mass_properties: ColliderMassProperties::default(),
+            mass_properties: ColliderMassProperties::default(),
             colliding_entities: CollidingEntities::default(),
             collision_groups: CollisionGroups::default(),
             solver_groups: SolverGroups::default(),
@@ -238,9 +268,17 @@ pub fn prevent_oob(
     }
 }
 
+pub fn minimum_mass(bodies: Query<(&mut AdditionalMassProperties, &ReadMassProperties)>) {
+    for (mut modify, read) in &bodies {
+        //if read.0.mass < 
+    }
+}
+
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<ReadMassProperties>();
+
         app.insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Fixed {
                 dt: crate::TICK_RATE.as_secs_f32(),

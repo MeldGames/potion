@@ -195,12 +195,17 @@ pub fn transform_stored(
             transform.scale *= ratio;
             //scale_border_radius(&mut collider, ratio);
 
+            // Need to figure out how to simplify this in the future.
             let mut joint_attached = Vec::new();
             if let Ok(joint_children) = joint_children.get(entity) {
                 joint_attached.extend(joint_children.0.iter());
             }
 
             if let Ok(joint) = impulse_joints.get(entity) {
+                joint_attached.push(joint.parent);
+            }
+
+            if let Ok(joint) = multibody_joints.get(entity) {
                 joint_attached.push(joint.parent);
             }
 
@@ -298,6 +303,10 @@ pub fn transform_stored(
                 joint_attached.push(joint.parent);
             }
 
+            if let Ok(joint) = multibody_joints.get(item.entity) {
+                joint_attached.push(joint.parent);
+            }
+
             for child in &joint_attached {
                 info!("joint child: {:?}", debug_name(*child));
                 if let Ok(mut transform) = transforms.get_mut(*child) {
@@ -373,7 +382,6 @@ pub fn store_item(
             }
         });
 
-        info!("hands: {:?}", hands);
         // last active hand
         let Some(hand) = hands.get(0) else { continue };
         let hand = hand.0;

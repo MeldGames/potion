@@ -25,7 +25,6 @@ pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .insert(Name::new("Ground"))
         .insert(RigidBodyBundle {
             rigid_body: RigidBody::Fixed,
-            friction: crate::DEFAULT_FRICTION,
             ..default()
         })
         .insert(ColliderBundle {

@@ -51,7 +51,6 @@ pub fn setup(
                 Collider::cuboid(50.0, 10.0, 50.0),
                 Name::new("Plane"),
                 crate::physics::TERRAIN_GROUPING,
-                crate::DEFAULT_FRICTION,
                 NotShadowReceiver,
             ));
     });
@@ -70,7 +69,6 @@ pub fn setup(
     ))
     .insert(RigidBodyBundle {
         rigid_body: RigidBody::Dynamic,
-        friction: crate::DEFAULT_FRICTION,
         ..default()
     })
     .insert(ColliderBundle {
@@ -91,11 +89,7 @@ pub fn setup(
         },
         Name::new("potion 3"),
     ))
-    .insert(RigidBodyBundle {
-        rigid_body: RigidBody::Dynamic,
-        friction: crate::DEFAULT_FRICTION,
-        ..default()
-    })
+    .insert(RigidBodyBundle::dynamic())
     .insert(ColliderBundle {
         collider: Collider::cuboid(0.5, 0.5, 0.5),
         collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -113,11 +107,7 @@ pub fn setup(
         },
         Name::new("potion 2"),
     ))
-    .insert(RigidBodyBundle {
-        rigid_body: RigidBody::Dynamic,
-        friction: crate::DEFAULT_FRICTION,
-        ..default()
-    })
+    .insert(RigidBodyBundle::dynamic())
     .insert(ColliderBundle {
         collider: Collider::cuboid(0.5, 0.5, 0.5),
         collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -187,11 +177,7 @@ pub fn setup(
             },
             ..default()
         })
-        .insert(RigidBodyBundle {
-            rigid_body: RigidBody::Dynamic,
-            friction: crate::DEFAULT_FRICTION,
-            ..default()
-        })
+        .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.3, 0.3, 0.3),
             collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -215,11 +201,7 @@ pub fn setup(
             },
             ..default()
         })
-        .insert(RigidBodyBundle {
-            rigid_body: RigidBody::Dynamic,
-            friction: crate::DEFAULT_FRICTION,
-            ..default()
-        })
+        .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.5, 0.5, 0.5),
             collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -262,13 +244,12 @@ pub fn setup(
         ))
         .insert(RigidBodyBundle {
             rigid_body: RigidBody::Dynamic,
-            friction: crate::DEFAULT_FRICTION,
             ..default()
         })
         .insert(ColliderBundle {
             collider: Collider::cylinder(1.8, 1.3),
             collision_groups: crate::physics::TERRAIN_GROUPING,
-            collider_mass_properties: ColliderMassProperties::Density(2.0),
+            mass_properties: ColliderMassProperties::Density(2.0),
             ..default()
         })
         .with_children(|commands| {
@@ -347,7 +328,6 @@ pub fn setup(
             ExternalImpulse::default(),
             Slottable::default(),
             ReadMassProperties::default(),
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -378,7 +358,6 @@ pub fn setup(
                 linear_damping: 0.5,
                 angular_damping: 0.5,
             },
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -402,7 +381,6 @@ pub fn setup(
             ExternalImpulse::default(),
             Slottable::default(),
             ReadMassProperties::default(),
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -427,7 +405,6 @@ pub fn setup(
             ExternalImpulse::default(),
             Name::new("Thorns"),
             Velocity::default(),
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -440,23 +417,17 @@ pub fn setup(
             },
             ..default()
         })
+        .insert(RigidBodyBundle::default())
+        .insert(ColliderBundle {
+            collider: Collider::ball(0.2),
+            mass_properties: ColliderMassProperties::Density(1.0),
+            ..default()
+        })
         .insert((
             Ingredient,
             Slottable::default(),
             crate::deposit::Value::new(1),
-            Collider::ball(0.2),
-            RigidBody::Dynamic,
             Name::new("Weltberry"),
-            Velocity::default(),
-            ExternalImpulse::default(),
-            ExternalForce::default(),
-            //ColliderMassProperties::Density(50.0),
-            Damping {
-                linear_damping: 0.5,
-                angular_damping: 0.5,
-            },
-            ReadMassProperties::default(),
-            crate::DEFAULT_FRICTION,
         ))
         .id();
 
@@ -558,7 +529,6 @@ pub fn setup(
             ExternalForce::default(),
             ReadMassProperties::default(),
             Velocity::default(),
-            crate::DEFAULT_FRICTION,
             //DecompLoad("stirrer".to_owned()),
             level_collision_mesh3,
         ))
@@ -648,11 +618,10 @@ pub fn setup(
         ))
         .insert(RigidBodyBundle {
             rigid_body: RigidBody::Dynamic,
-            friction: crate::DEFAULT_FRICTION,
             ..default()
         })
         .insert(ColliderBundle {
-            collider_mass_properties: ColliderMassProperties::Density(10.0),
+            mass_properties: ColliderMassProperties::Density(10.0),
             collider: Collider::cuboid(0.0, 0.0, 0.0),
             ..default()
         })

@@ -45,7 +45,6 @@ pub enum FixedSet {
     Last,
 }
 
-pub const DEFAULT_FRICTION: Friction = Friction::coefficient(0.5);
 pub const TICK_RATE: std::time::Duration = std::time::Duration::from_millis(16);
 
 pub struct PotionCellarPlugin;
@@ -131,12 +130,12 @@ impl Plugin for PotionCellarPlugin {
             //.add_plugin(TreesPlugin)
             .add_plugin(PhysicsPlugin)
             .add_plugin(RapierDebugRenderPlugin {
+                //always_on_top: true,
                 always_on_top: false,
                 enabled: true,
                 style: Default::default(),
                 mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
             })
-            //.add_plugin(bevy::diagnostic::DiagnosticsPlugin)
             .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
 
         //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
