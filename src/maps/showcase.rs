@@ -13,6 +13,8 @@ use crate::{
     player::grab::{AimPrimitive, AutoAim},
 };
 
+use crate::prelude::*;
+
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
@@ -67,10 +69,8 @@ pub fn setup(
         },
         Name::new("potion"),
     ))
-    .insert(RigidBodyBundle {
-        rigid_body: RigidBody::Dynamic,
-        ..default()
-    })
+    .insert(Storeable)
+    .insert(RigidBodyBundle::dynamic())
     .insert(ColliderBundle {
         collider: Collider::cuboid(0.5, 0.5, 0.5),
         collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -89,12 +89,14 @@ pub fn setup(
         },
         Name::new("potion 3"),
     ))
+    .insert(Storeable)
     .insert(RigidBodyBundle::dynamic())
     .insert(ColliderBundle {
         collider: Collider::cuboid(0.5, 0.5, 0.5),
         collision_groups: crate::physics::TERRAIN_GROUPING,
         ..default()
     });
+
     commands.spawn((
         SceneBundle {
             scene: asset_server.load("models/potion_flask.glb#Scene0"),
@@ -107,6 +109,7 @@ pub fn setup(
         },
         Name::new("potion 2"),
     ))
+    .insert(Storeable)
     .insert(RigidBodyBundle::dynamic())
     .insert(ColliderBundle {
         collider: Collider::cuboid(0.5, 0.5, 0.5),
