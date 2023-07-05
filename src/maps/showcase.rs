@@ -32,30 +32,97 @@ pub fn setup(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    commands
-        .spawn((
-            SceneBundle {
-                scene: asset_server.load("models/map.gltf#Scene0"),
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("models/map.gltf#Scene0"),
+            ..default()
+        },
+        NotShadowCaster,
+        NotShadowReceiver,
+        Name::new("Ground"),
+    ))
+    .with_children(|children| {
+        children
+            .spawn(TransformBundle::from_transform(Transform::from_xyz(
+                0.0, -10.0, 0.0,
+            )))
+            .insert((
+                RigidBody::Fixed,
+                Collider::cuboid(50.0, 10.0, 50.0),
+                Name::new("Plane"),
+                crate::physics::TERRAIN_GROUPING,
+                crate::DEFAULT_FRICTION,
+                NotShadowReceiver,
+            ));
+    });
+
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("models/potion_square.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(5.0, 3.5, 0.0),
+                scale: Vec3::new(0.5, 0.5, 0.5),
                 ..default()
             },
-            NotShadowCaster,
-            NotShadowReceiver,
-            Name::new("Ground"),
-        ))
-        .with_children(|children| {
-            children
-                .spawn(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, -10.0, 0.0,
-                )))
-                .insert((
-                    RigidBody::Fixed,
-                    Collider::cuboid(50.0, 10.0, 50.0),
-                    Name::new("Plane"),
-                    crate::physics::TERRAIN_GROUPING,
-                    crate::DEFAULT_FRICTION,
-                    NotShadowReceiver,
-                ));
-        });
+            ..default()
+        },
+        Name::new("potion"),
+    ))
+    .insert(RigidBodyBundle {
+        rigid_body: RigidBody::Dynamic,
+        friction: crate::DEFAULT_FRICTION,
+        ..default()
+    })
+    .insert(ColliderBundle {
+        collider: Collider::cuboid(0.5, 0.5, 0.5),
+        collision_groups: crate::physics::TERRAIN_GROUPING,
+        ..default()
+    });
+
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("models/potion_coil.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(1.0, 3.5, 0.0),
+                scale: Vec3::new(0.5, 0.5, 0.5),
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("potion 3"),
+    ))
+    .insert(RigidBodyBundle {
+        rigid_body: RigidBody::Dynamic,
+        friction: crate::DEFAULT_FRICTION,
+        ..default()
+    })
+    .insert(ColliderBundle {
+        collider: Collider::cuboid(0.5, 0.5, 0.5),
+        collision_groups: crate::physics::TERRAIN_GROUPING,
+        ..default()
+    });
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("models/potion_flask.glb#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(8.0, 3.5, 0.0),
+                scale: Vec3::new(0.5, 0.5, 0.5),
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("potion 2"),
+    ))
+    .insert(RigidBodyBundle {
+        rigid_body: RigidBody::Dynamic,
+        friction: crate::DEFAULT_FRICTION,
+        ..default()
+    })
+    .insert(ColliderBundle {
+        collider: Collider::cuboid(0.5, 0.5, 0.5),
+        collision_groups: crate::physics::TERRAIN_GROUPING,
+        ..default()
+    });
 
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
