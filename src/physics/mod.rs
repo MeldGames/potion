@@ -61,12 +61,9 @@ pub struct RigidBodyBundle {
     pub external_impulse: ExternalImpulse,
     pub additional_mass_properties: AdditionalMassProperties,
     pub read_mass_properties: ReadMassProperties,
-    pub locked_axes: LockedAxes,
     pub sleeping: Sleeping,
     pub damping: Damping,
-    pub dominance: Dominance,
     pub ccd: Ccd,
-    pub gravity_scale: GravityScale,
     pub friction: Friction,
     pub restitution: Restitution,
 }
@@ -110,15 +107,12 @@ impl Default for RigidBodyBundle {
             external_impulse: ExternalImpulse::default(),
             additional_mass_properties: AdditionalMassProperties::default(),
             read_mass_properties: ReadMassProperties::default(),
-            locked_axes: LockedAxes::default(),
             sleeping: Sleeping::default(),
             damping: Damping {
                 linear_damping: 0.05,
                 angular_damping: 0.05,
             },
-            dominance: Dominance::default(),
             ccd: Ccd::default(),
-            gravity_scale: GravityScale::default(),
             friction: Friction::default(),
             restitution: Restitution::coefficient(0.45),
         }
@@ -132,7 +126,6 @@ pub struct ColliderBundle {
     pub colliding_entities: CollidingEntities,
     pub collision_groups: CollisionGroups,
     pub solver_groups: SolverGroups,
-    pub contact_force_event_threshold: ContactForceEventThreshold,
 }
 
 impl ColliderBundle {
@@ -152,7 +145,6 @@ impl Default for ColliderBundle {
             colliding_entities: CollidingEntities::default(),
             collision_groups: CollisionGroups::default(),
             solver_groups: SolverGroups::default(),
-            contact_force_event_threshold: ContactForceEventThreshold::default(),
         }
     }
 }
@@ -163,20 +155,16 @@ pub struct FillRigidBodyComponents {
     pub velocity: Option<&'static Velocity>,
     pub additional_mass_properties: Option<&'static AdditionalMassProperties>,
     pub read_mass_properties: Option<&'static ReadMassProperties>,
-    pub locked_axes: Option<&'static LockedAxes>,
     pub external_force: Option<&'static ExternalForce>,
     pub external_impulse: Option<&'static ExternalImpulse>,
     pub sleeping: Option<&'static Sleeping>,
     pub damping: Option<&'static Damping>,
-    pub dominance: Option<&'static Dominance>,
     pub ccd: Option<&'static Ccd>,
-    pub gravity_scale: Option<&'static GravityScale>,
     pub colliding_entities: Option<&'static CollidingEntities>,
     pub friction: Option<&'static Friction>,
     pub restitution: Option<&'static Restitution>,
     pub collision_groups: Option<&'static CollisionGroups>,
     pub solver_groups: Option<&'static SolverGroups>,
-    pub contact_force_event_threshold: Option<&'static ContactForceEventThreshold>,
 }
 
 impl<'a> FillRigidBodyComponentsItem<'a> {
@@ -190,9 +178,6 @@ impl<'a> FillRigidBodyComponentsItem<'a> {
         if let None = self.read_mass_properties {
             commands.insert(ReadMassProperties::default());
         }
-        if let None = self.locked_axes {
-            commands.insert(LockedAxes::default());
-        }
         if let None = self.external_force {
             commands.insert(ExternalForce::default());
         }
@@ -205,14 +190,8 @@ impl<'a> FillRigidBodyComponentsItem<'a> {
         if let None = self.damping {
             commands.insert(Damping::default());
         }
-        if let None = self.dominance {
-            commands.insert(Dominance::default());
-        }
         if let None = self.ccd {
             commands.insert(Ccd::default());
-        }
-        if let None = self.gravity_scale {
-            commands.insert(GravityScale::default());
         }
         if let None = self.colliding_entities {
             commands.insert(CollidingEntities::default());
@@ -228,9 +207,6 @@ impl<'a> FillRigidBodyComponentsItem<'a> {
         }
         if let None = self.solver_groups {
             commands.insert(SolverGroups::default());
-        }
-        if let None = self.contact_force_event_threshold {
-            commands.insert(ContactForceEventThreshold::default());
         }
     }
 }
