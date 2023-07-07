@@ -34,88 +34,103 @@ pub fn setup(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("models/map.gltf#Scene0"),
-            ..default()
-        },
-        NotShadowCaster,
-        NotShadowReceiver,
-        Name::new("Ground"),
-    ))
-    .with_children(|children| {
-        children
-            .spawn(TransformBundle::from_transform(Transform::from_xyz(
-                0.0, -10.0, 0.0,
-            )))
-            .insert((
-                RigidBody::Fixed,
-                Collider::cuboid(50.0, 10.0, 50.0),
-                Name::new("Plane"),
-                crate::physics::TERRAIN_GROUPING,
-                NotShadowReceiver,
-            ));
-    });
-
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("models/potion_square.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(5.0, 3.5, 0.0),
-                scale: Vec3::new(0.5, 0.5, 0.5),
+    commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/map.gltf#Scene0"),
                 ..default()
             },
-            ..default()
-        },
-        Name::new("potion"),
-    ))
-    .insert(Storeable)
-    .insert(RigidBodyBundle::dynamic())
-    .insert(ColliderBundle {
-        collider: Collider::cuboid(0.5, 0.5, 0.5),
-        collision_groups: crate::physics::TERRAIN_GROUPING,
-        ..default()
-    });
+            NotShadowCaster,
+            NotShadowReceiver,
+            Name::new("Ground"),
+        ))
+        .with_children(|children| {
+            children
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
+                    0.0, -10.0, 0.0,
+                )))
+                .insert((
+                    RigidBody::Fixed,
+                    Collider::cuboid(50.0, 10.0, 50.0),
+                    Name::new("Plane"),
+                    crate::physics::TERRAIN_GROUPING,
+                    NotShadowReceiver,
+                ));
+        });
 
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("models/potion_coil.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(1.0, 3.5, 0.0),
-                scale: Vec3::new(0.5, 0.5, 0.5),
+    commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/potion_square.glb#Scene0"),
+                transform: Transform {
+                    translation: Vec3::new(5.0, 3.5, 0.0),
+                    scale: Vec3::new(0.5, 0.5, 0.5),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },
-        Name::new("potion 3"),
-    ))
-    .insert(Storeable)
-    .insert(RigidBodyBundle::dynamic())
-    .insert(ColliderBundle {
-        collider: Collider::cuboid(0.5, 0.5, 0.5),
-        collision_groups: crate::physics::TERRAIN_GROUPING,
-        ..default()
-    });
+            Name::new("potion"),
+        ))
+        .insert(Storeable)
+        .insert(RigidBodyBundle::dynamic())
+        .with_children(|children| {
+            children
+                .spawn(TransformBundle {
+                    local: Transform {
+                        //translation: Vec3::new(0., 0.5, 0.),
+                        scale: Vec3::new(1.15, 2.0, 1.15),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(ColliderBundle {
+                    collider: Collider::cuboid(0.5, 0.5, 0.5),
+                    collision_groups: crate::physics::TERRAIN_GROUPING,
+                    ..default()
+                });
+        });
 
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("models/potion_flask.glb#Scene0"),
-            transform: Transform {
-                translation: Vec3::new(8.0, 3.5, 0.0),
-                scale: Vec3::new(0.5, 0.5, 0.5),
+    commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/potion_coil.glb#Scene0"),
+                transform: Transform {
+                    translation: Vec3::new(1.0, 3.5, 0.0),
+                    scale: Vec3::new(0.5, 0.5, 0.5),
+                    ..default()
+                },
                 ..default()
             },
+            Name::new("potion 3"),
+        ))
+        .insert(Storeable)
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
             ..default()
-        },
-        Name::new("potion 2"),
-    ))
-    .insert(Storeable)
-    .insert(RigidBodyBundle::dynamic())
-    .insert(ColliderBundle {
-        collider: Collider::cuboid(0.5, 0.5, 0.5),
-        collision_groups: crate::physics::TERRAIN_GROUPING,
-        ..default()
-    });
+        });
+
+    commands
+        .spawn((
+            SceneBundle {
+                scene: asset_server.load("models/potion_flask.glb#Scene0"),
+                transform: Transform {
+                    translation: Vec3::new(8.0, 3.5, 0.0),
+                    scale: Vec3::new(0.5, 0.5, 0.5),
+                    ..default()
+                },
+                ..default()
+            },
+            Name::new("potion 2"),
+        ))
+        .insert(Storeable)
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle {
+            collider: Collider::cuboid(0.5, 0.5, 0.5),
+            collision_groups: crate::physics::TERRAIN_GROUPING,
+            ..default()
+        });
 
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
@@ -321,16 +336,13 @@ pub fn setup(
             AimPrimitive::Point(Vec3::Z * ball_radius),
             AimPrimitive::Point(-Vec3::Z * ball_radius),
         ]))
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle::collider(Collider::ball(ball_radius)))
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
-            Collider::ball(ball_radius),
-            RigidBody::Dynamic,
             Name::new("Ball"),
-            Velocity::default(),
-            ExternalImpulse::default(),
             Slottable::default(),
-            ReadMassProperties::default(),
         ))
         .id();
 
@@ -346,21 +358,13 @@ pub fn setup(
             transform: Transform::from_xyz(1.0, 6.0, -2.0),
             ..default()
         })
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle::collider(Collider::round_cylinder(0.025, 0.4, 0.2)))
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
-            Collider::round_cylinder(0.025, 0.4, 0.2),
-            //Collider::cylinder(1.0, 1.0),
-            RigidBody::Dynamic,
             Name::new("Donut"),
-            Velocity::default(),
-            ExternalImpulse::default(),
             Slottable::default(),
-            ReadMassProperties::default(),
-            Damping {
-                linear_damping: 0.5,
-                angular_damping: 0.5,
-            },
         ))
         .id();
 
@@ -374,16 +378,13 @@ pub fn setup(
             },
             ..default()
         })
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle::collider(Collider::cuboid(0.3, 0.3, 0.3)))
         .insert((
             Ingredient,
             crate::deposit::Value::new(1),
-            Collider::cuboid(0.3, 0.3, 0.3),
-            RigidBody::Dynamic,
             Name::new("Prallet"),
-            Velocity::default(),
-            ExternalImpulse::default(),
             Slottable::default(),
-            ReadMassProperties::default(),
         ))
         .id();
 
@@ -397,17 +398,14 @@ pub fn setup(
             },
             ..default()
         })
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle::collider(Collider::cuboid(0.3, 0.3, 0.3)))
         .insert((
             Ingredient,
             crate::deposit::Value::new(1),
-            Collider::cuboid(0.3, 0.3, 0.3),
-            RigidBody::Dynamic,
             StoreItem,
             Slottable::default(),
-            ReadMassProperties::default(),
-            ExternalImpulse::default(),
             Name::new("Thorns"),
-            Velocity::default(),
         ))
         .id();
 
@@ -502,9 +500,12 @@ pub fn setup(
             crate::ColliderLoad,
             Name::new("Mortar & Pestle"),
             col_mesh_mortar,
-            RigidBody::Dynamic,
-            crate::physics::TERRAIN_GROUPING,
         ))
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle {
+            collision_groups: TERRAIN_GROUPING,
+            ..default()
+        })
         .id();
 
     let _stirrer = commands
@@ -522,17 +523,9 @@ pub fn setup(
             start: Vec3::new(0.0, 0.3, 0.0),
             end: Vec3::new(0.0, 1.2, 0.0),
         }]))
+        .insert(RigidBodyBundle::dynamic())
         .insert((
-            //GravityScale(0.0),
-            ColliderMassProperties::Density(4.0),
-            //RigidBody::KinematicVelocityBased,
-            RigidBody::Dynamic,
             Name::new("Stirrer"),
-            ExternalImpulse::default(),
-            ExternalForce::default(),
-            ReadMassProperties::default(),
-            Velocity::default(),
-            //DecompLoad("stirrer".to_owned()),
             level_collision_mesh3,
         ))
         .with_children(|builder| {
@@ -544,7 +537,8 @@ pub fn setup(
                     },
                     ..default()
                 })
-                .insert(Collider::cuboid(0.1, 0.5, 0.1));
+                //.insert(DecompLoad("stirrer".to_owned()))
+                .insert(ColliderBundle::collider(Collider::cuboid(0.1, 0.5, 0.1)));
         })
         .id();
 
@@ -562,11 +556,10 @@ pub fn setup(
             },
             ..default()
         })
+        .insert(RigidBodyBundle::fixed())
+        .insert(ColliderBundle::collider(Collider::cuboid(1.0, 1.0, 1.0)))
         .insert((
-            Collider::cuboid(1.0, 1.0, 1.0),
-            RigidBody::Fixed,
             Name::new("Walls Shop"),
-            Velocity::default(),
             crate::DecompLoad("walls_shop1".to_owned()),
             level_collision_mesh,
         ))
@@ -576,10 +569,10 @@ pub fn setup(
         .spawn(TransformBundle::from_transform(Transform::from_xyz(
             1.1, 1.0, 0.5,
         )))
+        .insert(RigidBodyBundle::fixed())
+        .insert(ColliderBundle::collider(Collider::cuboid(0.5, 1.0, 0.5)))
+        .insert(Sensor)
         .insert((
-            Collider::cuboid(0.5, 1.0, 0.5),
-            RigidBody::Fixed,
-            Sensor,
             SecurityCheck { push: -Vec3::Z },
             Name::new("Security Check"),
         ))

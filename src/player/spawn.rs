@@ -107,7 +107,7 @@ pub fn setup_player(
                             max_speed: 7.0,
                             max_acceleration_force: 4.0,
                             up_vector: Vec3::Y,
-                            gravity: -9.8,
+                            gravity: -9.8175,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
@@ -352,10 +352,15 @@ pub fn attach_arm(
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;
     //let motor_model = MotorModel::AccelerationBased;
-    let debug_mesh = meshes.add(Mesh::from(shape::UVSphere {
-        radius: 0.04,
-        ..default()
-    }));
+    const DISPLAY_IK: bool = false;
+    let debug_mesh = if DISPLAY_IK {
+        meshes.add(Mesh::from(shape::UVSphere {
+            radius: 0.04,
+            ..default()
+        }))
+    } else {
+        default()
+    };
 
     let arm_segment = 1.0;
     let forearm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
@@ -456,12 +461,16 @@ pub fn attach_arm(
         .spawn(TransformBundle::from_transform(to_transform))
         .insert(Name::new(format!("UpperArm {}", index)))
         .insert(UpperArm)
-        .insert(RigidBody::Dynamic)
-        .insert(ExternalImpulse::default())
-        .insert(Velocity::default())
-        .insert(ReadMassProperties::default())
-        .insert(crate::physics::REST_GROUPING)
-        .insert(Collider::capsule(Vec3::ZERO, upperarm_height, arm_radius))
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::capsule(Vec3::ZERO, upperarm_height, arm_radius),
+            collision_groups: REST_GROUPING,
+            mass_properties: ColliderMassProperties::Density(arm_density),
+            ..default()
+        })
         .insert(ImpulseJoint::new(to, upperarm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -473,10 +482,7 @@ pub fn attach_arm(
             strength: 0.5,
             ..default()
         })
-        .insert(ColliderMassProperties::Density(arm_density))
         .id();
-
-    //commands.entity(pole_target).insert(Attach::translation(upperarm_entity));
 
     let mut forearm_joint = SphericalJointBuilder::new()
         .local_anchor2(forearm_height)
@@ -496,12 +502,16 @@ pub fn attach_arm(
         .spawn(TransformBundle::from_transform(to_transform))
         .insert(Name::new(format!("ForeArm {}", index)))
         .insert(ForeArm)
-        .insert(RigidBody::Dynamic)
-        .insert(ExternalImpulse::default())
-        .insert(Velocity::default())
-        .insert(ReadMassProperties::default())
-        .insert(crate::physics::REST_GROUPING)
-        .insert(Collider::capsule(Vec3::ZERO, forearm_height, arm_radius))
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::capsule(Vec3::ZERO, forearm_height, arm_radius),
+            collision_groups: REST_GROUPING,
+            mass_properties: ColliderMassProperties::Density(arm_density),
+            ..default()
+        })
         .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -513,7 +523,6 @@ pub fn attach_arm(
             strength: 0.1,
             ..default()
         })
-        .insert(ColliderMassProperties::Density(arm_density))
         .id();
 
     let hand_position = commands
@@ -558,12 +567,16 @@ pub fn attach_arm(
         .insert(ConnectedEntities::default())
         .insert(CharacterEntities::default())
         .insert(Grabbing { ..default() })
-        .insert(ExternalImpulse::default())
-        .insert(Velocity::default())
-        .insert(ReadMassProperties::default())
-        .insert(RigidBody::Dynamic)
-        .insert(crate::physics::REST_GROUPING)
-        .insert(Collider::ball(hand_radius))
+        .insert(RigidBodyBundle {
+            rigid_body: RigidBody::Dynamic,
+            ..default()
+        })
+        .insert(ColliderBundle {
+            collider: Collider::ball(hand_radius),
+            collision_groups: REST_GROUPING,
+            mass_properties: ColliderMassProperties::Density(arm_density),
+            ..default()
+        })
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         //.insert(crate::Slottable) // kind of funny lol

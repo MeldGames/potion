@@ -12,8 +12,8 @@ pub mod slot;
 
 pub mod prelude {
     pub use super::{
-        contact_filter::*, joint_break::*, muscle::*, slot::*, GRAB_GROUPING, PLAYER_GROUPING,
-        REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING, RigidBodyBundle, ColliderBundle,
+        contact_filter::*, joint_break::*, muscle::*, slot::*, ColliderBundle, RigidBodyBundle,
+        GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING,
     };
 }
 
@@ -112,12 +112,15 @@ impl Default for RigidBodyBundle {
             read_mass_properties: ReadMassProperties::default(),
             locked_axes: LockedAxes::default(),
             sleeping: Sleeping::default(),
-            damping: Damping::default(),
+            damping: Damping {
+                linear_damping: 0.05,
+                angular_damping: 0.05,
+            },
             dominance: Dominance::default(),
             ccd: Ccd::default(),
             gravity_scale: GravityScale::default(),
             friction: Friction::default(),
-            restitution: Restitution::default(),
+            restitution: Restitution::coefficient(0.45),
         }
     }
 }
@@ -130,6 +133,15 @@ pub struct ColliderBundle {
     pub collision_groups: CollisionGroups,
     pub solver_groups: SolverGroups,
     pub contact_force_event_threshold: ContactForceEventThreshold,
+}
+
+impl ColliderBundle {
+    pub fn collider(collider: impl Into<Collider>) -> Self {
+        Self {
+            collider: collider.into(),
+            ..default()
+        }
+    }
 }
 
 impl Default for ColliderBundle {
@@ -233,6 +245,7 @@ pub fn fill_missing(
 }
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
+    /*
     let integration = &mut context.integration_parameters;
     integration.damping_ratio = 0.5;
     integration.joint_erp = 0.8;
@@ -240,15 +253,33 @@ pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     // Try to avoid launching players in weird situations
     integration.max_penetration_correction = 1000.0;
     integration.dt = crate::TICK_RATE.as_secs_f32();
+ */
 }
 
-pub const VELOCITY_CAP: f32 = 1000.0;
-pub const ANG_VELOCITY_CAP: f32 = 50.0;
+pub const VELOCITY_CAP: f32 = 50.0;
+pub const ANG_VELOCITY_CAP: f32 = 5.0;
 
 pub fn cap_velocity(mut velocities: Query<&mut Velocity, Changed<Velocity>>) {
     for mut velocity in &mut velocities {
         velocity.linvel = velocity.linvel.clamp_length_max(VELOCITY_CAP);
         velocity.angvel = velocity.angvel.clamp_length_max(ANG_VELOCITY_CAP);
+    }
+}
+
+pub const IMPULSE_CAP: f32 = 0.001;
+pub const ANG_IMPULSE_CAP: f32 = 0.0001;
+
+pub fn cap_impulse(
+    mut impulses: Query<(&mut ExternalImpulse, &ReadMassProperties), Changed<ExternalImpulse>>,
+) {
+    for (mut impulse, mass) in &mut impulses {
+        if mass.0.mass < 0.1 {
+            impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP / 100.0);
+            impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP / 100.0);
+        } else {
+            impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP);
+            impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP);
+        }
     }
 }
 
@@ -270,7 +301,7 @@ pub fn prevent_oob(
 
 pub fn minimum_mass(bodies: Query<(&mut AdditionalMassProperties, &ReadMassProperties)>) {
     for (mut modify, read) in &bodies {
-        //if read.0.mass < 
+        //if read.0.mass <
     }
 }
 
@@ -331,7 +362,7 @@ impl Plugin for PhysicsPlugin {
         );
 
         app.add_system(fill_missing);
-        app.add_system(cap_velocity);
+        //app.add_system(cap_velocity).add_system(cap_impulse);
         app.add_system(prevent_oob);
         app.add_startup_system(modify_rapier_context);
 

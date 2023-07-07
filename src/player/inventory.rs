@@ -254,7 +254,6 @@ pub fn transform_stored(
                 continue;
             }
             let Ok(mut transform) = transforms.get_mut(item.entity) else { continue };
-            let Ok(collider_handle) = colliders.get(item.entity) else { continue };
 
             //let slots = inventory.len();
             let slots = 4;
@@ -278,14 +277,18 @@ pub fn transform_stored(
             inventory_joint.set_contacts_enabled(false);
 
             let extents: Vec3 = {
-                let Some(rapier_collider) = rapier.colliders.get(collider_handle.0) else { continue };
+                if let Ok(collider_handle) = colliders.get(item.entity) {
+                    let Some(rapier_collider) = rapier.colliders.get(collider_handle.0) else { continue };
 
-                let mut collider = rapier_collider.clone();
-                collider.set_rotation(default());
-                collider.set_translation(default());
-                let aabb = collider.compute_aabb();
-                let extents = aabb.extents();
-                extents.into()
+                    let mut collider = rapier_collider.clone();
+                    collider.set_rotation(default());
+                    collider.set_translation(default());
+                    let aabb = collider.compute_aabb();
+                    let extents = aabb.extents();
+                    extents.into()
+                } else {
+                    Vec3::splat(1.)
+                }
             };
 
             let max = extents.x.max(extents.y).max(extents.z);
