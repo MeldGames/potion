@@ -73,6 +73,7 @@ pub fn setup(
         ))
         .insert(Storeable)
         .insert(RigidBodyBundle::dynamic())
+        .insert(crate::objects::potion::PotionBundle::default())
         .with_children(|children| {
             children
                 .spawn(TransformBundle {
@@ -105,6 +106,7 @@ pub fn setup(
         ))
         .insert(Storeable)
         .insert(RigidBodyBundle::dynamic())
+        .insert(crate::objects::potion::PotionBundle::default())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.5, 0.5, 0.5),
             collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -125,6 +127,7 @@ pub fn setup(
             Name::new("potion 2"),
         ))
         .insert(Storeable)
+        .insert(crate::objects::potion::PotionBundle::default())
         .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.5, 0.5, 0.5),
@@ -359,7 +362,9 @@ pub fn setup(
             ..default()
         })
         .insert(RigidBodyBundle::dynamic())
-        .insert(ColliderBundle::collider(Collider::round_cylinder(0.025, 0.4, 0.2)))
+        .insert(ColliderBundle::collider(Collider::round_cylinder(
+            0.025, 0.4, 0.2,
+        )))
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),
@@ -524,10 +529,7 @@ pub fn setup(
             end: Vec3::new(0.0, 1.2, 0.0),
         }]))
         .insert(RigidBodyBundle::dynamic())
-        .insert((
-            Name::new("Stirrer"),
-            level_collision_mesh3,
-        ))
+        .insert((Name::new("Stirrer"), level_collision_mesh3))
         .with_children(|builder| {
             builder
                 .spawn(TransformBundle {

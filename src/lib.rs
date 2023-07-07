@@ -126,6 +126,7 @@ impl Plugin for PotionCellarPlugin {
             .add_plugin(DepositPlugin)
             .add_plugin(HierarchyTraversalPlugin)
             .add_plugin(InverseKinematicsPlugin)
+            .add_plugin(crate::objects::potion::PotionPlugin)
             .add_plugin(crate::debug::DebugPlugin)
             //.add_plugin(TreesPlugin)
             .add_plugin(PhysicsPlugin)

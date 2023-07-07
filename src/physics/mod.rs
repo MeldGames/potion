@@ -222,14 +222,14 @@ pub fn fill_missing(
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     /*
-    let integration = &mut context.integration_parameters;
-    integration.damping_ratio = 0.5;
-    integration.joint_erp = 0.8;
-    integration.joint_damping_ratio = 0.5;
-    // Try to avoid launching players in weird situations
-    integration.max_penetration_correction = 1000.0;
-    integration.dt = crate::TICK_RATE.as_secs_f32();
- */
+       let integration = &mut context.integration_parameters;
+       integration.damping_ratio = 0.5;
+       integration.joint_erp = 0.8;
+       integration.joint_damping_ratio = 0.5;
+       // Try to avoid launching players in weird situations
+       integration.max_penetration_correction = 1000.0;
+       integration.dt = crate::TICK_RATE.as_secs_f32();
+    */
 }
 
 pub const VELOCITY_CAP: f32 = 50.0;
@@ -251,7 +251,9 @@ pub fn cap_impulse(
     for (mut impulse, mass) in &mut impulses {
         if mass.0.mass < 0.1 {
             impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP / 100.0);
-            impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP / 100.0);
+            impulse.torque_impulse = impulse
+                .torque_impulse
+                .clamp_length_max(ANG_IMPULSE_CAP / 100.0);
         } else {
             impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP);
             impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP);
