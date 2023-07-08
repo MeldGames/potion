@@ -84,6 +84,7 @@ pub fn setup(
                     },
                     ..default()
                 })
+                .insert(crate::objects::potion::PotionColliderBundle::default())
                 .insert(ColliderBundle {
                     collider: Collider::cuboid(0.5, 0.5, 0.5),
                     collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -107,6 +108,7 @@ pub fn setup(
         .insert(Storeable)
         .insert(RigidBodyBundle::dynamic())
         .insert(crate::objects::potion::PotionBundle::default())
+        .insert(crate::objects::potion::PotionColliderBundle::default())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.5, 0.5, 0.5),
             collision_groups: crate::physics::TERRAIN_GROUPING,
@@ -128,6 +130,7 @@ pub fn setup(
         ))
         .insert(Storeable)
         .insert(crate::objects::potion::PotionBundle::default())
+        .insert(crate::objects::potion::PotionColliderBundle::default())
         .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle {
             collider: Collider::cuboid(0.5, 0.5, 0.5),

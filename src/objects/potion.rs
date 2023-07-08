@@ -1,16 +1,13 @@
-
 use crate::prelude::*;
-
 
 pub struct PotionPlugin;
 
 impl Plugin for PotionPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .register_type::<Potion>()
-        .register_type::<CrackThreshold>();
+        app.register_type::<Potion>()
+            .register_type::<CrackThreshold>();
 
-    app.add_system(potion_contact_explode);
+        app.add_system(potion_contact_explode);
     }
 }
 
@@ -24,7 +21,7 @@ pub struct CrackThreshold(f32);
 
 impl Default for CrackThreshold {
     fn default() -> Self {
-        Self(0.1)
+        Self(50.0)
     }
 }
 
@@ -32,7 +29,6 @@ impl Default for CrackThreshold {
 pub struct PotionBundle {
     pub potion: Potion,
     pub crack_threshold: CrackThreshold,
-    pub contact_force_event_threshold: ContactForceEventThreshold,
 }
 
 impl Default for PotionBundle {
@@ -40,14 +36,42 @@ impl Default for PotionBundle {
         Self {
             potion: Potion::default(),
             crack_threshold: CrackThreshold::default(),
-            contact_force_event_threshold: ContactForceEventThreshold(0.0),
         }
     }
 }
 
-pub fn potion_contact_explode(mut commands: Commands, potions: Query<(&Potion, &CrackThreshold)>, mut contact_forces: EventReader<ContactForceEvent>) {
-    let mut check_crack = |entity: Entity, event: &ContactForceEvent| -> bool {
-        info!("checking crack: {:?}", entity);
+#[derive(Bundle)]
+pub struct PotionColliderBundle {
+    pub contact_force_event_threshold: ContactForceEventThreshold,
+    pub active_events: ActiveEvents,
+}
+
+impl Default for PotionColliderBundle {
+    fn default() -> Self {
+        Self {
+            contact_force_event_threshold: ContactForceEventThreshold(5.0),
+            active_events: ActiveEvents::CONTACT_FORCE_EVENTS,
+        }
+    }
+}
+
+pub fn potion_contact_explode(
+    mut commands: Commands,
+    potions: Query<(&Potion, &CrackThreshold)>,
+    mut contact_forces: EventReader<ContactForceEvent>,
+    rigid_body: Query<Entity, With<RigidBody>>,
+    parent: Query<&Parent>,
+) {
+    let mut check_crack = |mut entity: Entity, event: &ContactForceEvent| -> bool {
+        while !rigid_body.contains(entity) {
+            if let Ok(parent) = parent.get(entity) {
+                info!("parent: {:?}", parent);
+                entity = parent.get();
+            } else {
+                return false;
+            }
+        }
+
         let Ok((potion, crack_threshold)) = potions.get(entity) else { return false };
         let hit_force = event.max_force_magnitude.abs();
         let cracked = hit_force > crack_threshold.0;

@@ -6,14 +6,16 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 
 pub mod contact_filter;
+pub mod context_ext;
 pub mod joint_break;
 pub mod muscle;
 pub mod slot;
 
 pub mod prelude {
     pub use super::{
-        contact_filter::*, joint_break::*, muscle::*, slot::*, ColliderBundle, RigidBodyBundle,
-        GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING, STORED_GROUPING, TERRAIN_GROUPING,
+        contact_filter::*, context_ext::*, joint_break::*, muscle::*, slot::*, ColliderBundle,
+        RigidBodyBundle, GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING, STORED_GROUPING,
+        TERRAIN_GROUPING,
     };
 }
 
