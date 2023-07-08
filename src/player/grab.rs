@@ -247,7 +247,7 @@ pub fn grab_collider(
             }
         } else {
             if let Some(grabbed) = grabbing.grabbed.take() {
-                info!("letting go of {:?}", name.get(grabbed.entity).unwrap());
+                info!("letting go of {:?}", name.get(grabbed.entity));
             }
         }
     }
