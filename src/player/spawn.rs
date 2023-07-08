@@ -108,11 +108,11 @@ pub fn setup_player(
                             max_acceleration_force: 4.0,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
                             up_vector: Vec3::Y,
-                            gravity: -15.0,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             forward_vector: None,
                             skip_ground_check_override: false,
                             exclude_from_ground: HashSet::new(),
+                            gravity: -15.0,
 
                             jump_time: 0.0,
                             jump_initial_force: 20.0,
@@ -126,17 +126,17 @@ pub fn setup_player(
 
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
-                            float_cast_length: 1.3,
+                            float_cast_length: 1.5,
                             float_cast_collider: Collider::ball(player_radius),
-                            float_cast_origin: Vec3::ZERO,
+                            float_cast_origin: Vec3::new(0., 0., 0.),
                             float_distance: 1.0,
                             float_spring: Spring {
                                 strength: 180.0,
-                                damping: 0.7,
+                                damping: 1.5,
                             },
                             upright_spring: Spring {
                                 strength: 150.0,
-                                damping: 0.85,
+                                damping: 0.9,
                             },
                             opposing_movement_impulse_scale: 0.01,
                             opposing_impulse_scale: 1.0,
@@ -154,7 +154,7 @@ pub fn setup_player(
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
-                    .insert(ColliderMassProperties::Density(5.0))
+                    .insert(ColliderMassProperties::Density(2.0))
                     .insert(PlayerInput::default())
                     .insert(Inventory::default())
                     .insert(Player { id: id })
