@@ -37,7 +37,7 @@ pub fn setup(
     commands
         .spawn((
             SceneBundle {
-                scene: asset_server.load("models/map.gltf#Scene0"),
+                //scene: asset_server.load("models/map.gltf#Scene0"),
                 ..default()
             },
             NotShadowCaster,
@@ -51,7 +51,7 @@ pub fn setup(
                 )))
                 .insert((
                     RigidBody::Fixed,
-                    Collider::cuboid(50.0, 10.0, 50.0),
+                    Collider::cuboid(30.0, 10.0, 30.0),
                     Name::new("Plane"),
                     crate::physics::TERRAIN_GROUPING,
                     NotShadowReceiver,
@@ -245,13 +245,51 @@ pub fn setup(
             SceneBundle {
                 scene: asset_server.load("models/cellar.gltf#Scene0"),
                 transform: Transform {
-                    translation: Vec3::new(-16.5, -3.0, 1.075),
+                    translation: Vec3::new(-20.6, -3.7, 1.0),
+                    scale: Vec3::splat(1.5),
                     ..default()
                 },
                 ..default()
             },
             crate::SpawnedScene,
         ))
+        .insert(Name::new("Cellar"))
+        .insert(RigidBodyBundle::fixed())
+        .insert(ColliderBundle {
+            collider: Collider::compound(vec![
+                // Floor
+                (
+                    Vec3::new(-11., -1., 0.),
+                    Quat::IDENTITY,
+                    Collider::cuboid(10., 1., 10.),
+                ),
+                // Walls
+                (
+                    Vec3::new(-11., -1., 25.4),
+                    Quat::IDENTITY,
+                    Collider::cuboid(20., 3.425, 20.),
+                ),
+                (
+                    Vec3::new(-11., -1., -24.625),
+                    Quat::IDENTITY,
+                    Collider::cuboid(20., 3.425, 20.),
+                ),
+                (
+                    Vec3::new(-36.26, -1., 0.),
+                    Quat::IDENTITY,
+                    Collider::cuboid(20., 3.425, 20.),
+                ),
+            ]),
+            ..default()
+        })
+        .with_children(|children| {
+            children
+                .spawn(ColliderBundle {
+                    collider: Collider::cuboid(0.5, 0.5, 0.5),
+                    ..default()
+                })
+                .insert(TransformBundle::default());
+        })
         .id();
 
     let _cart = commands
@@ -604,7 +642,7 @@ pub fn setup(
 
     let _door = commands
         .spawn(SceneBundle {
-            scene: asset_server.load("models/door.glb#Scene0"),
+            //scene: asset_server.load("models/door.glb#Scene0"),
             transform: Transform {
                 scale: scale,
                 ..default()

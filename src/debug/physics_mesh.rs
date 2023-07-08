@@ -134,13 +134,10 @@ impl<'a> AsMesh for ColliderView<'a> {
 pub fn init_physics_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    rigid_bodies: Query<
-        (Entity, Option<&Children>, &Collider),
-        (With<RigidBody>, Changed<Collider>),
-    >,
+    colliders: Query<(Entity, Option<&Children>, &Collider), Changed<Collider>>,
     physics_mesh: Query<&PhysicsDebugMesh>,
 ) {
-    for (entity, children, collider) in &rigid_bodies {
+    for (entity, children, collider) in &colliders {
         if let Some(children) = children {
             for child in children.iter() {
                 if physics_mesh.get(*child).is_ok() {

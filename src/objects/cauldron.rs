@@ -33,7 +33,7 @@ pub fn spawn_cauldron(
         })
         .insert(ColliderBundle {
             collider: Collider::cylinder(0.5, 0.75),
-            mass_properties: ColliderMassProperties::Density(5.0),
+            mass_properties: ColliderMassProperties::Density(15.0),
             collision_groups: crate::physics::TERRAIN_GROUPING,
             ..default()
         })

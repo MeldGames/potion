@@ -208,7 +208,7 @@ fn decomp_load(
 ) {
     for (collider, decomp, entity) in &mut replace {
         let path = format!("assets/decomp/obj/{}/obj.obj", decomp.0);
-        info!("running decomp load: {:?}", path);
+        //info!("running decomp load: {:?}", path);
         if let Ok(decomp) = Obj::load(&path) {
             let mut colliders = Vec::new();
             for object in decomp.data.objects {

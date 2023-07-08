@@ -7,7 +7,7 @@ impl Plugin for PotionPlugin {
         app.register_type::<Potion>()
             .register_type::<CrackThreshold>();
 
-        app.add_system(potion_contact_explode);
+        app.add_system(potion_contact_explode.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
@@ -21,7 +21,7 @@ pub struct CrackThreshold(f32);
 
 impl Default for CrackThreshold {
     fn default() -> Self {
-        Self(50.0)
+        Self(80.0)
     }
 }
 
@@ -57,7 +57,7 @@ impl Default for PotionColliderBundle {
 
 pub fn potion_contact_explode(
     mut commands: Commands,
-    potions: Query<(&Potion, &CrackThreshold)>,
+    potions: Query<&CrackThreshold, With<Potion>>,
     mut contact_forces: EventReader<ContactForceEvent>,
     rigid_body: Query<Entity, With<RigidBody>>,
     parent: Query<&Parent>,
@@ -65,14 +65,13 @@ pub fn potion_contact_explode(
     let mut check_crack = |mut entity: Entity, event: &ContactForceEvent| -> bool {
         while !rigid_body.contains(entity) {
             if let Ok(parent) = parent.get(entity) {
-                info!("parent: {:?}", parent);
                 entity = parent.get();
             } else {
                 return false;
             }
         }
 
-        let Ok((potion, crack_threshold)) = potions.get(entity) else { return false };
+        let Ok(crack_threshold) = potions.get(entity) else { return false };
         let hit_force = event.max_force_magnitude.abs();
         let cracked = hit_force > crack_threshold.0;
         if cracked {

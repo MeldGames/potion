@@ -103,11 +103,6 @@ pub fn update_attach(
        }
     */
     for invalid_attacher in &no_velocity {
-        info!(
-            "attacher needs Velocity, adding default: {:?}",
-            names.get(invalid_attacher).unwrap(),
-        );
-
         commands
             .entity(invalid_attacher)
             .insert(Velocity::default());

@@ -95,7 +95,7 @@ pub fn setup_player(
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
-                let global_transform = GlobalTransform::from(Transform::from_xyz(0.0, 10.0, 0.0));
+                let global_transform = GlobalTransform::from(Transform::from_xyz(-25.0, 10.0, 0.0));
 
                 let player_height = 1.0;
                 let player_radius = 0.3;
@@ -107,19 +107,19 @@ pub fn setup_player(
                             max_speed: 7.0,
                             max_acceleration_force: 4.0,
                             up_vector: Vec3::Y,
-                            gravity: -9.8175,
+                            gravity: -15.0,
                             max_ground_angle: 45.0 * (PI / 180.0),
                             min_float_offset: -0.3,
                             max_float_offset: 0.05,
                             jump_time: 0.5,
-                            jump_initial_force: 15.0,
+                            jump_initial_force: 20.0,
                             jump_stop_force: 0.01,
                             jump_decay_function: |x| (1.0 - x).sqrt(),
                             jump_skip_ground_check_duration: 0.5,
                             coyote_time_duration: 0.16,
                             jump_buffer_duration: 0.16,
                             force_scale: Vec3::new(1.0, 0.0, 1.0),
-                            float_cast_length: 1.0,
+                            float_cast_length: 1.3,
                             float_cast_collider: Collider::ball(player_radius),
                             float_distance: 1.0,
                             float_spring: Spring {
@@ -143,10 +143,6 @@ pub fn setup_player(
                         },
                         transform: global_transform.compute_transform(),
                         global_transform: global_transform,
-                        ..default()
-                    })
-                    .insert(SceneBundle {
-                        //scene: asset_server.load("models/skin.gltf#Scene0"),
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
@@ -206,10 +202,11 @@ pub fn setup_player(
                 */
 
                 let camera = commands
-                    .spawn(TransformBundle::from_transform(
-                        Transform::from_translation(Vec3::new(0., 0., 4.))
+                    .spawn(SpatialBundle {
+                        transform: Transform::from_translation(Vec3::new(0., 0., 4.))
                             .looking_at(Vec3::ZERO, Vec3::Y),
-                    ))
+                        ..default()
+                    })
                     .insert(Camera3dBundle {
                         projection: PerspectiveProjection { ..default() }.into(),
                         camera: Camera {
@@ -251,7 +248,9 @@ pub fn setup_player(
                 commands.entity(player_entity).push_children(&[head]);
 
                 let neck = commands
-                    .spawn((TransformBundle::default(), Neck, Name::new("Neck")))
+                    .spawn(SpatialBundle::default())
+                    .insert(Neck)
+                    .insert(Name::new("Neck"))
                     .insert(Attach::translation(head))
                     .insert(Velocity::default())
                     .id();

@@ -114,7 +114,6 @@ pub fn grab_joint(
                     }
                 }
 
-                info!("adding grab joint");
                 let motor_model = MotorModel::ForceBased;
                 let max_force = 1000.0;
                 let stiffness = 20.0;
@@ -144,7 +143,6 @@ pub fn grab_joint(
             }
             None => {
                 if let Some((joint_entity, _)) = joint {
-                    info!("cleaning up joint entity");
                     commands
                         .entity(joint_entity)
                         .remove::<ImpulseJoint>()
@@ -156,7 +154,7 @@ pub fn grab_joint(
 }
 
 pub fn grab_collider(
-    name: Query<DebugName>,
+    names: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
     auto_aim: Query<&AutoAim>,
@@ -235,7 +233,10 @@ pub fn grab_collider(
                     let anchor1 =
                         other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
 
-                    let name = name.get(other_rigidbody).unwrap();
+                    let name = names
+                        .get(other_rigidbody)
+                        .map(|name| name.as_str().to_owned())
+                        .unwrap_or(format!("{:?}", other_rigidbody));
                     info!("grabbing {:?}", name);
 
                     grabbing.grabbed = Some(Grabbed {
@@ -247,7 +248,11 @@ pub fn grab_collider(
             }
         } else {
             if let Some(grabbed) = grabbing.grabbed.take() {
-                info!("letting go of {:?}", name.get(grabbed.entity));
+                let name = names
+                    .get(grabbed.entity)
+                    .map(|name| name.as_str().to_owned())
+                    .unwrap_or(format!("{:?}", grabbed.entity));
+                info!("dropping {:?}", name);
             }
         }
     }
