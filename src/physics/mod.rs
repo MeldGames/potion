@@ -10,6 +10,7 @@ pub mod context_ext;
 pub mod joint_break;
 pub mod muscle;
 pub mod slot;
+pub mod split_compound;
 
 pub mod prelude {
     pub use super::{
@@ -345,6 +346,7 @@ impl Plugin for PhysicsPlugin {
         //app.add_system(cap_velocity).add_system(cap_impulse);
         app.add_system(prevent_oob);
         app.add_startup_system(modify_rapier_context);
+        app.add_system(split_compound::split_compound);
 
         app.add_plugin(MusclePlugin);
         app.add_plugin(BreakJointPlugin);

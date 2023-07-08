@@ -8,7 +8,7 @@ fn main() {
     app.add_plugin(potion::maps::showcase::SetupPlugin);
     //app.add_plugin(potion::maps::puzzle::SetupPlugin);
     //app.add_plugin(potion::maps::base_test::SetupPlugin);
-    app.add_startup_system(spawn_multibody);
+    //app.add_startup_system(spawn_multibody);
 
     app.run();
 }
