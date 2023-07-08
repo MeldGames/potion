@@ -134,13 +134,25 @@ impl<'a> AsMesh for ColliderView<'a> {
 pub fn init_physics_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    colliders: Query<(Entity, Option<&Children>, &Collider), Changed<Collider>>,
+    colliders: Query<(Entity, &Collider), Changed<Collider>>,
+    childrens: Query<&Children>,
     physics_mesh: Query<&PhysicsDebugMesh>,
+    mut removed: RemovedComponents<Collider>,
 ) {
-    for (entity, children, collider) in &colliders {
-        if let Some(children) = children {
+    for entity in removed.iter() {
+        if let Ok(children) = childrens.get(entity) {
             for child in children.iter() {
-                if physics_mesh.get(*child).is_ok() {
+                if physics_mesh.contains(*child) {
+                    commands.entity(*child).despawn_recursive();
+                }
+            }
+        }
+    }
+
+    for (entity, collider) in &colliders {
+        if let Ok(children) = childrens.get(entity) {
+            for child in children.iter() {
+                if physics_mesh.contains(*child) {
                     commands.entity(*child).despawn_recursive();
                 }
             }
