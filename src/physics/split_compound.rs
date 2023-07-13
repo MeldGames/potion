@@ -62,7 +62,6 @@ pub fn split_compound(
                         ColliderView::RoundConvexPolyhedron(RoundConvexPolyhedronView { raw }) => {
                             SharedShape::new(raw.clone())
                         }
-                        _ => unimplemented!(),
                     };
                     children
                         .spawn(SpatialBundle {

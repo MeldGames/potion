@@ -2,7 +2,7 @@ use potion::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
-    app.add_plugin(PotionCellarPlugin);
+    app.add_plugins(PotionCellarPlugin);
     app.insert_resource(LockToggle::default());
 
     /*

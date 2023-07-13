@@ -28,7 +28,7 @@ impl Plugin for NetworkPlugin {
                 .label("server_update_system"),
         );
 
-        app.add_plugin(SabiPlugin::<PlayerInput> {
+        app.add_plugins(SabiPlugin::<PlayerInput> {
             tick_rate: crate::TICK_RATE,
             ..Default::default()
         });

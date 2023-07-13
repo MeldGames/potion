@@ -14,9 +14,9 @@ fn main() {
                 .set(AssetPlugin { ..default() }),
         )
         .insert_resource(ClearColor(Color::hex("071f3c").unwrap()))
-        .add_plugin(potion::egui::SetupEguiPlugin)
-        .add_plugin(bevy_editor_pls::EditorPlugin)
-        .add_plugin(CameraControllerPlugin)
+        .add_plugins(potion::egui::SetupEguiPlugin)
+        .add_plugins(bevy_editor_pls::EditorPlugin)
+        .add_plugins(CameraControllerPlugin)
         .add_startup_system(setup)
         .add_system(twist)
         .run();

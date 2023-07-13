@@ -251,27 +251,16 @@ pub fn transform_stored(
             }
             let Ok(mut transform) = transforms.get_mut(item.entity) else { continue };
 
-            //let slots = inventory.len();
+            //let slots = inventory.items.len();
             let slots = 4;
             let left_align = (NORMALIZED_SCALE + PADDING) * ((slots / 2) as f32 - 0.5);
 
-            let strength = 5000.0;
-            let damping = 5.0;
-            //let mut inventory_joint = GenericJointBuilder::new(JointAxesMask::empty())
             let mut inventory_joint = FixedJointBuilder::new()
                 .local_anchor1(Vec3::new(
                     (index as f32 * (NORMALIZED_SCALE + PADDING)) - left_align,
                     1.0,
                     0.5,
                 ))
-                /*
-                .motor_position(JointAxis::X, 0.0, strength, damping)
-                .motor_position(JointAxis::Y, 0.0, strength, damping)
-                .motor_position(JointAxis::Z, 0.0, strength, damping)
-                .motor_position(JointAxis::AngX, 0.0, strength, damping)
-                .motor_position(JointAxis::AngY, 0.0, strength, damping)
-                .motor_position(JointAxis::AngZ, 0.0, strength, damping)
-                */
                 .build();
             inventory_joint.set_contacts_enabled(false);
 

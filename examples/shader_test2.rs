@@ -28,7 +28,7 @@ fn main() {
                 ..default()
             }),
     )
-    .add_plugin(MaterialPlugin::<GlowyMaterial>::default())
+    .add_plugins(MaterialPlugin::<GlowyMaterial>::default())
     .add_startup_system(setup);
 
     app.run();

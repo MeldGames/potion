@@ -8,9 +8,9 @@ use bevy_editor_pls::EditorPlugin;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(EditorPlugin)
-        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(EditorPlugin)
+        .add_plugins(LogDiagnosticsPlugin::default())
         .add_startup_system(setup)
         .run();
 }

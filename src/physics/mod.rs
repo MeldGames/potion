@@ -223,8 +223,8 @@ pub fn fill_missing(
     }
 }
 
+/*
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
-    /*
        let integration = &mut context.integration_parameters;
        integration.damping_ratio = 0.5;
        integration.joint_erp = 0.8;
@@ -232,8 +232,8 @@ pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
        // Try to avoid launching players in weird situations
        integration.max_penetration_correction = 1000.0;
        integration.dt = crate::TICK_RATE.as_secs_f32();
-    */
 }
+*/
 
 pub const VELOCITY_CAP: f32 = 50.0;
 pub const ANG_VELOCITY_CAP: f32 = 5.0;
@@ -280,12 +280,6 @@ pub fn prevent_oob(
     }
 }
 
-pub fn minimum_mass(bodies: Query<(&mut AdditionalMassProperties, &ReadMassProperties)>) {
-    for (mut modify, read) in &bodies {
-        //if read.0.mass <
-    }
-}
-
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
@@ -301,7 +295,7 @@ impl Plugin for PhysicsPlugin {
 
         type PhysicsPlugin<'w, 's> = RapierPhysicsPlugin<ContactFilterHook<'w, 's>>;
         let physics_plugin = PhysicsPlugin::default().with_default_system_setup(false);
-        app.add_plugin(physics_plugin);
+        app.add_plugins(physics_plugin);
 
         app.configure_sets(
             FixedUpdate,
@@ -338,11 +332,11 @@ impl Plugin for PhysicsPlugin {
         app.add_systems(Update, fill_missing);
         //app.add_systems(Update, cap_velocity).add_systems(Update, cap_impulse);
         app.add_systems(Update, prevent_oob);
-        app.add_systems(Startup, modify_rapier_context);
+        //app.add_systems(Startup, modify_rapier_context);
         //app.add_systems(Update, split_compound::split_compound);
 
-        app.add_plugin(MusclePlugin);
-        app.add_plugin(BreakJointPlugin);
-        app.add_plugin(SlotPlugin);
+        app.add_plugins(MusclePlugin);
+        app.add_plugins(BreakJointPlugin);
+        app.add_plugins(SlotPlugin);
     }
 }

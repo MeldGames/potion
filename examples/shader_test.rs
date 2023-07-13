@@ -41,9 +41,9 @@ fn main() {
                 ..default()
             }),
     )
-    .add_plugin(Material2dPlugin::<DopeMaterial>::default())
+    .add_plugins(Material2dPlugin::<DopeMaterial>::default())
     .add_startup_system(spawn_camera)
-    .add_plugin(ExtractResourcePlugin::<ExtractedTime>::default())
+    .add_plugins(ExtractResourcePlugin::<ExtractedTime>::default())
     .add_startup_system(setup);
 
     app.sub_app_mut(RenderApp)

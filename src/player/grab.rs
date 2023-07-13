@@ -609,8 +609,8 @@ pub fn auto_aim_debug_lines(auto_aim: Query<(&GlobalTransform, &AutoAim)>) {
                     );*/
                 }
                 AimPrimitive::Line { start, end } => {
-                    let start = global.transform_point(start);
-                    let end = global.transform_point(end);
+                    //let start = global.transform_point(start);
+                    //let end = global.transform_point(end);
 
                     /*
                                        lines.line_colored(
@@ -651,7 +651,7 @@ pub fn auto_aim_pull(
                         crate::TICK_RATE.as_secs_f32(),
                         Color::GREEN,
                     ); */
-                    //pulls.push(difference);
+                    pulls.push(difference);
                 }
             }
         }

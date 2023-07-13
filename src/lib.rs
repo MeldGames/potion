@@ -90,10 +90,10 @@ impl Plugin for PotionCellarPlugin {
         */
         app.insert_resource(FixedTime::new(crate::TICK_RATE));
         //app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
-        //app.add_plugin(bevy_framepace::FramepacePlugin);
+        //app.add_plugins(bevy_framepace::FramepacePlugin);
         app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
-        //app.add_plugin(crate::egui::SetupEguiPlugin);
-        //app.add_plugin(bevy_editor_pls::EditorPlugin::default());
+        //app.add_plugins(crate::egui::SetupEguiPlugin);
+        //app.add_plugins(bevy_editor_pls::EditorPlugin::default());
 
         const MSAA: bool = true;
         if MSAA {
@@ -101,7 +101,7 @@ impl Plugin for PotionCellarPlugin {
         } else {
             /*
             app.insert_resource(Msaa::Off)
-                .add_plugin(EdgeDetectionPlugin)
+                .add_plugins(EdgeDetectionPlugin)
                 .insert_resource(EdgeDetectionConfig {
                     debug: 0,
                     enabled: 1,
@@ -116,7 +116,7 @@ impl Plugin for PotionCellarPlugin {
             (FixedSet::First, FixedSet::Update, FixedSet::Last).chain(),
         );
 
-        //app.add_plugin(bevy_framepace::FramepacePlugin);
+        //app.add_plugins(bevy_framepace::FramepacePlugin);
         app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
             .add_plugins((
                 PlayerPlugin,
@@ -135,13 +135,13 @@ impl Plugin for PotionCellarPlugin {
                 style: Default::default(),
                 mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
             })
-            .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
+            .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
 
         //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
 
         app.add_event::<AssetEvent<Mesh>>();
 
-        app.add_startup_system(fallback_camera);
+        app.add_systems(Startup, fallback_camera);
 
         app.add_systems(
             Update,

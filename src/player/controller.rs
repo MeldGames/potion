@@ -167,12 +167,11 @@ pub fn teleport_player_back(
 
 pub fn character_crouch(
     mut controllers: Query<(&PlayerInput, &mut Float)>,
-    //mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>,
 ) {
     let crouch_height = 0.15;
     let full_height = 1.0;
     let threshold = -PI / 4.0;
-    for (input, mut controller) in &mut controllers {
+    for (input, mut float) in &mut controllers {
         // Are we looking sufficiently down?
         if input.pitch < threshold {
             // interpolate between crouch and full based on how far we are pitched downwards
@@ -180,9 +179,9 @@ pub fn character_crouch(
                 (input.pitch.abs() - threshold.abs()) / ((PI / 2.0) - threshold.abs());
             let interpolated =
                 full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
-            //controller.float_distance = interpolated;
+            float.distance = interpolated;
         } else {
-            //controller.float_distance = full_height;
+            float.distance = full_height;
         }
     }
 }
@@ -195,7 +194,6 @@ pub fn controller_exclude(
         &Inventory,
         &mut GroundCaster,
     )>,
-    //mut controllers: Query<(Entity, Option<&CharacterEntities>, &Inventory, &mut ControllerSettings)>,
 ) {
     for (_entity, connected, inventory, mut settings) in &mut controllers {
         let mut new_exclude = HashSet::new();

@@ -14,8 +14,8 @@ use bevy_rapier3d::prelude::*;
 pub struct TreesPlugin;
 impl Plugin for TreesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(MaterialPlugin::<LeafMaterial>::default())
-            .add_plugin(MaterialPlugin::<BarkMaterial>::default())
+        app.add_plugins(MaterialPlugin::<LeafMaterial>::default())
+            .add_plugins(MaterialPlugin::<BarkMaterial>::default())
             .add_system(mod_scene);
     }
 }

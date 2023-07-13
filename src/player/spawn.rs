@@ -101,58 +101,6 @@ pub fn setup_player(
                 let player_radius = 0.3;
                 // Spawn player cube
                 let player_entity = commands
-                    /*
-                    .spawn(ControllerBundle {
-                              settings: ControllerSettings {
-                                acceleration: 5.0,
-                                max_speed: 7.0,
-                                max_acceleration_force: 4.0,
-                                force_scale: Vec3::new(1.0, 0.0, 1.0),
-                                up_vector: Vec3::Y,
-                                max_ground_angle: 45.0 * (PI / 180.0),
-                                forward_vector: None,
-                                skip_ground_check_override: false,
-                                exclude_from_ground: HashSet::new(),
-                                gravity: 15.0,
-                                jump_time: 0.0,
-                                jump_initial_force: 20.0,
-                                jump_force: 0.0,
-                                jump_stop_force: 0.0,
-                                jump_decay_function: Some(|x| x),
-                                jump_skip_ground_check_duration: 0.0,
-                                extra_jumps: 0,
-                                coyote_time_duration: 0.0,
-                                jump_buffer_duration: 0.0,
-                                min_float_offset: 0.3,
-                                max_float_offset: 0.05,
-                                float_cast_length: 1.5,
-                                float_cast_collider: Collider::ball(player_radius),
-                                float_cast_origin: Vec3::new(0., 0., 0.),
-                                float_distance: 1.0,
-                                float_spring: Spring {
-                                    strength: 180.0,
-                                    damping: 1.5,
-                                },
-                                upright_spring: Spring {
-                                    strength: 150.0,
-                                    damping: 0.9,
-                                },
-                                opposing_movement_impulse_scale: 0.01,
-                                opposing_impulse_scale: 1.0,
-                            },
-                            physics: ControllerPhysicsBundle {
-                                collider: Collider::capsule(
-                                    Vec3::new(0.0, 0.0, 0.0),
-                                    Vec3::new(0.0, player_height, 0.0),
-                                    player_radius,
-                                ),
-                                ..default()
-                            },
-                            transform: global_transform.compute_transform(),
-                            global_transform: global_transform,
-                            ..default()
-                        })
-                        */
                     .spawn(ControllerBundle {
                         controller: Controller {
                             movement: Movement {
@@ -184,8 +132,8 @@ pub fn setup_player(
                             },
                             upright: Upright {
                                 spring: Spring {
-                                    strength: 50.0,
-                                    damping: 0.8,
+                                    strength: 150.0,
+                                    damping: 0.9,
                                 },
                                 forward_vector: None,
                             },
