@@ -47,11 +47,7 @@ impl Plugin for CustomWanderlustPlugin {
             |casts: Query<&GroundCast>, mut gizmos: Gizmos| {
                 for cast in &casts {
                     if let Some((entity, toi, velocity)) = cast.cast {
-                        if toi.status == TOIStatus::Penetrating {
-                            //gizmos.sphere(toi.witness1, Quat::IDENTITY, 0.3, Color::RED);
-                        } else {
-                            gizmos.sphere(toi.witness1, Quat::IDENTITY, 0.3, Color::LIME_GREEN);
-                        }
+                        gizmos.sphere(toi.witness, Quat::IDENTITY, 0.3, Color::LIME_GREEN);
                     }
                 }
             }
