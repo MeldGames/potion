@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 
-use bevy_mod_wanderlust::{ControllerInput, WanderlustPlugin};
+use bevy_mod_wanderlust::{ControllerInput, WanderlustPlugin, *};
 
 pub mod controller;
 pub mod grab;
@@ -16,10 +17,45 @@ pub mod prelude {
 pub struct CustomWanderlustPlugin;
 impl Plugin for CustomWanderlustPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(WanderlustPlugin::default());
+        //app.add_plugins(WanderlustPlugin::default());
 
         //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
         //app.add_systems(FixedUpdate, bevy_mod_wanderlust::movement);
+
+        app.add_systems(
+            FixedUpdate,
+            (
+                get_mass_from_rapier,
+                get_velocity_from_rapier,
+                find_ground,
+                determine_groundedness,
+                apply_gravity,
+                movement_force,
+                jump_force,
+                upright_force,
+                float_force,
+                accumulate_forces,
+                apply_forces,
+                apply_ground_forces,
+            )
+                .chain()
+                .before(PhysicsSet::SyncBackend),
+        );
+
+        app.add_systems(
+            Update,
+            |casts: Query<&GroundCast>, mut gizmos: Gizmos| {
+                for cast in &casts {
+                    if let Some((entity, toi, velocity)) = cast.cast {
+                        if toi.status == TOIStatus::Penetrating {
+                            //gizmos.sphere(toi.witness1, Quat::IDENTITY, 0.3, Color::RED);
+                        } else {
+                            gizmos.sphere(toi.witness1, Quat::IDENTITY, 0.3, Color::LIME_GREEN);
+                        }
+                    }
+                }
+            }
+        );
     }
 }
 

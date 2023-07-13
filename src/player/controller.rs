@@ -189,13 +189,24 @@ pub fn character_crouch(
 
 pub fn controller_exclude(
     _names: Query<&Name>,
-    mut controllers: Query<(Entity, Option<&CharacterEntities>, &Inventory, &mut GroundCaster)>,
+    mut controllers: Query<(
+        Entity,
+        Option<&CharacterEntities>,
+        &Inventory,
+        &mut GroundCaster,
+    )>,
     //mut controllers: Query<(Entity, Option<&CharacterEntities>, &Inventory, &mut ControllerSettings)>,
 ) {
     for (_entity, connected, inventory, mut settings) in &mut controllers {
         let mut new_exclude = HashSet::new();
 
-        new_exclude.extend(inventory.items.iter().filter_map(|item| *item).map(|item| item.entity));
+        new_exclude.extend(
+            inventory
+                .items
+                .iter()
+                .filter_map(|item| *item)
+                .map(|item| item.entity),
+        );
 
         if let Some(connected) = connected {
             new_exclude.extend(connected.iter());
