@@ -23,10 +23,9 @@ use crate::prelude::*;
 
 use bevy::window::{CursorGrabMode, WindowPlugin};
 
-use bevy_editor_pls::editor::Editor;
-use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
+//use bevy_editor_pls::editor::Editor;
+//use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
-use bevy_prototype_debug_lines::*;
 use obj::Obj;
 
 use self::{
@@ -68,13 +67,11 @@ impl Plugin for PotionCellarPlugin {
                     }),
                     ..default()
                 })
-                .set(AssetPlugin {
-                    watch_for_changes: true,
-                    ..default()
-                }),
+                .set(AssetPlugin { ..default() }),
         );
 
-        app.add_startup_system(
+        app.add_systems(
+            Startup,
             move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>| {
                 if let Ok(mut window) = windows.get_single_mut() {
                     let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
@@ -84,24 +81,25 @@ impl Plugin for PotionCellarPlugin {
             },
         );
 
+        /*
         app.insert_resource(bevy_framepace::FramepaceSettings {
             //limiter: bevy_framepace::Limiter::Off,
             limiter: bevy_framepace::Limiter::Auto,
             //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
         });
+        */
         app.insert_resource(FixedTime::new(crate::TICK_RATE));
-        app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
-        app.add_plugin(bevy_framepace::FramepacePlugin);
+        //app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
+        //app.add_plugin(bevy_framepace::FramepacePlugin);
         app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
-        app.add_plugin(DebugLinesPlugin::default());
-        //app.add_system(|mut lines: ResMut<DebugLines>| lines.enabled = false);
         //app.add_plugin(crate::egui::SetupEguiPlugin);
-        app.add_plugin(bevy_editor_pls::EditorPlugin::default());
+        //app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
         const MSAA: bool = true;
         if MSAA {
             app.insert_resource(Msaa::Sample8);
         } else {
+            /*
             app.insert_resource(Msaa::Off)
                 .add_plugin(EdgeDetectionPlugin)
                 .insert_resource(EdgeDetectionConfig {
@@ -109,30 +107,30 @@ impl Plugin for PotionCellarPlugin {
                     enabled: 1,
                     ..default()
                 })
-                .add_system(edge_detect_swap);
+                .add_systems(Update, edge_detect_swap);
+            */
         }
 
-        app.world
-            .resource_mut::<Schedules>()
-            .get_mut(&CoreSchedule::FixedUpdate)
-            .unwrap()
-            .configure_sets((FixedSet::First, FixedSet::Update, FixedSet::Last).chain());
+        app.configure_sets(
+            FixedUpdate,
+            (FixedSet::First, FixedSet::Update, FixedSet::Last).chain(),
+        );
 
         //app.add_plugin(bevy_framepace::FramepacePlugin);
         app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
-            .add_plugin(PlayerPlugin)
-            .add_plugin(attach::AttachPlugin)
-            .add_plugin(StorePlugin)
-            .add_plugin(DepositPlugin)
-            .add_plugin(HierarchyTraversalPlugin)
-            .add_plugin(InverseKinematicsPlugin)
-            .add_plugin(crate::objects::potion::PotionPlugin)
-            .add_plugin(crate::debug::DebugPlugin)
-            //.add_plugin(TreesPlugin)
-            .add_plugin(PhysicsPlugin)
-            .add_plugin(RapierDebugRenderPlugin {
-                //always_on_top: true,
-                always_on_top: false,
+            .add_plugins((
+                PlayerPlugin,
+                attach::AttachPlugin,
+                StorePlugin,
+                DepositPlugin,
+                HierarchyTraversalPlugin,
+                InverseKinematicsPlugin,
+                crate::objects::potion::PotionPlugin,
+                crate::debug::DebugPlugin,
+                //TreesPlugin,
+                PhysicsPlugin,
+            ))
+            .add_plugins(RapierDebugRenderPlugin {
                 enabled: true,
                 style: Default::default(),
                 mode: DebugRenderMode::COLLIDER_SHAPES, //| DebugRenderMode::COLLIDER_AABBS,
@@ -145,13 +143,15 @@ impl Plugin for PotionCellarPlugin {
 
         app.add_startup_system(fallback_camera);
 
-        app.add_system(update_level_collision);
-        app.add_system(active_cameras);
-        app.add_system(decomp_load);
-        //app.add_system(prepare_scene);
+        app.add_systems(
+            Update,
+            (update_level_collision, active_cameras, decomp_load),
+        );
+        //app.add_systems(Update, prepare_scene);
     }
 }
 
+/*
 fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionConfig>) {
     if key.just_pressed(KeyCode::T) {
         config.debug = match config.debug {
@@ -160,6 +160,7 @@ fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionCo
         };
     }
 }
+ */
 
 fn fallback_camera(mut commands: Commands) {
     commands
@@ -355,6 +356,11 @@ pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>
     }
 }
 
+pub fn editor_active() -> bool {
+    false
+}
+
+/*
 pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
     if let Some(editor) = editor {
         editor.active()
@@ -362,3 +368,4 @@ pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
         false
     }
 }
+ */

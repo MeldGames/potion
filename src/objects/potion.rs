@@ -7,15 +7,15 @@ impl Plugin for PotionPlugin {
         app.register_type::<Potion>()
             .register_type::<CrackThreshold>();
 
-        app.add_system(potion_contact_explode.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems(FixedUpdate, potion_contact_explode);
     }
 }
 
-#[derive(Component, Debug, Reflect, FromReflect, Default)]
+#[derive(Component, Debug, Reflect, Default)]
 #[reflect(Component)]
 pub struct Potion;
 
-#[derive(Component, Debug, Reflect, FromReflect)]
+#[derive(Component, Debug, Reflect)]
 #[reflect(Component)]
 pub struct CrackThreshold(f32);
 

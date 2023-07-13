@@ -15,7 +15,7 @@ impl Plugin for HierarchyTraversalPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<JointChildren>();
 
-        app.add_system(joint_children.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems(FixedUpdate, joint_children);
     }
 }
 
@@ -79,7 +79,7 @@ pub fn find_children_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     queried
 }
 
-#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect, FromReflect)]
+#[derive(Deref, DerefMut, Default, Debug, Component, Clone, Reflect)]
 #[reflect(Component)]
 pub struct JointChildren(pub Vec<Entity>);
 

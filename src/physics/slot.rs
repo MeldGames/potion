@@ -6,7 +6,7 @@ use bevy_rapier3d::{
     rapier::dynamics::{JointAxesMask, JointAxis},
 };
 
-#[derive(Default, Debug, Copy, Clone, Component, Reflect, FromReflect)]
+#[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct Slot {
     /// Entity this slot contains.
@@ -21,11 +21,11 @@ pub struct SlotBundle {
     pub grace: SlotGracePeriod,
 }
 
-#[derive(Default, Debug, Clone, Component, Reflect, FromReflect)]
+#[derive(Default, Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct SlotSettings(pub springy::Spring);
 
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Component, Reflect, FromReflect)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Component, Reflect)]
 #[reflect(Component)]
 pub enum Slottable {
     #[default]
@@ -34,7 +34,7 @@ pub enum Slottable {
     Slotted,
 }
 
-#[derive(Debug, Clone, Component, Reflect, FromReflect)]
+#[derive(Debug, Clone, Component, Reflect)]
 #[reflect(Component)]
 pub struct SlotGracePeriod(Timer);
 
@@ -262,14 +262,14 @@ impl Plugin for SlotPlugin {
             .register_type::<SlotSettings>();
 
         app.add_systems(
+            FixedUpdate,
             (
                 pending_slot,
                 insert_slot.after(pending_slot),
                 tick_grace_period.before(insert_slot),
                 slot_joints.after(insert_slot),
             )
-                .before(PhysicsSet::SyncBackend)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .before(PhysicsSet::SyncBackend),
         );
     }
 }

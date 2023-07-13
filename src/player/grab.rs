@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use bevy::input::mouse::MouseMotion;
 
 use bevy::prelude::*;
-use bevy_prototype_debug_lines::DebugLines;
 
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
@@ -24,6 +23,7 @@ impl Plugin for GrabPlugin {
             .register_type::<Grabbing>();
 
         app.add_systems(
+            FixedUpdate,
             (
                 auto_aim_debug_lines,
                 auto_aim_pull,
@@ -34,38 +34,20 @@ impl Plugin for GrabPlugin {
                 last_active_arm,
             )
                 .in_set(GrabSet)
-                .in_set(FixedSet::Update)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .in_set(FixedSet::Update),
         );
 
-        app.add_system(
+        app.add_systems(
+            FixedUpdate,
             player_extend_arm
                 .in_set(GrabSet)
-                .after(super::controller::player_movement)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .after(super::controller::player_movement),
         );
-        app.add_system(
-            tense_arms
-                .in_set(GrabSet)
-                .in_schedule(CoreSchedule::FixedUpdate),
-        );
+        app.add_systems(FixedUpdate, tense_arms.in_set(GrabSet));
     }
 }
 
-#[derive(
-    Default,
-    Component,
-    Debug,
-    Copy,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Reflect,
-    FromReflect,
-)]
+#[derive(Default, Component, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
 #[reflect(Component)]
 pub struct GrabJoint;
 
@@ -258,7 +240,7 @@ pub fn grab_collider(
     }
 }
 
-#[derive(Debug, Clone, Copy, Reflect, FromReflect)]
+#[derive(Debug, Clone, Copy, Reflect)]
 pub struct Grabbed {
     /// Entity currently grabbed onto.
     pub entity: Entity,
@@ -270,7 +252,7 @@ pub struct Grabbed {
     pub teleport_entity: bool,
 }
 
-#[derive(Default, Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[derive(Default, Debug, Component, Clone, Copy, Reflect)]
 pub struct Grabbing {
     /// Attempting to grab something.
     pub trying_grab: bool,
@@ -283,7 +265,7 @@ pub struct Grabbing {
     pub point: Vec3,
 }
 
-#[derive(Default, Debug, Clone, Copy, Reflect, FromReflect)]
+#[derive(Default, Debug, Clone, Copy, Reflect)]
 pub struct Sphere {
     /// Center of sphere in world space.
     pub center: Vec3,
@@ -291,7 +273,7 @@ pub struct Sphere {
     pub radius: f32,
 }
 
-#[derive(Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[derive(Debug, Component, Clone, Copy, Reflect)]
 #[reflect(Component)]
 pub struct GrabSphere {
     pub sphere: Option<Sphere>,
@@ -353,7 +335,7 @@ pub fn twist_grab(
         if grabbing.grabbed.is_none() {
             grabbing.rotation = Quat::IDENTITY;
         } else {
-            if !kb.pressed(KeyCode::RControl) {
+            if !kb.pressed(KeyCode::ControlRight) {
                 continue;
             }
 
@@ -375,8 +357,6 @@ pub fn update_grab_sphere(
     joint_children: Query<&JointChildren>,
     grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
     globals: Query<&GlobalTransform>,
-
-    mut lines: ResMut<DebugLines>,
 ) {
     for (entity, mut grab_sphere) in &mut grab_spheres {
         let mut anchors = Vec::new();
@@ -396,12 +376,14 @@ pub fn update_grab_sphere(
 
             let anchor = joint.data.local_anchor2();
             let global_anchor = global.transform_point(anchor);
+            /*
             lines.line_colored(
                 global_anchor,
                 global_anchor + Vec3::Y,
                 crate::TICK_RATE.as_secs_f32(),
                 Color::YELLOW,
             );
+            */
 
             anchors.push((grabber, global_anchor));
         }
@@ -428,15 +410,16 @@ pub fn update_grab_sphere(
             radius: radius,
         });
 
-        lines.line_colored(
-            midpoint,
-            midpoint + Vec3::Y,
-            crate::TICK_RATE.as_secs_f32(),
-            Color::RED,
-        );
+        /*
+               lines.line_colored(
+                   midpoint,
+                   midpoint + Vec3::Y,
+                   crate::TICK_RATE.as_secs_f32(),
+                   Color::RED,
+               );
 
-        lines.line_colored(min, max, crate::TICK_RATE.as_secs_f32(), Color::PURPLE);
-
+               lines.line_colored(min, max, crate::TICK_RATE.as_secs_f32(), Color::PURPLE);
+        */
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing
@@ -555,7 +538,7 @@ pub fn last_active_arm(
     }
 }
 
-#[derive(Component, Reflect, FromReflect, Default)]
+#[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct AutoAim(pub Vec<AimPrimitive>);
 
@@ -574,7 +557,7 @@ impl AutoAim {
     }
 }
 
-#[derive(Reflect, FromReflect)]
+#[derive(Reflect)]
 pub enum AimPrimitive {
     Point(Vec3),
     Line { start: Vec3, end: Vec3 },
@@ -611,48 +594,45 @@ impl AimPrimitive {
     }
 }
 
-pub fn auto_aim_debug_lines(
-    auto_aim: Query<(&GlobalTransform, &AutoAim)>,
-    mut lines: ResMut<DebugLines>,
-) {
+pub fn auto_aim_debug_lines(auto_aim: Query<(&GlobalTransform, &AutoAim)>) {
     for (global, auto) in &auto_aim {
         for primitive in &auto.0 {
             match *primitive {
                 AimPrimitive::Point(point) => {
                     let point = global.transform_point(point);
 
-                    lines.line_colored(
+                    /*lines.line_colored(
                         point,
                         point + Vec3::Y * 0.25,
                         crate::TICK_RATE.as_secs_f32(),
                         Color::LIME_GREEN,
-                    );
+                    );*/
                 }
                 AimPrimitive::Line { start, end } => {
                     let start = global.transform_point(start);
                     let end = global.transform_point(end);
 
-                    lines.line_colored(
-                        start,
-                        end,
-                        crate::TICK_RATE.as_secs_f32(),
-                        Color::LIME_GREEN,
-                    );
+                    /*
+                                       lines.line_colored(
+                                           start,
+                                           end,
+                                           crate::TICK_RATE.as_secs_f32(),
+                                           Color::LIME_GREEN,
+                                       );
+                    */
                 }
             }
         }
     }
 }
 
-#[derive(Default, Component, Reflect, FromReflect)]
+#[derive(Default, Component, Reflect)]
 #[reflect(Component)]
 pub struct PullOffset(Vec3);
 
 pub fn auto_aim_pull(
     pullers: Query<(&GlobalTransform, &AutoAim)>,
     mut offsets: Query<(&GlobalTransform, &mut PullOffset)>,
-
-    mut lines: ResMut<DebugLines>,
 ) {
     for (offset_global, mut offset) in &mut offsets {
         let mut pulls: Vec<Vec3> = Vec::new();
@@ -664,12 +644,13 @@ pub fn auto_aim_pull(
                 let difference = closest_point - offset_point;
 
                 if difference.length() < 5.0 {
+                    /*
                     lines.line_colored(
                         offset_point,
                         closest_point,
                         crate::TICK_RATE.as_secs_f32(),
                         Color::GREEN,
-                    );
+                    ); */
                     //pulls.push(difference);
                 }
             }

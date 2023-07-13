@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use bevy_mod_wanderlust::{ControllerInput, ControllerSettings, ControllerState};
+use bevy_mod_wanderlust::{ControllerInput, WanderlustPlugin};
 
 pub mod controller;
 pub mod grab;
@@ -16,11 +16,10 @@ pub mod prelude {
 pub struct CustomWanderlustPlugin;
 impl Plugin for CustomWanderlustPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<ControllerState>()
-            .register_type::<ControllerSettings>()
-            .register_type::<ControllerInput>()
-            //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
-            .add_system(bevy_mod_wanderlust::movement.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_plugins(WanderlustPlugin::default());
+
+        //.add_startup_system(bevy_mod_wanderlust::setup_physics_context)
+        //app.add_systems(FixedUpdate, bevy_mod_wanderlust::movement);
     }
 }
 

@@ -9,7 +9,7 @@ use bevy_mod_inverse_kinematics::IkConstraint;
 
 use std::f32::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerBundle, ControllerPhysicsBundle, ControllerSettings, Spring};
+use bevy_mod_wanderlust::*;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
@@ -26,6 +26,7 @@ impl Plugin for PlayerSpawnPlugin {
 
         app.insert_resource(Events::<PlayerEvent>::default());
         app.add_systems(
+            FixedUpdate,
             (
                 related_entities::<CharacterEntities, Without<GrabJoint>>,
                 related_entities::<ConnectedEntities, ()>,
@@ -35,8 +36,7 @@ impl Plugin for PlayerSpawnPlugin {
                 Events::<PlayerEvent>::update_system,
             )
                 .in_set(PlayerSpawnSet)
-                .in_set(crate::FixedSet::First)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .in_set(crate::FixedSet::First),
         );
     }
 }
@@ -70,7 +70,7 @@ pub struct PlayerCamera(pub Entity);
 #[derive(Component, Debug)]
 pub struct PlayerNeck(pub Entity);
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Event, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PlayerEvent {
     Spawn { id: u64 },
     SetupLocal { id: u64 },
@@ -101,8 +101,9 @@ pub fn setup_player(
                 let player_radius = 0.3;
                 // Spawn player cube
                 let player_entity = commands
-                    .spawn(ControllerBundle {
-                        settings: ControllerSettings {
+                /*
+                .spawn(ControllerBundle {
+                          settings: ControllerSettings {
                             acceleration: 5.0,
                             max_speed: 7.0,
                             max_acceleration_force: 4.0,
@@ -112,19 +113,19 @@ pub fn setup_player(
                             forward_vector: None,
                             skip_ground_check_override: false,
                             exclude_from_ground: HashSet::new(),
-                            gravity: -15.0,
+                            gravity: 15.0,
 
                             jump_time: 0.0,
                             jump_initial_force: 20.0,
                             jump_force: 0.0,
                             jump_stop_force: 0.0,
-                            jump_decay_function: |x| x,
+                            jump_decay_function: Some(|x| x),
                             jump_skip_ground_check_duration: 0.0,
                             extra_jumps: 0,
                             coyote_time_duration: 0.0,
                             jump_buffer_duration: 0.0,
 
-                            min_float_offset: -0.3,
+                            min_float_offset: 0.3,
                             max_float_offset: 0.05,
                             float_cast_length: 1.5,
                             float_cast_collider: Collider::ball(player_radius),
@@ -142,6 +143,72 @@ pub fn setup_player(
                             opposing_impulse_scale: 1.0,
                         },
                         physics: ControllerPhysicsBundle {
+                            collider: Collider::capsule(
+                                Vec3::new(0.0, 0.0, 0.0),
+                                Vec3::new(0.0, player_height, 0.0),
+                                player_radius,
+                            ),
+                            ..default()
+                        },
+                        transform: global_transform.compute_transform(),
+                        global_transform: global_transform,
+                        ..default()
+                    })
+                    */
+                    .spawn(ControllerBundle {
+                        controller: Controller {
+                            movement: Movement {
+                                acceleration: 10.0,
+                                max_speed: 40.0,
+                                force_scale: Vec3::new(1.0, 0.0, 1.0),
+                                max_acceleration_force: 15.0,
+                                ..default()
+                            },
+                            gravity: Gravity {
+                                acceleration: Vec3::new(0.0, -15.0, 0.0),
+                            },
+                            ground_caster: GroundCaster {
+                                max_ground_angle: 45.0 * (PI / 180.0),
+                                exclude_from_ground: HashSet::new(),
+                                cast_collider: Collider::ball(player_radius),
+                                cast_origin: Vec3::new(0., 0., 0.),
+                                cast_length: 1.5,
+                                ..default()
+                            },
+                            float: Float {
+                                min_offset: -0.3,
+                                max_offset: 0.05,
+                                distance: 1.0,
+                                spring: Spring {
+                                    strength: 180.0,
+                                    damping: 1.5,
+                                },
+                            },
+                            upright: Upright {
+                                spring: Spring {
+                                    strength: 50.0,
+                                    damping: 0.8,
+                                },
+                                forward_vector: None,
+                            },
+                            jump: Jump {
+                                time: 0.0,
+                                initial_force: 1000.0,
+                                decay_function: None,
+                                coyote_time: CoyoteTime {
+                                    duration: 0.0,
+                                    ..default()
+                                },
+                                buffer_duration: 0.0,
+                                ..default()
+                            },
+                            force_settings: ForceSettings {
+                                opposing_movement_force_scale: 0.01,
+                                opposing_force_scale: 1.0,
+                            },
+                            ..default()
+                        },
+                        rapier_physics: RapierPhysicsBundle {
                             collider: Collider::capsule(
                                 Vec3::new(0.0, 0.0, 0.0),
                                 Vec3::new(0.0, player_height, 0.0),

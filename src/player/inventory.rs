@@ -12,7 +12,7 @@ pub mod prelude {
     pub use super::{Inventory, Storeable};
 }
 
-#[derive(Component, Clone, Debug, Reflect, FromReflect)]
+#[derive(Component, Clone, Debug, Reflect)]
 #[reflect(Component)]
 pub struct Inventory {
     pub items: Vec<Option<Grabbed>>,
@@ -40,7 +40,7 @@ impl Inventory {
 }
 
 /// Item is allowed to the scaled and fitted into an [`Inventory`].
-#[derive(Component, Clone, Debug, Reflect, FromReflect, Default)]
+#[derive(Component, Clone, Debug, Reflect, Default)]
 #[reflect(Component)]
 pub struct Storeable;
 
@@ -52,21 +52,17 @@ impl Plugin for InventoryPlugin {
             .register_type::<Inventory>();
 
         // Core
-        app.add_system(
+        app.add_systems(
+            FixedUpdate,
             store_item
-                .in_schedule(CoreSchedule::FixedUpdate)
                 .after(update_local_player_inputs)
                 .before(reset_inputs),
         );
 
-        app.add_system(
-            transform_stored
-                .in_schedule(CoreSchedule::FixedUpdate)
-                .after(store_item),
-        );
+        app.add_systems(FixedUpdate, transform_stored.after(store_item));
 
         // Niceties
-        app.add_system(ingredients_are_storable.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems(FixedUpdate, ingredients_are_storable);
     }
 }
 
@@ -261,18 +257,21 @@ pub fn transform_stored(
 
             let strength = 5000.0;
             let damping = 5.0;
-            let mut inventory_joint = GenericJointBuilder::new(JointAxesMask::empty())
+            //let mut inventory_joint = GenericJointBuilder::new(JointAxesMask::empty())
+            let mut inventory_joint = FixedJointBuilder::new()
                 .local_anchor1(Vec3::new(
                     (index as f32 * (NORMALIZED_SCALE + PADDING)) - left_align,
                     1.0,
                     0.5,
                 ))
+                /*
                 .motor_position(JointAxis::X, 0.0, strength, damping)
                 .motor_position(JointAxis::Y, 0.0, strength, damping)
                 .motor_position(JointAxis::Z, 0.0, strength, damping)
                 .motor_position(JointAxis::AngX, 0.0, strength, damping)
                 .motor_position(JointAxis::AngY, 0.0, strength, damping)
                 .motor_position(JointAxis::AngZ, 0.0, strength, damping)
+                */
                 .build();
             inventory_joint.set_contacts_enabled(false);
 

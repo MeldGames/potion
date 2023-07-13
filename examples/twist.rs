@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_prototype_debug_lines::*;
 
 fn main() {
     App::new()
@@ -12,13 +11,9 @@ fn main() {
                     }),
                     ..default()
                 })
-                .set(AssetPlugin {
-                    watch_for_changes: true,
-                    ..default()
-                }),
+                .set(AssetPlugin { ..default() }),
         )
         .insert_resource(ClearColor(Color::hex("071f3c").unwrap()))
-        .add_plugin(DebugLinesPlugin::with_depth_test(true))
         .add_plugin(potion::egui::SetupEguiPlugin)
         .add_plugin(bevy_editor_pls::EditorPlugin)
         .add_plugin(CameraControllerPlugin)
@@ -74,7 +69,6 @@ pub fn twist(
     _kb: Res<Input<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut twist: Local<Quat>,
-    mut lines: ResMut<DebugLines>,
 ) {
     for delta in mouse_motion.iter().map(|event| event.delta) {
         let previous = twist.clone();
@@ -90,18 +84,20 @@ pub fn twist(
         let axis2 = Vec3::Y;
         let world1 = Quat::from_axis_angle(axis1, delta.y / 180.0);
         let world2 = Quat::from_axis_angle(axis2, delta.x / 180.0);
-        lines.line_colored(-axis1, axis1 * 2.0, 3.0, Color::BLUE);
-        lines.line_colored(-axis2, axis2 * 2.0, 3.0, Color::GREEN);
+        //lines.line_colored(-axis1, axis1 * 2.0, 3.0, Color::BLUE);
+        //lines.line_colored(-axis2, axis2 * 2.0, 3.0, Color::GREEN);
 
         *twist = world1 * *twist;
         *twist = world2 * *twist;
 
+        /*
         lines.line_colored(
             previous * Vec3::X * 1.03,
             *twist * Vec3::X * 1.03,
             3.0,
             Color::RED,
         );
+        */
     }
 }
 

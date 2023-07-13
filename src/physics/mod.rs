@@ -303,50 +303,43 @@ impl Plugin for PhysicsPlugin {
         let physics_plugin = PhysicsPlugin::default().with_default_system_setup(false);
         app.add_plugin(physics_plugin);
 
-        app.world
-            .resource_mut::<Schedules>()
-            .get_mut(&CoreSchedule::FixedUpdate)
-            .unwrap()
-            .configure_sets(
-                (
-                    PhysicsSet::SyncBackend,
-                    PhysicsSet::SyncBackendFlush,
-                    PhysicsSet::StepSimulation,
-                    PhysicsSet::Writeback,
-                )
-                    .chain(),
-            );
-
-        app.add_system(
-            bevy_rapier3d::plugin::systems::sync_removals.in_base_set(CoreSet::PostUpdate),
+        app.configure_sets(
+            FixedUpdate,
+            (
+                PhysicsSet::SyncBackend,
+                PhysicsSet::SyncBackendFlush,
+                PhysicsSet::StepSimulation,
+                PhysicsSet::Writeback,
+            )
+                .chain(),
         );
 
+        app.add_systems(PostUpdate, bevy_rapier3d::plugin::systems::sync_removals);
+
         app.add_systems(
-            PhysicsPlugin::get_systems(PhysicsSet::SyncBackend)
-                .in_base_set(PhysicsSet::SyncBackend)
-                .in_schedule(CoreSchedule::FixedUpdate),
+            FixedUpdate,
+            PhysicsPlugin::get_systems(PhysicsSet::SyncBackend).in_set(PhysicsSet::SyncBackend),
         );
         app.add_systems(
+            FixedUpdate,
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)
-                .in_base_set(PhysicsSet::SyncBackendFlush)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .in_set(PhysicsSet::SyncBackendFlush),
         );
         app.add_systems(
+            FixedUpdate,
             PhysicsPlugin::get_systems(PhysicsSet::StepSimulation)
-                .in_base_set(PhysicsSet::StepSimulation)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                .in_set(PhysicsSet::StepSimulation),
         );
         app.add_systems(
-            PhysicsPlugin::get_systems(PhysicsSet::Writeback)
-                .in_base_set(PhysicsSet::Writeback)
-                .in_schedule(CoreSchedule::FixedUpdate),
+            FixedUpdate,
+            PhysicsPlugin::get_systems(PhysicsSet::Writeback).in_set(PhysicsSet::Writeback),
         );
 
-        app.add_system(fill_missing);
-        //app.add_system(cap_velocity).add_system(cap_impulse);
-        app.add_system(prevent_oob);
-        app.add_startup_system(modify_rapier_context);
-        app.add_system(split_compound::split_compound);
+        app.add_systems(Update, fill_missing);
+        //app.add_systems(Update, cap_velocity).add_systems(Update, cap_impulse);
+        app.add_systems(Update, prevent_oob);
+        app.add_systems(Startup, modify_rapier_context);
+        //app.add_systems(Update, split_compound::split_compound);
 
         app.add_plugin(MusclePlugin);
         app.add_plugin(BreakJointPlugin);

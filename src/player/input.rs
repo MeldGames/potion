@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
 use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
-use bevy_editor_pls::editor::Editor;
+//use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::PI;
 
@@ -31,14 +31,16 @@ impl Plugin for PlayerInputPlugin {
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
-        app.configure_sets((CollectInputs, MetaInputs).in_set(InputSet));
-        app.configure_set(
-            CollectInputs
+        app.configure_sets(PreUpdate, (CollectInputs, MetaInputs).in_set(InputSet));
+        /*app.configure_sets(
+            PreUpdate,
+            (CollectInputs,)
                 .run_if(crate::mouse_locked)
                 .run_if(crate::window_focused)
                 .run_if(not(crate::editor_active)),
-        );
+        );*/
         app.add_systems(
+            Update,
             (
                 player_binary_inputs,
                 zoom_on_scroll,
@@ -48,6 +50,7 @@ impl Plugin for PlayerInputPlugin {
                 .in_set(CollectInputs),
         )
         .add_systems(
+            Update,
             (
                 initial_mouse_click,
                 toggle_mouse_lock,
@@ -57,8 +60,8 @@ impl Plugin for PlayerInputPlugin {
                 .in_set(MetaInputs),
         );
 
-        app.add_system(update_local_player_inputs.in_schedule(CoreSchedule::FixedUpdate))
-            .add_system(reset_inputs.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems(FixedUpdate, update_local_player_inputs)
+            .add_systems(FixedUpdate, reset_inputs);
     }
 }
 
@@ -307,9 +310,9 @@ pub fn toggle_mouse_lock(
         .and_then(|window| Ok(window.focused))
         .unwrap_or(false);
 
-    let should_lock = (kb.pressed(KeyCode::LAlt) || toggle.0) && primary_focused; // && initial_click.is_some();
+    let should_lock = (kb.pressed(KeyCode::AltLeft) || toggle.0) && primary_focused; // && initial_click.is_some();
 
-    match &state.0 {
+    match state.get() {
         MouseState::Free if should_lock => next_state.set(MouseState::Locked),
         MouseState::Locked if !should_lock => next_state.set(MouseState::Free),
         _ => {}
@@ -318,11 +321,12 @@ pub fn toggle_mouse_lock(
 
 pub fn mouse_lock(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
-    editor: Option<Res<Editor>>,
+    //editor: Option<Res<Editor>>,
     state: Res<State<MouseState>>,
 ) {
-    let editor_active = editor.map(|state| state.active()).unwrap_or(false);
-    let locked = state.0 == MouseState::Locked && !editor_active;
+    //let editor_active = editor.map(|state| state.active()).unwrap_or(false);
+    let editor_active = false;
+    let locked = *state == MouseState::Locked && !editor_active;
 
     if let Ok(mut window) = windows.get_single_mut() {
         window.cursor.visible = !locked;
@@ -372,16 +376,16 @@ pub fn player_binary_inputs(
         0,
         mouse_input.pressed(MouseButton::Right)
             || keyboard_input.pressed(KeyCode::K)
-            || keyboard_input.pressed(KeyCode::LShift),
+            || keyboard_input.pressed(KeyCode::ShiftLeft),
     );
     player_input.set_extend_arm(
         1,
         mouse_input.pressed(MouseButton::Left)
             || keyboard_input.pressed(KeyCode::J)
-            || keyboard_input.pressed(KeyCode::LShift),
+            || keyboard_input.pressed(KeyCode::ShiftLeft),
     );
 
-    player_input.set_twist(keyboard_input.pressed(KeyCode::LControl));
+    player_input.set_twist(keyboard_input.pressed(KeyCode::ControlLeft));
 
     let inv_swap = if keyboard_input.just_pressed(KeyCode::Key1) {
         Some(0)
@@ -447,7 +451,7 @@ pub fn player_mouse_inputs(
         cumulative_delta += ev.delta;
     }
 
-    if kb.pressed(KeyCode::RControl) {
+    if kb.pressed(KeyCode::ControlRight) {
         return;
     }
 

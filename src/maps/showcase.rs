@@ -190,7 +190,7 @@ pub fn setup(
         },
     );
 
-    crate::objects::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    //crate::objects::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
 
     let _stone = commands
         .spawn(SceneBundle {

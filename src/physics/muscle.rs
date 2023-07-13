@@ -9,11 +9,11 @@ pub struct MusclePlugin;
 impl Plugin for MusclePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Muscle>();
-        app.add_system(muscle_target.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems(FixedUpdate, muscle_target);
     }
 }
 
-#[derive(Debug, Component, Clone, Copy, Reflect, FromReflect)]
+#[derive(Debug, Component, Clone, Copy, Reflect)]
 #[reflect(Component)]
 pub struct Muscle {
     pub target: Option<Entity>,

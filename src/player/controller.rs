@@ -2,10 +2,10 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy_prototype_debug_lines::DebugLines;
 use std::f32::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
+use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster};
+//use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
 use super::input::PlayerInput;
@@ -19,6 +19,7 @@ pub struct ControllerSet;
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            FixedUpdate,
             (
                 player_movement,
                 avoid_intersecting,
@@ -28,9 +29,8 @@ impl Plugin for ControllerPlugin {
                 teleport_player_back,
             )
                 .in_set(ControllerSet)
-                .before(bevy_mod_wanderlust::movement)
-                .in_set(crate::FixedSet::Update)
-                .in_schedule(CoreSchedule::FixedUpdate),
+                //.before(bevy_mod_wanderlust::movement)
+                .in_set(crate::FixedSet::Update),
         );
     }
 }
@@ -56,7 +56,6 @@ pub fn player_movement(
         ),
         //With<Owned>,
     >,
-    _lines: ResMut<DebugLines>,
 ) {
     for (global, mut controller, mut impulse, _look_transform, player_input) in query.iter_mut() {
         let mut dir = Vec3::new(0.0, 0.0, 0.0);
@@ -166,7 +165,10 @@ pub fn teleport_player_back(
     }
 }
 
-pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>) {
+pub fn character_crouch(
+    mut controllers: Query<(&PlayerInput, &mut Float)>,
+    //mut controllers: Query<(&PlayerInput, &mut ControllerSettings)>,
+) {
     let crouch_height = 0.15;
     let full_height = 1.0;
     let threshold = -PI / 4.0;
@@ -178,19 +180,22 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut ControllerSet
                 (input.pitch.abs() - threshold.abs()) / ((PI / 2.0) - threshold.abs());
             let interpolated =
                 full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
-            controller.float_distance = interpolated;
+            //controller.float_distance = interpolated;
         } else {
-            controller.float_distance = full_height;
+            //controller.float_distance = full_height;
         }
     }
 }
 
 pub fn controller_exclude(
     _names: Query<&Name>,
-    mut controllers: Query<(Entity, Option<&CharacterEntities>, &mut ControllerSettings)>,
+    mut controllers: Query<(Entity, Option<&CharacterEntities>, &Inventory, &mut GroundCaster)>,
+    //mut controllers: Query<(Entity, Option<&CharacterEntities>, &Inventory, &mut ControllerSettings)>,
 ) {
-    for (_entity, connected, mut settings) in &mut controllers {
+    for (_entity, connected, inventory, mut settings) in &mut controllers {
         let mut new_exclude = HashSet::new();
+
+        new_exclude.extend(inventory.items.iter().filter_map(|item| *item).map(|item| item.entity));
 
         if let Some(connected) = connected {
             new_exclude.extend(connected.iter());
