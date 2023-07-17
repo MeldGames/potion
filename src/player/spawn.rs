@@ -104,14 +104,15 @@ pub fn setup_player(
                     .spawn(ControllerBundle {
                         controller: Controller {
                             movement: Movement {
-                                acceleration: 4.0,
-                                max_acceleration_force: 5.0,
+                                acceleration: 55.0,
+                                max_acceleration_force: 30.0,
                                 max_speed: 10.0,
                                 force_scale: Vec3::new(1.0, 0.0, 1.0),
                                 ..default()
                             },
                             gravity: Gravity {
-                                acceleration: Vec3::new(0.0, -15.0, 0.0),
+                                acceleration: -15.0,
+                                up_vector: Vec3::Y,
                             },
                             ground_caster: GroundCaster {
                                 max_ground_angle: 45.0 * (PI / 180.0),
@@ -132,14 +133,15 @@ pub fn setup_player(
                             },
                             upright: Upright {
                                 spring: Spring {
-                                    strength: 150.0,
+                                    //strength: 150.0,
+                                    strength: 100.0,
                                     damping: 0.9,
                                 },
                                 forward_vector: None,
                             },
                             jump: Jump {
                                 time: 0.0,
-                                initial_force: 1000.0,
+                                initial_force: 300.0,
                                 decay_function: None,
                                 coyote_time: CoyoteTime {
                                     duration: 0.0,
@@ -149,7 +151,8 @@ pub fn setup_player(
                                 ..default()
                             },
                             force_settings: ForceSettings {
-                                opposing_movement_force_scale: 0.01,
+                                //opposing_movement_force_scale: 0.01,
+                                opposing_movement_force_scale: 0.0,
                                 opposing_force_scale: 1.0,
                             },
                             ..default()
@@ -201,6 +204,7 @@ pub fn setup_player(
                     Vec3::new(-distance_from_body, player_height, 0.0),
                     1,
                 );
+
                 // for some body horror
                 /*
                 attach_arm(
@@ -211,7 +215,6 @@ pub fn setup_player(
                     Vec3::new(0.0, player_height, distance_from_body),
                     2,
                 );
-
                 attach_arm(
                     &mut commands,
                     &mut meshes,

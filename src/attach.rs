@@ -92,16 +92,7 @@ pub fn update_attach(
         )>,
     >,
     globals: Query<&GlobalTransform>,
-    names: Query<DebugName>,
 ) {
-    /*
-       for invalid_attacher in &parented {
-           info!(
-               "attacher is invalid, cannot use the transform hierarchy: {:?}",
-               named(invalid_attacher)
-           );
-       }
-    */
     for invalid_attacher in &no_velocity {
         commands
             .entity(invalid_attacher)

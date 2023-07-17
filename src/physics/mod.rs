@@ -112,8 +112,8 @@ impl Default for RigidBodyBundle {
             read_mass_properties: ReadMassProperties::default(),
             sleeping: Sleeping::default(),
             damping: Damping {
-                linear_damping: 0.05,
-                angular_damping: 0.05,
+                linear_damping: 0.0,
+                angular_damping: 0.0,
             },
             ccd: Ccd::default(),
             friction: Friction::default(),

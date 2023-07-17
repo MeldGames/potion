@@ -11,7 +11,9 @@ pub mod spawn;
 pub mod wanderlust;
 
 pub mod prelude {
-    pub use super::{controller::*, grab::*, input::*, inventory::prelude::*, spawn::*, wanderlust::*};
+    pub use super::{
+        controller::*, grab::*, input::*, inventory::prelude::*, spawn::*, wanderlust::*,
+    };
     pub use super::{PlayerBundle, PlayerPlugin};
 }
 

@@ -25,8 +25,43 @@ use bevy_rapier3d::prelude::*;
 pub struct SetupPlugin;
 impl Plugin for SetupPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        app.add_systems(Startup, (setup, moving_ground));
+        app.add_systems(FixedUpdate, circle_velocity);
     }
+}
+
+pub fn moving_ground(
+    mut commands: Commands,
+) {
+    commands
+    .spawn(SpatialBundle {
+        transform: Transform {
+            translation: Vec3::new(-25.0, 1.0, 0.0),
+            ..default()
+        },
+        ..default()
+    })
+    .insert(RigidBodyBundle {
+        velocity: Velocity {
+            linvel: Vec3::new(-0.3, 0.0, 0.0),
+            angvel: Vec3::new(0.0, 0.3, 0.0),
+            //angvel: Vec3::new(0.0, 0.0, 0.0),
+        },
+        ..RigidBodyBundle::kinematic_velocity()
+    })
+    .insert(CircleVelocity)
+    .insert(ColliderBundle::collider(Collider::cuboid(3.0, 0.1, 3.0)));
+}
+
+#[derive(Component, Debug, Copy, Clone)]
+pub struct CircleVelocity;
+
+pub fn circle_velocity(mut t: Local<f32>, mut query: Query<&mut Velocity, With<CircleVelocity>>) {
+    for mut vel in &mut query {
+        vel.linvel = Vec3::new(t.sin(), 0.0, t.cos()); 
+    }
+
+    *t += 0.01;
 }
 
 pub fn setup(

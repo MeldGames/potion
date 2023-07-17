@@ -165,9 +165,7 @@ pub fn teleport_player_back(
     }
 }
 
-pub fn character_crouch(
-    mut controllers: Query<(&PlayerInput, &mut Float)>,
-) {
+pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut Float)>) {
     let crouch_height = 0.15;
     let full_height = 1.0;
     let threshold = -PI / 4.0;
