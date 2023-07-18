@@ -1,10 +1,10 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
+use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow, math::DVec2};
 //use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 use super::prelude::*;
 
@@ -66,7 +66,7 @@ impl Plugin for PlayerInputPlugin {
 }
 
 #[derive(Resource, Debug)]
-pub struct MouseSensitivity(f32);
+pub struct MouseSensitivity(f64);
 
 impl Default for MouseSensitivity {
     fn default() -> Self {
@@ -120,14 +120,14 @@ impl PlayerInputSet {
 
 #[derive(Clone, Copy, Default, Component, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Radians(f32);
+pub struct Radians(f64);
 
 impl Debug for Radians {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "{value:.precision$?}°",
             precision = f.precision().unwrap_or(2),
-            value = self.0 * 360.0 / std::f32::consts::TAU,
+            value = self.0 * 360.0 / std::f64::consts::TAU,
         ))
     }
 }
@@ -139,9 +139,9 @@ pub struct PlayerInput {
     /// Arm should extend by index.
     pub extend_arm: [bool; 8],
     /// Vertical rotation of camera
-    pub pitch: f32,
+    pub pitch: f64,
     /// Horizontal rotation of camera
-    pub yaw: f32,
+    pub yaw: f64,
     /// Modifier for grabbing
     pub twist: bool,
     /// Attempt to swap items from inventory <-> hands
@@ -446,9 +446,9 @@ pub fn player_mouse_inputs(
     mut player_input: ResMut<PlayerInput>,
     kb: Res<Input<KeyCode>>,
 ) {
-    let mut cumulative_delta = Vec2::ZERO;
+    let mut cumulative_delta = DVec2::ZERO;
     for ev in ev_mouse.iter() {
-        cumulative_delta += ev.delta;
+        cumulative_delta += ev.delta.as_dvec2();
     }
 
     if kb.pressed(KeyCode::ControlRight) {
@@ -459,7 +459,7 @@ pub fn player_mouse_inputs(
     player_input.pitch = player_input.pitch.clamp(-PI / 2.0, PI / 2.0);
 
     player_input.yaw -= sensitivity.0 * cumulative_delta.x / 180.0;
-    player_input.yaw = player_input.yaw.rem_euclid(std::f32::consts::TAU);
+    player_input.yaw = player_input.yaw.rem_euclid(std::f64::consts::TAU);
 }
 
 pub fn update_local_player_inputs(

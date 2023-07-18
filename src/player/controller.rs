@@ -2,9 +2,9 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster};
+use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster, GroundCast};
 //use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
@@ -21,6 +21,7 @@ impl Plugin for ControllerPlugin {
         app.add_systems(
             FixedUpdate,
             (
+                rotate_inputs,
                 player_movement,
                 avoid_intersecting,
                 character_crouch,
@@ -29,7 +30,7 @@ impl Plugin for ControllerPlugin {
                 teleport_player_back,
             )
                 .in_set(ControllerSet)
-                //.before(bevy_mod_wanderlust::movement)
+                .before(WanderlustSet)
                 .in_set(crate::FixedSet::Update),
         );
     }
@@ -90,14 +91,23 @@ pub fn player_movement(
         let desired_dir = Vec2::new(camera_dir.x, camera_dir.z);
         //}
 
-        let _spring = springy::Spring {
-            strength: 0.1,
-            damp_ratio: 1.0,
-        };
-
         if desired_dir.length() > 0.0 && current_dir.length() > 0.0 {
             let y = desired_dir.angle_between(current_dir);
             impulse.torque_impulse.y += y * 0.5;
+        }
+    }
+}
+
+pub fn rotate_inputs(
+    mut inputs: Query<(&GroundCast, &mut PlayerInput)>,
+    mut input: ResMut<PlayerInput>,
+) {
+    for (ground, mut inputs) in &mut inputs {
+        if let Some(ground) = ground.last() {
+            inputs.yaw += ground.angular_velocity.y as f64 * crate::TICK_RATE.as_secs_f64();
+            *input = *inputs;
+            info!("vel: {:?}", ground.angular_velocity);
+            info!("yaw: {:?}", inputs.yaw);
         }
     }
 }
@@ -177,9 +187,9 @@ pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut Float)>) {
                 (input.pitch.abs() - threshold.abs()) / ((PI / 2.0) - threshold.abs());
             let interpolated =
                 full_height * (1.0 - crouch_coefficient) + crouch_height * crouch_coefficient;
-            float.distance = interpolated;
+            float.distance = interpolated as f32;
         } else {
-            float.distance = full_height;
+            float.distance = full_height as f32;
         }
     }
 }

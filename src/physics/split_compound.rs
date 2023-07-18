@@ -1,7 +1,4 @@
-use bevy_rapier3d::{
-    prelude::shape_views::*,
-    rapier::prelude::{SharedShape, TypedShape},
-};
+use bevy_rapier3d::{prelude::shape_views::*, rapier::prelude::SharedShape};
 
 use crate::prelude::*;
 

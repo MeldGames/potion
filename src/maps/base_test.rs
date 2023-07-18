@@ -7,7 +7,7 @@ use bevy_rapier3d::prelude::*;
 pub struct SetupPlugin;
 impl Plugin for SetupPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        app.add_systems(Startup, setup);
     }
 }
 

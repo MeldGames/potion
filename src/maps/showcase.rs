@@ -30,27 +30,25 @@ impl Plugin for SetupPlugin {
     }
 }
 
-pub fn moving_ground(
-    mut commands: Commands,
-) {
+pub fn moving_ground(mut commands: Commands) {
     commands
-    .spawn(SpatialBundle {
-        transform: Transform {
-            translation: Vec3::new(-25.0, 1.0, 0.0),
+        .spawn(SpatialBundle {
+            transform: Transform {
+                translation: Vec3::new(-25.0, 1.0, 0.0),
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-    })
-    .insert(RigidBodyBundle {
-        velocity: Velocity {
-            linvel: Vec3::new(-0.3, 0.0, 0.0),
-            angvel: Vec3::new(0.0, 0.3, 0.0),
-            //angvel: Vec3::new(0.0, 0.0, 0.0),
-        },
-        ..RigidBodyBundle::kinematic_velocity()
-    })
-    .insert(CircleVelocity)
-    .insert(ColliderBundle::collider(Collider::cuboid(3.0, 0.1, 3.0)));
+        })
+        .insert(RigidBodyBundle {
+            velocity: Velocity {
+                linvel: Vec3::new(-0.3, 0.0, 0.0),
+                angvel: Vec3::new(0.0, 0.3, 0.0),
+                //angvel: Vec3::new(0.0, 0.0, 0.0),
+            },
+            ..RigidBodyBundle::kinematic_velocity()
+        })
+        .insert(CircleVelocity)
+        .insert(ColliderBundle::collider(Collider::cuboid(3.0, 0.1, 3.0)));
 }
 
 #[derive(Component, Debug, Copy, Clone)]
@@ -58,7 +56,7 @@ pub struct CircleVelocity;
 
 pub fn circle_velocity(mut t: Local<f32>, mut query: Query<&mut Velocity, With<CircleVelocity>>) {
     for mut vel in &mut query {
-        vel.linvel = Vec3::new(t.sin(), 0.0, t.cos()); 
+        vel.linvel = Vec3::new(t.sin(), 0.0, t.cos());
     }
 
     *t += 0.01;

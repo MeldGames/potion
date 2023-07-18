@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
        .add_system(mouse_lock.run_if(window_focused).label("toggle_mouse_lock"));
     */
 
-    app.add_startup_system(potion::maps::showcase::setup);
+    app.add_systems(Startup, potion::maps::showcase::setup);
 
     /*
        #[cfg(feature = "public")]

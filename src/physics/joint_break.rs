@@ -73,7 +73,7 @@ pub struct BreakJointPlugin;
 
 impl Plugin for BreakJointPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(break_grace_period);
-        app.add_system(break_joints);
+        app.add_systems(FixedUpdate, break_grace_period);
+        app.add_systems(FixedUpdate, break_joints);
     }
 }

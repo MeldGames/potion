@@ -119,7 +119,7 @@ pub fn setup_player(
                                 exclude_from_ground: HashSet::new(),
                                 cast_collider: Collider::ball(player_radius),
                                 cast_origin: Vec3::new(0., 0., 0.),
-                                cast_length: 1.5,
+                                cast_length: 1.0,
                                 ..default()
                             },
                             float: Float {
@@ -140,14 +140,7 @@ pub fn setup_player(
                                 forward_vector: None,
                             },
                             jump: Jump {
-                                time: 0.0,
-                                initial_force: 300.0,
-                                decay_function: None,
-                                coyote_time: CoyoteTime {
-                                    duration: 0.0,
-                                    ..default()
-                                },
-                                buffer_duration: 0.0,
+                                //initial_force: 300.0,
                                 ..default()
                             },
                             force_settings: ForceSettings {
@@ -186,24 +179,26 @@ pub fn setup_player(
                     .id();
 
                 let distance_from_body = player_radius + 0.3;
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(distance_from_body, player_height, 0.0),
-                    0,
-                );
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(-distance_from_body, player_height, 0.0),
-                    1,
-                );
+                /*
+                               attach_arm(
+                                   &mut commands,
+                                   &mut meshes,
+                                   &mut materials,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(distance_from_body, player_height, 0.0),
+                                   0,
+                               );
+                               attach_arm(
+                                   &mut commands,
+                                   &mut meshes,
+                                   &mut materials,
+                                   player_entity,
+                                   global_transform.compute_transform(),
+                                   Vec3::new(-distance_from_body, player_height, 0.0),
+                                   1,
+                               );
+                */
 
                 // for some body horror
                 /*

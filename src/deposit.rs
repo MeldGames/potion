@@ -71,7 +71,7 @@ impl Plugin for DepositPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Value>();
 
-        app.add_system(deposit);
+        app.add_systems(FixedUpdate, deposit);
     }
 }
 
