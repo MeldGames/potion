@@ -27,6 +27,7 @@ impl Plugin for SetupPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (setup, moving_ground));
         app.add_systems(FixedUpdate, circle_velocity);
+        app.add_systems(Startup, ramps);
     }
 }
 
@@ -49,6 +50,28 @@ pub fn moving_ground(mut commands: Commands) {
         })
         .insert(CircleVelocity)
         .insert(ColliderBundle::collider(Collider::cuboid(3.0, 0.1, 3.0)));
+}
+
+pub fn ramps(mut commands: Commands) {
+    let steps = 9;
+    let angle_step = (std::f32::consts::PI / 2.0) / steps as f32;
+    let full_width = 5.0;
+    let width = full_width / steps as f32;
+    for i in 1..=steps {
+        commands
+        .spawn(SpatialBundle {
+            transform: Transform {
+                translation: Vec3::new(-30.0 + i as f32 * width * 2.0, -1.0, -10.0),
+                rotation: Quat::from_axis_angle(Vec3::X, angle_step * i as f32),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(RigidBodyBundle {
+            ..RigidBodyBundle::kinematic_velocity()
+        })
+        .insert(ColliderBundle::collider(Collider::cuboid(width, 1.0, 5.0)));
+    }
 }
 
 #[derive(Component, Debug, Copy, Clone)]
