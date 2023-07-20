@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow, math::DVec2};
+use bevy::{input::mouse::MouseMotion, math::DVec2, prelude::*, window::PrimaryWindow};
 //use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -321,11 +321,10 @@ pub fn toggle_mouse_lock(
 
 pub fn mouse_lock(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
-    //editor: Option<Res<Editor>>,
+    editor: Option<Res<bevy_editor_pls::editor::Editor>>,
     state: Res<State<MouseState>>,
 ) {
-    //let editor_active = editor.map(|state| state.active()).unwrap_or(false);
-    let editor_active = false;
+    let editor_active = editor.map(|state| state.active()).unwrap_or(false);
     let locked = *state == MouseState::Locked && !editor_active;
 
     if let Ok(mut window) = windows.get_single_mut() {

@@ -23,7 +23,7 @@ use crate::prelude::*;
 
 use bevy::window::{CursorGrabMode, WindowPlugin};
 
-//use bevy_editor_pls::editor::Editor;
+use bevy_editor_pls::editor::Editor;
 //use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use obj::Obj;
@@ -93,7 +93,7 @@ impl Plugin for PotionCellarPlugin {
         //app.add_plugins(bevy_framepace::FramepacePlugin);
         app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
         //app.add_plugins(crate::egui::SetupEguiPlugin);
-        //app.add_plugins(bevy_editor_pls::EditorPlugin::default());
+        app.add_plugins(bevy_editor_pls::EditorPlugin::default());
 
         const MSAA: bool = true;
         if MSAA {
@@ -356,11 +356,6 @@ pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>
     }
 }
 
-pub fn editor_active() -> bool {
-    false
-}
-
-/*
 pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
     if let Some(editor) = editor {
         editor.active()
@@ -368,4 +363,3 @@ pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
         false
     }
 }
- */

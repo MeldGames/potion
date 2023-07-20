@@ -16,8 +16,8 @@ bevy_egui = "0.21"
 #sabi = { path = "../sabi/sabi", features = ["public"] }
 #sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
-#springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
-springy = {path = "../springy", features = ["rapier3d"]}
+springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
+#springy = {path = "../springy", features = ["rapier3d"]}
 
 #bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
 bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
@@ -27,6 +27,7 @@ bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
 bevy-inspector-egui = "0.19"
 #bevy_editor_pls = "0.5"
 #bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
+bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
 #bevy_framepace = "0.13"
 bevy_mod_inverse_kinematics = "0.4"
 bevy_rapier3d = {version = "0.22", features = ["serde-serialize"]}
