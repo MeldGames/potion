@@ -25,6 +25,7 @@ bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
 #bevy_mod_edge_detection = {git = "https://github.com/Aceeri/bevy_mod_edge_detection"}
 
 bevy-inspector-egui = "0.19"
+bevy_mod_billboard = "0.4"
 #bevy_editor_pls = "0.5"
 #bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
 bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}

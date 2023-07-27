@@ -20,11 +20,13 @@ use bevy::{
     prelude::*,
 };
 
+use bevy_mod_billboard::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 pub struct SetupPlugin;
 impl Plugin for SetupPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(BillboardPlugin);
         app.add_systems(Startup, (setup, moving_ground));
         app.add_systems(FixedUpdate, circle_velocity);
         app.add_systems(Startup, ramps);
@@ -59,18 +61,18 @@ pub fn ramps(mut commands: Commands) {
     let width = full_width / steps as f32;
     for i in 1..=steps {
         commands
-        .spawn(SpatialBundle {
-            transform: Transform {
-                translation: Vec3::new(-30.0 + i as f32 * width * 2.0, -1.0, -10.0),
-                rotation: Quat::from_axis_angle(Vec3::X, angle_step * i as f32),
+            .spawn(SpatialBundle {
+                transform: Transform {
+                    translation: Vec3::new(-30.0 + i as f32 * width * 2.0, -1.0, -10.0),
+                    rotation: Quat::from_axis_angle(Vec3::X, angle_step * i as f32),
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        })
-        .insert(RigidBodyBundle {
-            ..RigidBodyBundle::kinematic_velocity()
-        })
-        .insert(ColliderBundle::collider(Collider::cuboid(width, 1.0, 5.0)));
+            })
+            .insert(RigidBodyBundle {
+                ..RigidBodyBundle::kinematic_velocity()
+            })
+            .insert(ColliderBundle::collider(Collider::cuboid(width, 1.0, 5.0)));
     }
 }
 
@@ -247,6 +249,33 @@ pub fn setup(
     );
 
     //crate::objects::trees::spawn_trees(&mut commands, &*asset_server, &mut meshes);
+    let billboard = commands.spawn(BillboardTextBundle {
+        transform: Transform {
+            translation: Vec3::new(-5.0, 2.0, 5.0),
+            rotation: Quat::IDENTITY,
+            scale: Vec3::splat(0.0085),
+        },
+        text: Text::from_sections([
+            TextSection {
+                value: "IMPORTANT".to_string(),
+                style: TextStyle {
+                    font_size: 60.0,
+                    color: Color::ORANGE,
+                    ..default()
+                },
+            },
+            TextSection {
+                value: " text".to_string(),
+                style: TextStyle {
+                    font_size: 60.0,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            },
+        ])
+        .with_alignment(TextAlignment::Center),
+        ..default()
+    });
 
     let _stone = commands
         .spawn(SceneBundle {
