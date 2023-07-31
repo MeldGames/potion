@@ -15,7 +15,6 @@ fn main() {
         )
         .insert_resource(ClearColor(Color::hex("071f3c").unwrap()))
         .add_plugins(potion::egui::SetupEguiPlugin)
-        .add_plugins(bevy_editor_pls::EditorPlugin)
         .add_plugins(CameraControllerPlugin)
         .add_startup_system(setup)
         .add_system(twist)
@@ -203,7 +202,7 @@ impl Default for CameraController {
             key_right: KeyCode::D,
             key_up: KeyCode::F,
             key_down: KeyCode::Q,
-            key_run: KeyCode::LShift,
+            key_run: KeyCode::ShiftLeft,
             mouse_key_enable_mouse: MouseButton::Left,
             keyboard_key_enable_mouse: KeyCode::M,
             walk_speed: 5.0,

@@ -127,14 +127,14 @@ pub fn setup_player(
                                 max_offset: 0.05,
                                 distance: 1.0,
                                 spring: Spring {
-                                    strength: 180.0,
+                                    strength: 60.0,
                                     damping: 1.5,
                                 },
                             },
                             upright: Upright {
                                 spring: Spring {
                                     //strength: 150.0,
-                                    strength: 100.0,
+                                    strength: 30.0,
                                     damping: 0.9,
                                 },
                                 forward_vector: None,
@@ -163,7 +163,7 @@ pub fn setup_player(
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
-                    .insert(ColliderMassProperties::Density(2.0))
+                    .insert(ColliderMassProperties::Density(1.0))
                     .insert(PlayerInput::default())
                     .insert(Inventory::default())
                     .insert(Player { id: id })
@@ -595,6 +595,7 @@ pub fn attach_arm(
         })
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
+        //.insert(NoContacts)
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .insert(MuscleIKTarget::new(target))

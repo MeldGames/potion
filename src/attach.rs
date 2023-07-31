@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
 #[derive(Debug, Clone, Component)]
@@ -69,6 +69,26 @@ pub fn velocity_nonphysics(mut velocities: Query<(&mut Transform, &Velocity), Wi
     }
 }
 
+pub fn ground_truth_transform(
+    mut entity: Entity,
+    transforms: &Query<&Transform>,
+    parents: &Query<&Parent>,
+) -> Transform {
+    let mut transform = transforms
+        .get(entity)
+        .cloned()
+        .unwrap_or(Transform::default());
+    while let Ok(parent) = parents.get(entity) {
+        if let Ok(parent_transform) = transforms.get(parent.get()) {
+            transform = *parent_transform * transform;
+        }
+
+        entity = parent.get()
+    }
+
+    transform
+}
+
 pub fn update_attach(
     mut commands: Commands,
     //parented: Query<Entity, (With<Attach>, With<Parent>)>,
@@ -78,8 +98,6 @@ pub fn update_attach(
     mut attachers: Query<
         (
             Entity,
-            &mut Transform,
-            &Velocity,
             &Attach,
             Option<&AttachTranslation>,
             Option<&AttachRotation>,
@@ -91,23 +109,18 @@ pub fn update_attach(
             With<AttachScale>,
         )>,
     >,
-    globals: Query<&GlobalTransform>,
+    mut transforms: Query<&mut Transform>,
+    parents: Query<&Parent>,
 ) {
-    for invalid_attacher in &no_velocity {
-        commands
-            .entity(invalid_attacher)
-            .insert(Velocity::default());
-    }
-
-    for (attach_entity, mut transform, _velocity, attach, translation, rotation, scale) in
-        &mut attachers
-    {
+    for (attach_entity, attach, translation, rotation, scale) in &mut attachers {
         let particle_entity = attach.get();
-        if let Ok(global) = globals.get(particle_entity) {
-            let global_transform = global.compute_transform();
+        let ground_truth =
+            ground_truth_transform(particle_entity, &transforms.to_readonly(), &parents);
+
+        if let Ok(mut transform) = transforms.get_mut(attach_entity) {
             match translation {
                 Some(AttachTranslation::Instant) => {
-                    transform.translation = global_transform.translation;
+                    transform.translation = ground_truth.translation;
                 }
                 Some(&AttachTranslation::Spring(spring)) => {
                     let timestep = crate::TICK_RATE.as_secs_f32();
@@ -144,17 +157,17 @@ pub fn update_attach(
 
             match rotation {
                 Some(AttachRotation::Instant) => {
-                    transform.rotation = global_transform.rotation;
+                    transform.rotation = ground_truth.rotation;
                     //velocity.angvel = Vec3::ZERO;
                 }
                 Some(AttachRotation::Inverse) => {
-                    transform.rotation = global_transform.rotation.inverse();
+                    transform.rotation = ground_truth.rotation.inverse();
                 }
                 _ => {}
             }
 
             if scale.is_some() {
-                transform.scale = global_transform.scale;
+                transform.scale = ground_truth.scale;
             }
         }
     }
@@ -168,24 +181,62 @@ impl Plugin for AttachPlugin {
             .register_type::<AttachRotation>()
             .register_type::<AttachScale>();
 
-        app.add_systems(
-            FixedUpdate,
-            velocity_nonphysics.in_set(crate::FixedSet::Update),
-        );
-
-        app.add_systems(FixedUpdate, update_attach.in_set(crate::FixedSet::First));
-        app.add_systems(
-            FixedUpdate,
-            update_attach
-                //.in_set(crate::FixedSet::Last)
-                .before(PhysicsSet::StepSimulation),
-        );
+        app.add_systems(Update, velocity_nonphysics.in_set(crate::FixedSet::Update));
 
         app.add_systems(
             FixedUpdate,
-            update_attach
-                //.in_set(crate::FixedSet::Last)
-                .after(PhysicsSet::Writeback),
+            (
+                update_attach.before(PhysicsSet::SyncBackend),
+                update_attach.after(PhysicsSet::Writeback),
+            ),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn verify_no_lag() {
+        let mut app = App::new();
+
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(HierarchyPlugin)
+            .add_plugins(TransformPlugin)
+            .add_plugins(AttachPlugin);
+
+        fn check_globals(
+            attached: Query<(&Attach, &GlobalTransform)>,
+            globals: Query<&GlobalTransform>,
+        ) {
+            for (attach, global) in &attached {
+                if let Ok(other_global) = globals.get(attach.get()) {
+                    println!(
+                        "{:.2} == {:.2}",
+                        global.translation(),
+                        other_global.translation()
+                    );
+                    assert_eq!(global.translation(), other_global.translation())
+                }
+            }
+        }
+
+        app.add_systems(Last, check_globals);
+
+        let core = app
+            .world
+            .spawn(SpatialBundle {
+                transform: Transform::from_xyz(5.0, 0.0, 0.0),
+                ..default()
+            })
+            .id();
+
+        app.world
+            .spawn(SpatialBundle::default())
+            .insert(Attach::translation(core));
+
+        app.update();
+        app.update();
     }
 }

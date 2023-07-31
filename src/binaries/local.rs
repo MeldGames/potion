@@ -13,6 +13,7 @@ fn main() {
     app.run();
 }
 
+/*
 fn spawn_multibody(mut commands: Commands) {
     let mut joint = SphericalJointBuilder::new()
         .local_anchor1(Vec3::new(0.5, 0.0, 0.0))
@@ -49,6 +50,7 @@ fn spawn_multibody(mut commands: Commands) {
         .insert(MultibodyJoint::new(r1, joint))
         .id();
 }
+*/
 
 fn spawn_local_player(mut spawn_player: EventWriter<PlayerEvent>, _asset_server: Res<AssetServer>) {
     spawn_player.send(PlayerEvent::Spawn { id: 1 });

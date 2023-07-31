@@ -22,10 +22,13 @@ impl Plugin for GrabPlugin {
             .register_type::<Grabbed>()
             .register_type::<Grabbing>();
 
+        app.add_systems(Update, auto_aim_debug_lines);
+
         app.add_systems(
             FixedUpdate,
             (
-                auto_aim_debug_lines,
+                tense_arms,
+                player_extend_arm,
                 auto_aim_pull,
                 twist_grab,
                 update_grab_sphere,
@@ -33,17 +36,11 @@ impl Plugin for GrabPlugin {
                 grab_joint,
                 last_active_arm,
             )
+                .chain()
                 .in_set(GrabSet)
-                .in_set(FixedSet::Update),
+                .in_set(FixedSet::Update)
+                .before(PhysicsSet::SyncBackend),
         );
-
-        app.add_systems(
-            FixedUpdate,
-            player_extend_arm
-                .in_set(GrabSet)
-                .after(super::controller::player_movement),
-        );
-        app.add_systems(FixedUpdate, tense_arms.in_set(GrabSet));
     }
 }
 
@@ -594,32 +591,20 @@ impl AimPrimitive {
     }
 }
 
-pub fn auto_aim_debug_lines(auto_aim: Query<(&GlobalTransform, &AutoAim)>) {
+pub fn auto_aim_debug_lines(auto_aim: Query<(&GlobalTransform, &AutoAim)>, mut gizmos: Gizmos) {
     for (global, auto) in &auto_aim {
         for primitive in &auto.0 {
             match *primitive {
                 AimPrimitive::Point(point) => {
-                    let point = global.transform_point(point);
+                    let center = global.transform_point(point);
 
-                    /*lines.line_colored(
-                        point,
-                        point + Vec3::Y * 0.25,
-                        crate::TICK_RATE.as_secs_f32(),
-                        Color::LIME_GREEN,
-                    );*/
+                    gizmos.sphere(center, Quat::IDENTITY, 0.1, Color::LIME_GREEN);
                 }
                 AimPrimitive::Line { start, end } => {
-                    //let start = global.transform_point(start);
-                    //let end = global.transform_point(end);
+                    let start = global.transform_point(start);
+                    let end = global.transform_point(end);
 
-                    /*
-                                       lines.line_colored(
-                                           start,
-                                           end,
-                                           crate::TICK_RATE.as_secs_f32(),
-                                           Color::LIME_GREEN,
-                                       );
-                    */
+                    gizmos.line(start, end, Color::LIME_GREEN);
                 }
             }
         }

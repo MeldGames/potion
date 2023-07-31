@@ -36,16 +36,21 @@ impl Plugin for CustomWanderlustPlugin {
         app.add_systems(
             Update,
             |casts: Query<(&GroundCast, &GroundForce, &JumpForce, &FloatForce)>,
-             mut gizmos: Gizmos| {
-                for (cast, opposing, jump, float) in &casts {
-                    if let GroundCast::Touching(ground) = cast{
-                        gizmos.ray_gradient(
+             mut gizmos: Gizmos,
+             mut config: ResMut<GizmoConfig>| {
+                config.depth_bias = -1.0;
+                for (cast, opposing, _jump, _float) in &casts {
+                    if let GroundCast::Touching(ground) = cast {
+                        /*gizmos.ray(
                             ground.cast.witness,
                             Vec3::Y,
                             Color::LIME_GREEN,
+                        );*/
+                        gizmos.ray(
+                            ground.cast.witness,
+                            opposing.linear * crate::TICK_RATE.as_secs_f32(),
                             Color::LIME_GREEN,
                         );
-                        //gizmos.ray_gradient(toi.witness, opposing.linear, Color::LIME_GREEN, Color::LIME_GREEN);
                         //gizmos.ray_gradient(toi.witness, -jump.linear, Color::RED, Color::RED);
                         //gizmos.ray_gradient(toi.witness, -float.linear, Color::BLUE, Color::BLUE);
                     }
@@ -59,15 +64,17 @@ pub fn custom_apply_ground_forces(
     mut grounds: Query<(&mut ExternalImpulse, Option<&ReadMassProperties>)>,
     ground_forces: Query<(Entity, &GroundForce, &GroundCast)>,
     ctx: Res<RapierContext>,
-
+    /*
     grabbing: Query<&Grabbing>,
     children: Query<&Children>,
     joint_children: Query<&JointChildren>,
+    */
 ) {
     let dt = ctx.integration_parameters.dt;
-    for (entity, force, cast) in &ground_forces {
+    for (_entity, force, cast) in &ground_forces {
         if let GroundCast::Touching(ground) = cast {
-            if let Ok((mut impulse, mass)) = grounds.get_mut(ground.entity) {
+            if let Ok((mut impulse, _mass)) = grounds.get_mut(ground.entity) {
+                /*
                 let mass = if let Some(mass) = mass {
                     mass.0.mass
                 } else {
@@ -85,9 +92,10 @@ pub fn custom_apply_ground_forces(
                 } else {
                     1.0
                 };
+                */
 
-                impulse.impulse += force.linear * force_multiplier * dt;
-                impulse.torque_impulse += force.angular * force_multiplier * dt;
+                impulse.impulse += force.linear * dt;
+                impulse.torque_impulse += force.angular * dt;
             }
         }
     }

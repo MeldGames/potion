@@ -252,11 +252,13 @@ pub fn cap_impulse(
     mut impulses: Query<(&mut ExternalImpulse, &ReadMassProperties), Changed<ExternalImpulse>>,
 ) {
     for (mut impulse, mass) in &mut impulses {
-        if mass.0.mass < 0.1 {
-            impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP / 100.0);
+        if mass.0.mass < 2.0 {
+            impulse.impulse = impulse
+                .impulse
+                .clamp_length_max(IMPULSE_CAP / 500.0 / mass.0.mass);
             impulse.torque_impulse = impulse
                 .torque_impulse
-                .clamp_length_max(ANG_IMPULSE_CAP / 100.0);
+                .clamp_length_max(ANG_IMPULSE_CAP / 100.0 / mass.0.mass);
         } else {
             impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP);
             impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP);
@@ -330,7 +332,8 @@ impl Plugin for PhysicsPlugin {
         );
 
         app.add_systems(Update, fill_missing);
-        //app.add_systems(Update, cap_velocity).add_systems(Update, cap_impulse);
+        app.add_systems(Update, cap_velocity)
+            .add_systems(Update, cap_impulse);
         app.add_systems(Update, prevent_oob);
         //app.add_systems(Startup, modify_rapier_context);
         //app.add_systems(Update, split_compound::split_compound);

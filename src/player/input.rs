@@ -60,8 +60,11 @@ impl Plugin for PlayerInputPlugin {
                 .in_set(MetaInputs),
         );
 
-        app.add_systems(FixedUpdate, update_local_player_inputs)
-            .add_systems(FixedUpdate, reset_inputs);
+        app.add_systems(
+            FixedUpdate,
+            update_local_player_inputs.in_set(crate::FixedSet::First),
+        )
+        .add_systems(FixedUpdate, reset_inputs.in_set(crate::FixedSet::Last));
     }
 }
 

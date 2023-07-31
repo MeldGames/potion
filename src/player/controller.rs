@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use std::f64::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster, GroundCast};
+use bevy_mod_wanderlust::{ControllerInput, Float, GroundCast, GroundCaster};
 //use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
