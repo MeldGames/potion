@@ -234,7 +234,18 @@ pub fn grab_collider(
                 ) {
                     let global_anchor: Vec3 = collider_contact.point2.into();
 
-                    info!("contact: {:?}", collider_contact.point2);
+                    let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_entity) {
+                        let closest_point = auto_aim.closest_point(other_global, global_anchor);
+                        closest_point
+                    } else {
+                        None
+                    };
+
+                    let global_anchor = if let Some(auto_anchor) = auto_anchor {
+                        auto_anchor
+                    } else {
+                        global_anchor
+                    };
 
                     let root_entity = ctx.collider_parent(other_entity).unwrap_or(other_entity);
 
@@ -246,7 +257,7 @@ pub fn grab_collider(
                         .transform_point3(global_anchor)
                         * other_transform.scale;
 
-                    info!("grabbing {:?}", names.get(root_entity));
+                    info!("grabbing {:?}", names.get(root_entity).unwrap());
 
                     grabbing.grabbed = Some(Grabbed {
                         entity: root_entity,
@@ -335,7 +346,7 @@ pub fn grab_collider(
             */
         } else {
             if let Some(grabbed) = grabbing.grabbed.take() {
-                info!("dropping {:?}", names.get(grabbed.entity));
+                info!("dropping {:?}", names.get(grabbed.entity).unwrap());
             }
         }
     }

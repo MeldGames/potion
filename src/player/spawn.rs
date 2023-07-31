@@ -127,14 +127,14 @@ pub fn setup_player(
                                 max_offset: 0.05,
                                 distance: 1.0,
                                 spring: Spring {
-                                    strength: 60.0,
+                                    strength: 260.0,
                                     damping: 1.5,
                                 },
                             },
                             upright: Upright {
                                 spring: Spring {
                                     //strength: 150.0,
-                                    strength: 30.0,
+                                    strength: 80.0,
                                     damping: 0.9,
                                 },
                                 forward_vector: None,
@@ -179,44 +179,25 @@ pub fn setup_player(
                     .id();
 
                 let distance_from_body = player_radius + 0.3;
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(distance_from_body, player_height, 0.0),
-                    0,
-                );
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(-distance_from_body, player_height, 0.0),
-                    1,
-                );
 
-                // for some body horror
-                /*
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(0.0, player_height, distance_from_body),
-                    2,
-                );
-                attach_arm(
-                    &mut commands,
-                    &mut meshes,
-                    player_entity,
-                    global_transform.compute_transform(),
-                    Vec3::new(0.0, player_height, -distance_from_body),
-                    3,
-                );
-                */
+                // for some body horror set this to > 2
+                let arms = 2;
+                let radius = distance_from_body;
+                for i in 0..arms {
+                    let step = (i as f32 / arms as f32) * std::f32::consts::TAU;
+                    let x = step.cos() * radius;
+                    let y = step.sin() * radius;
+
+                    attach_arm(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        player_entity,
+                        global_transform.compute_transform(),
+                        Vec3::new(x, player_height, y),
+                        i,
+                    );
+                }
 
                 let camera = commands
                     .spawn(SpatialBundle {

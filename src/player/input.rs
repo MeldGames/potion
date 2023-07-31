@@ -140,7 +140,7 @@ pub struct PlayerInput {
     /// Movement inputs
     pub binary_inputs: PlayerInputSet,
     /// Arm should extend by index.
-    pub extend_arm: [bool; 8],
+    pub extend_arm: [bool; 32],
     /// Vertical rotation of camera
     pub pitch: f64,
     /// Horizontal rotation of camera
@@ -176,7 +176,7 @@ impl PlayerInput {
     pub fn new() -> Self {
         Self {
             binary_inputs: PlayerInputSet::empty(),
-            extend_arm: [false; 8],
+            extend_arm: [false; 32],
             pitch: 0.0,
             yaw: 0.0,
             twist: false,
@@ -386,6 +386,10 @@ pub fn player_binary_inputs(
             || keyboard_input.pressed(KeyCode::J)
             || keyboard_input.pressed(KeyCode::ShiftLeft),
     );
+
+    for i in 2..32 {
+        player_input.set_extend_arm(i, keyboard_input.pressed(KeyCode::ShiftLeft));
+    }
 
     player_input.set_twist(keyboard_input.pressed(KeyCode::ControlLeft));
 
