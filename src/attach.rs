@@ -183,6 +183,7 @@ impl Plugin for AttachPlugin {
 
         app.add_systems(Update, velocity_nonphysics.in_set(crate::FixedSet::Update));
 
+        app.add_systems(Update, update_attach);
         app.add_systems(
             FixedUpdate,
             (
