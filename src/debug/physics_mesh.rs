@@ -158,24 +158,34 @@ pub fn init_physics_meshes(
             }
         }
 
-        for (mesh, transform) in collider.as_unscaled_typed_shape().as_meshes() {
-            let handle = meshes.add(mesh);
-            let physics_mesh = commands
-                .spawn(PbrBundle {
-                    mesh: handle,
-                    transform: transform,
-                    ..default()
-                })
+        let collider_meshes = collider.as_unscaled_typed_shape().as_meshes();
+        if collider_meshes.len() > 0 {
+            let physics_meshes = commands
+                .spawn(SpatialBundle::default())
                 .insert(PhysicsDebugMesh)
                 .insert(DebugVisible)
-                .insert(Name::new("Physics debug mesh"))
+                .insert(Name::new("Physics debug meshes"))
                 .id();
 
             commands
                 .entity(entity)
                 .insert(Visibility::default())
                 .insert(ComputedVisibility::default())
-                .add_child(physics_mesh);
+                .add_child(physics_meshes);
+
+            for (mesh, transform) in collider_meshes {
+                let handle = meshes.add(mesh);
+                commands
+                    .spawn(PbrBundle {
+                        mesh: handle,
+                        transform: transform,
+                        ..default()
+                    })
+                    .insert(PhysicsDebugMesh)
+                    .insert(DebugVisible)
+                    .insert(Name::new("Physics debug mesh"))
+                    .set_parent(physics_meshes);
+            }
         }
     }
 }

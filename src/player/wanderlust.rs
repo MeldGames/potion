@@ -38,7 +38,7 @@ impl Plugin for CustomWanderlustPlugin {
             |casts: Query<(&GroundCast, &GroundForce, &JumpForce, &FloatForce)>,
              mut gizmos: Gizmos,
              mut config: ResMut<GizmoConfig>| {
-                config.depth_bias = -1.0;
+                config.depth_bias = -0.01;
                 for (cast, opposing, _jump, _float) in &casts {
                     if let GroundCast::Touching(ground) = cast {
                         /*gizmos.ray(

@@ -95,7 +95,7 @@ pub fn setup_player(
             }
             &PlayerEvent::Spawn { id } => {
                 info!("spawning player {}", id);
-                let global_transform = GlobalTransform::from(Transform::from_xyz(-25.0, 10.0, 0.0));
+                let global_transform = GlobalTransform::from(Transform::from_xyz(-15.0, 15.0, 0.0));
 
                 let player_height = 1.0;
                 let player_radius = 0.3;
@@ -576,7 +576,7 @@ pub fn attach_arm(
         .build();
     hand_joint.set_contacts_enabled(false);
 
-    let _hand_entity = commands
+    let hand_entity = commands
         .spawn(TransformBundle::default())
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
@@ -601,6 +601,20 @@ pub fn attach_arm(
         .insert(Forearm::new(forearm_entity))
         .insert(LastActive(std::time::Instant::now()))
         .id();
+
+    let hand_sensor = commands
+        .spawn(TransformBundle::default())
+        .insert(ColliderBundle {
+            collider: Collider::ball(hand_radius),
+            collision_groups: GRAB_GROUPING,
+            ..default()
+        })
+        .insert(Sensor)
+        .insert(ActiveCollisionTypes::all())
+        .insert(Attach::all(hand_entity))
+        .id();
+
+    commands.entity(hand_entity).insert(GrabSensor(hand_sensor));
 }
 
 pub fn related_entities<R, JointFilter>(

@@ -91,10 +91,6 @@ pub fn ground_truth_transform(
 
 pub fn update_attach(
     mut commands: Commands,
-    //parented: Query<Entity, (With<Attach>, With<Parent>)>,
-    no_velocity: Query<Entity, (With<Attach>, Without<Velocity>)>,
-    particles: Query<springy::RapierParticleQuery>,
-    mut impulses: Query<Option<&mut ExternalImpulse>>,
     mut attachers: Query<
         (
             Entity,
@@ -110,6 +106,7 @@ pub fn update_attach(
         )>,
     >,
     mut transforms: Query<&mut Transform>,
+    mut globals: Query<&mut GlobalTransform>,
     parents: Query<&Parent>,
 ) {
     for (attach_entity, attach, translation, rotation, scale) in &mut attachers {
@@ -118,56 +115,30 @@ pub fn update_attach(
             ground_truth_transform(particle_entity, &transforms.to_readonly(), &parents);
 
         if let Ok(mut transform) = transforms.get_mut(attach_entity) {
-            match translation {
-                Some(AttachTranslation::Instant) => {
-                    transform.translation = ground_truth.translation;
-                }
-                Some(&AttachTranslation::Spring(spring)) => {
-                    let timestep = crate::TICK_RATE.as_secs_f32();
-                    let [particle_a, particle_b] =
-                        if let Ok(particles) = particles.get_many([attach_entity, attach.get()]) {
-                            particles
-                        } else {
-                            warn!("Particle does not contain all necessary components");
-                            continue;
-                        };
-
-                    let instant = particle_a.translation().instant(&particle_b.translation());
-                    let impulse = spring.impulse(timestep, instant);
-
-                    let [attach_impulse, particle_impulse] = if let Ok(impulses) =
-                        impulses.get_many_mut([attach_entity, particle_entity])
-                    {
-                        impulses
-                    } else {
-                        warn!("Particle does not contain all necessary components");
-                        continue;
-                    };
-
-                    if let Some(mut attach_impulse) = attach_impulse {
-                        attach_impulse.impulse += -impulse;
+            if let Ok(mut global) = globals.get_mut(attach_entity) {
+                match translation {
+                    Some(AttachTranslation::Instant) => {
+                        transform.translation = ground_truth.translation;
                     }
+                    _ => {}
+                }
 
-                    if let Some(mut particle_impulse) = particle_impulse {
-                        particle_impulse.impulse += impulse;
+                match rotation {
+                    Some(AttachRotation::Instant) => {
+                        transform.rotation = ground_truth.rotation;
+                        //velocity.angvel = Vec3::ZERO;
                     }
+                    Some(AttachRotation::Inverse) => {
+                        transform.rotation = ground_truth.rotation.inverse();
+                    }
+                    _ => {}
                 }
-                _ => {}
-            }
 
-            match rotation {
-                Some(AttachRotation::Instant) => {
-                    transform.rotation = ground_truth.rotation;
-                    //velocity.angvel = Vec3::ZERO;
+                if scale.is_some() {
+                    transform.scale = ground_truth.scale;
                 }
-                Some(AttachRotation::Inverse) => {
-                    transform.rotation = ground_truth.rotation.inverse();
-                }
-                _ => {}
-            }
 
-            if scale.is_some() {
-                transform.scale = ground_truth.scale;
+                *global = (*transform).into();
             }
         }
     }
