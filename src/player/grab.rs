@@ -5,7 +5,7 @@ use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
+use bevy_rapier3d::rapier::prelude::{JointAxesMask, JointAxis, MotorModel};
 
 use crate::prelude::*;
 
@@ -33,6 +33,7 @@ impl Plugin for GrabPlugin {
                 twist_grab,
                 update_grab_sphere,
                 grab_collider,
+                update_hand_collision_groups,
                 grab_joint,
                 last_active_arm,
             )
@@ -53,6 +54,8 @@ pub fn grab_joint(
     grabbers: Query<(Entity, &Grabbing, Option<&Children>, &GlobalTransform)>,
     mut transforms: Query<&mut Transform>,
     grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
+
+    globals: Query<&GlobalTransform>,
 ) {
     for (grabber, grabbing, children, global) in &grabbers {
         let joint = if let Some(children) = children {
@@ -71,7 +74,8 @@ pub fn grab_joint(
         match grabbing.grabbed {
             Some(Grabbed {
                 entity: grabbed_entity,
-                grab_point,
+                local_grab_point,
+                global_grab_point,
                 teleport_entity,
             }) => {
                 if let Some((joint_entity, joint)) = joint {
@@ -93,29 +97,59 @@ pub fn grab_joint(
                     }
                 }
 
+                let local_grabber_point = if let Ok([grabbed_global, grabber_global]) = globals.get_many([grabbed_entity, grabber]) {
+                    //let global_grab_point = grabbed_global.affine().transform_point3(grab_point);
+                    info!("worldspace grab: {:.1?}", global_grab_point);
+                    let local_grab_point = grabber_global.affine().inverse().transform_point3(global_grab_point);
+                    info!("localspace grab: {:.1?}", local_grab_point);
+                    local_grab_point
+                } else {
+                    Vec3::ZERO
+                };
+
                 let motor_model = MotorModel::ForceBased;
-                let max_force = 1000.0;
-                let stiffness = 20.0;
+                let max_force = 5000.0;
+                let stiffness = 100.0;
                 let damping = 0.4;
-                let mut grab_joint = SphericalJointBuilder::new()
-                    .local_anchor1(grab_point)
+                let mut grab_joint = GenericJointBuilder::new(JointAxesMask::LOCKED_SPHERICAL_AXES)
+                    .local_anchor1(local_grab_point)
                     // use the center of the hand instead of exact grab point
                     .local_anchor2(Vec3::ZERO)
+                    //.local_anchor2(local_grabber_point)
+                    .motor_model(JointAxis::X, motor_model)
+                    .motor_model(JointAxis::Y, motor_model)
+                    .motor_model(JointAxis::Z, motor_model)
                     .motor_model(JointAxis::AngX, motor_model)
                     .motor_model(JointAxis::AngY, motor_model)
-                    .motor_model(JointAxis::AngZ, motor_model)
+                    /*
+                    .motor_max_force(JointAxis::X, max_force)
+                    .motor_max_force(JointAxis::Y, max_force)
+                    .motor_max_force(JointAxis::Z, max_force)
                     .motor_max_force(JointAxis::AngX, max_force)
                     .motor_max_force(JointAxis::AngY, max_force)
                     .motor_max_force(JointAxis::AngZ, max_force)
+                    .motor_position(JointAxis::X, 0.0, stiffness, damping)
+                    .motor_position(JointAxis::Z, 0.0, stiffness, damping)
+                    .motor_position(JointAxis::Y, 0.0, stiffness, damping)
+                    */
                     .motor_position(JointAxis::AngX, 0.0, stiffness, damping)
                     .motor_position(JointAxis::AngZ, 0.0, stiffness, damping)
                     .motor_position(JointAxis::AngY, 0.0, stiffness, damping)
                     .build();
                 grab_joint.set_contacts_enabled(false);
 
+                let mut start_joint = grab_joint.clone();
+                start_joint.set_local_anchor2(local_grabber_point);
+
                 commands.entity(grabber).with_children(|children| {
                     children
                         .spawn(ImpulseJoint::new(grabbed_entity, grab_joint))
+                        .insert(JointInterpolation {
+                            start: start_joint,
+                            end: grab_joint,
+                            over: 0.2,
+                            ..default()
+                        })
                         .insert(GrabJoint)
                         .insert(Name::new("Grab Joint"));
                 });
@@ -133,6 +167,7 @@ pub fn grab_joint(
 }
 
 pub fn grab_collider(
+    ctx: Res<RapierContext>,
     names: Query<&Name>,
     rapier_context: Res<RapierContext>,
     globals: Query<&GlobalTransform>,
@@ -156,9 +191,7 @@ pub fn grab_collider(
                     contact_pair.collider1()
                 };
 
-                let other_rigidbody = if let Some(entity) =
-                    find_parent_with(&rigid_bodies, &parents, &joints, other_collider)
-                {
+                let other_rigidbody = if let Some(entity) = ctx.collider_parent(other_collider) {
                     entity
                 } else {
                     continue;
@@ -192,7 +225,7 @@ pub fn grab_collider(
                     }
                 }
 
-                if let Ok(other_global) = globals.get(other_rigidbody) {
+                if let Ok(other_global) = globals.get(other_collider) {
                     let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
                         let closest_point = auto_aim.closest_point(other_global, closest_point);
                         closest_point
@@ -200,7 +233,7 @@ pub fn grab_collider(
                         None
                     };
 
-                    let anchor1 = if let Some(auto_anchor) = auto_anchor {
+                    let global_anchor = if let Some(auto_anchor) = auto_anchor {
                         auto_anchor
                     } else {
                         closest_point
@@ -208,9 +241,8 @@ pub fn grab_collider(
 
                     // convert back to local space.
                     let other_transform = other_global.compute_transform();
-                    let other_matrix = other_global.compute_matrix();
-                    let anchor1 =
-                        other_matrix.inverse().transform_point3(anchor1) * other_transform.scale;
+                    let local_anchor =
+                        other_global.affine().inverse().transform_point3(global_anchor) * other_transform.scale;
 
                     let name = names
                         .get(other_rigidbody)
@@ -220,7 +252,8 @@ pub fn grab_collider(
 
                     grabbing.grabbed = Some(Grabbed {
                         entity: other_rigidbody,
-                        grab_point: anchor1,
+                        local_grab_point: local_anchor,
+                        global_grab_point: global_anchor,
                         teleport_entity: false,
                     });
                 }
@@ -241,8 +274,10 @@ pub fn grab_collider(
 pub struct Grabbed {
     /// Entity currently grabbed onto.
     pub entity: Entity,
-    /// Local space point where the grabbed entity is being grabbed.
-    pub grab_point: Vec3,
+    /// Local-space point where the grabbed entity is being grabbed.
+    pub local_grab_point: Vec3,
+    /// Global-space point where the grabbed entity is being grabbed.
+    pub global_grab_point: Vec3,
     /// Entity should be teleported to a position near the grab point.
     ///
     /// Typically this is from the inventory so we don't jerk the player around.
@@ -504,10 +539,24 @@ pub fn player_extend_arm(
             }
 
             grabbing.trying_grab = true;
-            *collision_groups = GRAB_GROUPING;
         } else {
             grabbing.trying_grab = false;
-            *collision_groups = REST_GROUPING;
+        }
+    }
+}
+
+pub fn update_hand_collision_groups(
+    mut hands: Query<(&mut CollisionGroups, &Grabbing), With<Hand>>,
+) {
+    for (mut groups, grabbing) in &mut hands {
+        if grabbing.trying_grab && grabbing.grabbed.is_none() {
+            if *groups != GRAB_GROUPING {
+                *groups = GRAB_GROUPING;
+            }
+        } else {
+            if *groups != REST_GROUPING {
+                *groups = REST_GROUPING;
+            }
         }
     }
 }

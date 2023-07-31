@@ -595,7 +595,6 @@ pub fn attach_arm(
         })
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
-        //.insert(NoContacts)
         //.insert(crate::Slottable) // kind of funny lol
         .insert(ArmId(index))
         .insert(MuscleIKTarget::new(target))

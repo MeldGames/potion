@@ -8,19 +8,22 @@ use bevy_rapier3d::prelude::*;
 pub mod contact_filter;
 pub mod context_ext;
 pub mod joint_break;
+pub mod joint_interpolation;
 pub mod muscle;
 pub mod slot;
 pub mod split_compound;
 
 pub mod prelude {
     pub use super::{
-        contact_filter::*, context_ext::*, joint_break::*, muscle::*, slot::*, ColliderBundle,
-        RigidBodyBundle, GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING, STORED_GROUPING,
-        TERRAIN_GROUPING,
+        contact_filter::*, context_ext::*, joint_break::*, joint_interpolation::*, muscle::*,
+        slot::*, ColliderBundle, RigidBodyBundle, GRAB_GROUPING, PLAYER_GROUPING, REST_GROUPING,
+        STORED_GROUPING, TERRAIN_GROUPING,
     };
 }
 
 use prelude::*;
+
+use crate::physics::joint_interpolation::JointInterpolationPlugin;
 
 bitflags::bitflags! {
     pub struct Groups: u32 {
@@ -290,7 +293,7 @@ impl Plugin for PhysicsPlugin {
         app.insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Fixed {
                 dt: crate::TICK_RATE.as_secs_f32(),
-                substeps: 1,
+                substeps: 32,
             },
             ..Default::default()
         });
@@ -341,5 +344,6 @@ impl Plugin for PhysicsPlugin {
         app.add_plugins(MusclePlugin);
         app.add_plugins(BreakJointPlugin);
         app.add_plugins(SlotPlugin);
+        app.add_plugins(JointInterpolationPlugin);
     }
 }
