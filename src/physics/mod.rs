@@ -292,7 +292,7 @@ impl Plugin for PhysicsPlugin {
 
         app.insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Fixed {
-                dt: crate::TICK_RATE.as_secs_f32(),
+                dt: crate::TICK_RATE.as_secs_f32() / 1.0,
                 substeps: 32,
             },
             ..Default::default()

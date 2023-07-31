@@ -35,7 +35,7 @@ impl Default for Muscle {
         Self {
             target: None,
             strength: 0.3,
-            tense: true,
+            tense: false,
         }
     }
 }

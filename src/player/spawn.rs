@@ -436,7 +436,7 @@ pub fn attach_arm(
     commands.entity(forearm_target).add_child(hand_target);
     commands.entity(to).add_child(pole_target);
 
-    let arm_density = 1.0;
+    let arm_density = 0.25;
 
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -454,8 +454,13 @@ pub fn attach_arm(
         .build();
     upperarm_joint.set_contacts_enabled(false);
 
+    let upperarm_transform = to_transform.mul_transform(Transform {
+        translation: at,
+        rotation: Quat::from_rotation_z(PI),
+        ..default()
+    });
     let upperarm_entity = commands
-        .spawn(TransformBundle::from_transform(to_transform))
+        .spawn(TransformBundle::from_transform(upperarm_transform))
         .insert(Name::new(format!("UpperArm {}", index)))
         .insert(UpperArm)
         .insert(RigidBodyBundle {
@@ -495,8 +500,12 @@ pub fn attach_arm(
         .build();
     forearm_joint.set_contacts_enabled(false);
 
+    let forearm_transform = upperarm_transform.mul_transform(Transform {
+        translation: forearm_height,
+        ..default()
+    });
     let forearm_entity = commands
-        .spawn(TransformBundle::from_transform(to_transform))
+        .spawn(TransformBundle::from_transform(forearm_transform))
         .insert(Name::new(format!("ForeArm {}", index)))
         .insert(ForeArm)
         .insert(RigidBodyBundle {
@@ -557,8 +566,9 @@ pub fn attach_arm(
         .build();
     hand_joint.set_contacts_enabled(false);
 
+    let hand_transform = forearm_transform;
     let hand_entity = commands
-        .spawn(TransformBundle::default())
+        .spawn(TransformBundle::from_transform(hand_transform))
         .insert(Name::new(format!("Hand {}", index)))
         .insert(Hand)
         .insert(ConnectedEntities::default())

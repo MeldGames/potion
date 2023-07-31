@@ -607,7 +607,7 @@ pub fn arm_target_position(
                 target_position.translation = shoulder_worldspace + direction * 2.0;
 
                 if grabbing.grabbed.is_none() {
-                    target_position.translation += pull_offset.0;
+                    //target_position.translation += pull_offset.0;
                 }
             }
 
