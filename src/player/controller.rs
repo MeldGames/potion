@@ -104,7 +104,7 @@ pub fn rotate_inputs(
 ) {
     for (ground, mut inputs) in &mut inputs {
         if let Some(ground) = ground.last() {
-            inputs.yaw += ground.point_velocity.angvel.y as f64 * crate::TICK_RATE.as_secs_f64();
+            inputs.yaw += ground.point_velocity.y as f64 * crate::TICK_RATE.as_secs_f64();
             *input = *inputs;
             //info!("vel: {:?}", ground.point_velocity);
             //info!("yaw: {:?}", inputs.yaw);

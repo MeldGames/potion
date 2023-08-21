@@ -104,10 +104,9 @@ pub fn setup_player(
                     .spawn(ControllerBundle {
                         controller: Controller {
                             movement: Movement {
-                                acceleration: 55.0,
-                                max_acceleration_force: 30.0,
+                                acceleration: Strength::Scaled(50.0),
                                 max_speed: 10.0,
-                                force_scale: Vec3::new(1.0, 0.0, 1.0),
+                                force_scale: ForceScale::Up,
                                 ..default()
                             },
                             gravity: Gravity {
@@ -117,7 +116,7 @@ pub fn setup_player(
                             ground_caster: GroundCaster {
                                 max_ground_angle: 45.0 * (PI / 180.0),
                                 exclude_from_ground: HashSet::new(),
-                                cast_collider: Collider::ball(player_radius),
+                                cast_collider: Some(Collider::ball(player_radius)),
                                 cast_origin: Vec3::new(0., 0., 0.),
                                 cast_length: 1.0,
                                 ..default()
@@ -127,20 +126,19 @@ pub fn setup_player(
                                 max_offset: 0.05,
                                 distance: 1.0,
                                 spring: Spring {
-                                    strength: 260.0,
+                                    strength: SpringStrength::AngularFrequency(10.0),
                                     damping: 1.5,
                                 },
                             },
                             upright: Upright {
                                 spring: Spring {
-                                    //strength: 150.0,
-                                    strength: 80.0,
+                                    strength: SpringStrength::AngularFrequency(40.0),
                                     damping: 0.9,
                                 },
                                 forward_vector: None,
                             },
                             jump: Jump {
-                                //initial_force: 300.0,
+                                initial_force: 300.0,
                                 ..default()
                             },
                             force_settings: ForceSettings {

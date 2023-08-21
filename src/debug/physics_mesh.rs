@@ -80,7 +80,9 @@ impl<'a> AsMesh for ColliderView<'a> {
                 meshes.push((mesh, Transform::default()));
             }
             ColliderView::Polyline(_polyline) => {}
-            ColliderView::HalfSpace(_half_space) => {}
+            ColliderView::HalfSpace(shape_views::HalfSpaceView { raw: halfspace }) => {
+                //let dir = halfspace.normal();
+            }
             ColliderView::HeightField(shape_views::HeightFieldView { raw: height_field }) => {
                 let (points, indices) = height_field.to_trimesh();
                 let trimesh = TriMesh::new(points, indices);

@@ -25,14 +25,15 @@ impl Plugin for CustomWanderlustPlugin {
                 jump_force,
                 accumulate_forces,
                 apply_forces,
-                //apply_ground_forces,
-                custom_apply_ground_forces,
+                apply_ground_forces,
+                //custom_apply_ground_forces,
             )
                 .chain()
                 .in_set(WanderlustSet)
                 .before(PhysicsSet::SyncBackend),
         );
 
+        /*
         app.add_systems(
             Update,
             |casts: Query<(&GroundCast, &GroundForce, &JumpForce, &FloatForce)>,
@@ -57,6 +58,7 @@ impl Plugin for CustomWanderlustPlugin {
                 }
             },
         );
+        */
     }
 }
 
@@ -72,7 +74,7 @@ pub fn custom_apply_ground_forces(
 ) {
     let dt = ctx.integration_parameters.dt;
     for (_entity, force, cast) in &ground_forces {
-        if let GroundCast::Touching(ground) = cast {
+        if let Some(ground) = cast.current() {
             if let Ok((mut impulse, _mass)) = grounds.get_mut(ground.entity) {
                 /*
                 let mass = if let Some(mass) = mass {
