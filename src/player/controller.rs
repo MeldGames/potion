@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use std::f64::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerInput, Float, GroundCast, GroundCaster};
+use bevy_mod_wanderlust::{ControllerInput, Float, GroundCast, ViableGroundCast, GroundCaster};
 //use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
 use bevy_rapier3d::prelude::*;
 
@@ -99,15 +99,13 @@ pub fn player_movement(
 }
 
 pub fn rotate_inputs(
-    mut inputs: Query<(&GroundCast, &mut PlayerInput)>,
+    mut inputs: Query<(&ViableGroundCast, &mut PlayerInput)>,
     mut input: ResMut<PlayerInput>,
 ) {
     for (ground, mut inputs) in &mut inputs {
-        if let Some(ground) = ground.last() {
-            inputs.yaw += ground.point_velocity.y as f64 * crate::TICK_RATE.as_secs_f64();
+        if let Some(ground) = ground.current() {
+            inputs.yaw += (ground.point_velocity.y as f64 * crate::TICK_RATE.as_secs_f64()).min(0.5);
             *input = *inputs;
-            //info!("vel: {:?}", ground.point_velocity);
-            //info!("yaw: {:?}", inputs.yaw);
         }
     }
 }

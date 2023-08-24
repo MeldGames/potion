@@ -74,7 +74,8 @@ obj = "0.10.2"
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
 #bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "38e1b79169303c47d639d64558b7d9adeed99211"}
-bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
+bevy_rapier3d = {git = "https://github.com/aceeri/bevy_rapier", branch = "with_query_filter"}
+#bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}

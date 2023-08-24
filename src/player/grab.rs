@@ -490,14 +490,6 @@ pub fn update_grab_sphere(
 
             let anchor = joint.data.local_anchor2();
             let global_anchor = global.transform_point(anchor);
-            /*
-            lines.line_colored(
-                global_anchor,
-                global_anchor + Vec3::Y,
-                crate::TICK_RATE.as_secs_f32(),
-                Color::YELLOW,
-            );
-            */
 
             anchors.push((grabber, global_anchor));
         }
@@ -524,16 +516,6 @@ pub fn update_grab_sphere(
             radius: radius,
         });
 
-        /*
-               lines.line_colored(
-                   midpoint,
-                   midpoint + Vec3::Y,
-                   crate::TICK_RATE.as_secs_f32(),
-                   Color::RED,
-               );
-
-               lines.line_colored(min, max, crate::TICK_RATE.as_secs_f32(), Color::PURPLE);
-        */
         for (grabber, anchor) in &anchors {
             let mut grabbing = if let Ok(grabbing) = grabbing.get_mut(*grabber) {
                 grabbing
@@ -751,13 +733,6 @@ pub fn auto_aim_pull(
                 let difference = closest_point - offset_point;
 
                 if difference.length() < 5.0 {
-                    /*
-                    lines.line_colored(
-                        offset_point,
-                        closest_point,
-                        crate::TICK_RATE.as_secs_f32(),
-                        Color::GREEN,
-                    ); */
                     pulls.push(difference);
                 }
             }

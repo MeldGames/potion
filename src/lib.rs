@@ -44,7 +44,9 @@ pub enum FixedSet {
     Last,
 }
 
+pub const RAW_TICK_RATE: std::time::Duration = std::time::Duration::from_millis(16);
 pub const TICK_RATE: std::time::Duration = std::time::Duration::from_millis(16);
+pub const SUBSTEPS: usize = 16;
 
 pub struct PotionCellarPlugin;
 impl Plugin for PotionCellarPlugin {
