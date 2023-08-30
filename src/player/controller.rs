@@ -100,10 +100,17 @@ pub fn player_movement(
 
 pub fn rotate_inputs(
     mut inputs: Query<(&ViableGroundCast, &mut PlayerInput)>,
+    masses: Query<&ReadMassProperties>,
     mut input: ResMut<PlayerInput>,
 ) {
     for (ground, mut inputs) in &mut inputs {
         if let Some(ground) = ground.current() {
+            if let Ok(mass) = masses.get(ground.entity) {
+                if mass.0.mass < 3.0 {
+                    continue;
+                }
+            }
+
             inputs.yaw +=
                 (ground.point_velocity.y as f64 * crate::TICK_RATE.as_secs_f64()).min(0.5);
             *input = *inputs;
