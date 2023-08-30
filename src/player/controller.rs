@@ -23,7 +23,6 @@ impl Plugin for ControllerPlugin {
             (
                 rotate_inputs,
                 player_movement,
-                avoid_intersecting,
                 character_crouch,
                 controller_exclude,
                 player_swivel_and_tilt,
@@ -33,6 +32,13 @@ impl Plugin for ControllerPlugin {
                 .in_set(ControllerSet)
                 .before(WanderlustSet)
                 .in_set(crate::FixedSet::Update),
+        );
+
+        app.add_systems(
+            PostUpdate,
+            (
+                avoid_intersecting,
+            )
         );
     }
 }

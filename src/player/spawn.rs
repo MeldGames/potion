@@ -359,7 +359,7 @@ pub fn attach_arm(
         default()
     };
 
-    let arm_segment = 1.0;
+    let arm_segment = 0.8;
     let forearm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
     let upperarm_height = Vec3::new(0.0, arm_segment - arm_radius, 0.0);
 
