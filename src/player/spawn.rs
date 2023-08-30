@@ -105,7 +105,7 @@ pub fn setup_player(
                         controller: Controller {
                             movement: Movement {
                                 acceleration: Strength::Scaled(50.0),
-                                max_speed: 10.0,
+                                max_speed: 7.0,
                                 force_scale: ForceScale::Up,
                                 ..default()
                             },
@@ -114,7 +114,8 @@ pub fn setup_player(
                                 up_vector: Vec3::Y,
                             },
                             ground_caster: GroundCaster {
-                                max_ground_angle: 45.0 * (PI / 180.0),
+                                unstable_ground_angle: 45.0 * (PI / 180.0),
+                                max_ground_angle: 75.0 * (PI / 180.0),
                                 exclude_from_ground: HashSet::new(),
                                 cast_collider: Some(Collider::ball(player_radius)),
                                 cast_origin: Vec3::new(0., 0., 0.),
@@ -126,19 +127,19 @@ pub fn setup_player(
                                 max_offset: 0.05,
                                 distance: 2.0,
                                 spring: Spring {
-                                    strength: SpringStrength::AngularFrequency(10.0),
+                                    strength: SpringStrength::AngularFrequency(20.0),
                                     damping: 0.9,
                                 },
                             },
                             upright: Upright {
                                 spring: Spring {
-                                    strength: SpringStrength::AngularFrequency(40.0),
+                                    strength: SpringStrength::AngularFrequency(30.0),
                                     damping: 0.9,
                                 },
                                 forward_vector: None,
                             },
                             jump: Jump {
-                                initial_force: 300.0,
+                                initial_force: 150.0,
                                 ..default()
                             },
                             force_settings: ForceSettings {
@@ -161,7 +162,7 @@ pub fn setup_player(
                         ..default()
                     })
                     //.insert(crate::deposit::Value::new(500))
-                    .insert(ColliderMassProperties::Density(1.0))
+                    .insert(ColliderMassProperties::Density(0.5))
                     .insert(PlayerInput::default())
                     .insert(Inventory::default())
                     .insert(Player { id: id })

@@ -175,6 +175,7 @@ pub fn grab_joint(
 pub struct GrabSensor(pub Entity);
 
 pub fn grab_collider(
+    mut commands: Commands,
     ctx: Res<RapierContext>,
     names: Query<DebugName>,
     globals: Query<&GlobalTransform>,
@@ -350,7 +351,13 @@ pub fn grab_collider(
             */
         } else {
             if let Some(grabbed) = grabbing.grabbed.take() {
-                info!("dropping {:?}", names.get(grabbed.entity).unwrap());
+                if let Ok(name) = names.get(grabbed.entity) {
+                    info!("dropping {:?}", name);
+                }
+
+                if let Some(mut entity_command) = commands.get_entity(grabbed.entity) {
+                    entity_command.insert(crate::objects::Thrown::default());
+                }
             }
         }
     }

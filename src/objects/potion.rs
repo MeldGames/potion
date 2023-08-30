@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::objects::Thrown;
 
 pub struct PotionPlugin;
 
@@ -7,7 +8,7 @@ impl Plugin for PotionPlugin {
         app.register_type::<Potion>()
             .register_type::<CrackThreshold>();
 
-        app.add_systems(FixedUpdate, potion_contact_explode);
+        app.add_systems(FixedUpdate, (potion_contact_explode,));
     }
 }
 
@@ -21,7 +22,7 @@ pub struct CrackThreshold(f32);
 
 impl Default for CrackThreshold {
     fn default() -> Self {
-        Self(80.0)
+        Self(200.0)
     }
 }
 
@@ -57,12 +58,14 @@ impl Default for PotionColliderBundle {
 
 pub fn potion_contact_explode(
     mut commands: Commands,
-    potions: Query<&CrackThreshold, With<Potion>>,
+    potions: Query<&CrackThreshold, (With<Potion>, With<Thrown>)>,
+    globals: Query<&GlobalTransform>,
     mut contact_forces: EventReader<ContactForceEvent>,
     rigid_body: Query<Entity, With<RigidBody>>,
     parent: Query<&Parent>,
+    mut gizmos: ResMut<RetainedGizmos>,
 ) {
-    let mut check_crack = |mut entity: Entity, event: &ContactForceEvent| -> bool {
+    let mut check_crack = |mut entity: Entity, other: Entity, event: &ContactForceEvent| -> bool {
         while !rigid_body.contains(entity) {
             if let Ok(parent) = parent.get(entity) {
                 entity = parent.get();
@@ -79,13 +82,15 @@ pub fn potion_contact_explode(
         if cracked {
             info!("entity {:?} cracked at force {:?}", entity, hit_force);
             commands.entity(entity).despawn_recursive();
+            let translation = globals.get(entity).unwrap_or(&GlobalTransform::default()).translation();
+            gizmos.sphere(4.0, translation, Quat::IDENTITY, 3.0, Color::PURPLE);
         }
 
         cracked
     };
 
     for contact_force in contact_forces.iter() {
-        check_crack(contact_force.collider1, &contact_force);
-        check_crack(contact_force.collider2, &contact_force);
+        check_crack(contact_force.collider1, contact_force.collider2, &contact_force);
+        check_crack(contact_force.collider2, contact_force.collider1, &contact_force);
     }
 }

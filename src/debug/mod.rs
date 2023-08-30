@@ -2,11 +2,14 @@ use bevy::prelude::*;
 
 pub mod physics_mesh;
 pub mod texture;
+pub mod retained_gizmos;
 
 pub use texture::TestMaterial;
+pub use retained_gizmos::*;
 
 pub mod prelude {
     pub use super::DebugVisible;
+    pub use super::retained_gizmos::RetainedGizmos;
 }
 
 #[derive(Debug, Clone, Resource)]
@@ -48,6 +51,8 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Debug(true));
+
+        app.add_plugins(RetainedGizmoPlugin);
 
         app.add_systems(Update, toggle_debug);
         app.add_systems(Update, debug_visible.after(toggle_debug));

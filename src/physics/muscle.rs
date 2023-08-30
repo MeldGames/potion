@@ -102,11 +102,11 @@ pub fn muscle_target(
         }
 
         if let Some(mut impulse_a) = impulse_a {
-            impulse_a.torque_impulse -= angular_impulse * dt;
+            impulse_a.torque_impulse -= angular_impulse;
         }
 
         if let Some(mut impulse_b) = impulse_b {
-            impulse_b.torque_impulse += angular_impulse * dt;
+            impulse_b.torque_impulse += angular_impulse;
         }
     }
 }
