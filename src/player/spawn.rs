@@ -126,8 +126,8 @@ pub fn setup_player(
                                 max_offset: 0.05,
                                 distance: 1.0,
                                 spring: Spring {
-                                    strength: SpringStrength::AngularFrequency(10.0),
-                                    damping: 1.5,
+                                    strength: SpringStrength::AngularFrequency(30.0),
+                                    damping: 0.9,
                                 },
                             },
                             upright: Upright {

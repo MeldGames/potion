@@ -11,6 +11,11 @@ pub struct WanderlustSet;
 pub struct CustomWanderlustPlugin;
 impl Plugin for CustomWanderlustPlugin {
     fn build(&self, app: &mut App) {
+
+
+        app.add_plugins(WanderlustPlugin::default()
+            .in_fixed_schedule());
+        /*
         app.add_systems(
             FixedUpdate,
             (
@@ -32,6 +37,7 @@ impl Plugin for CustomWanderlustPlugin {
                 .in_set(WanderlustSet)
                 .before(PhysicsSet::SyncBackend),
         );
+        */
 
         /*
         app.add_systems(
