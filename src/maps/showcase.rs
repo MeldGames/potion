@@ -484,12 +484,36 @@ pub fn setup(
                            ..default()
                        })),
             */
-            transform: Transform::from_xyz(1.0, 6.0, -2.0),
+            transform: Transform::from_xyz(2.0, 6.0, -2.0),
             ..default()
         })
         .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle::collider(Collider::round_cylinder(
-            0.025, 0.4, 0.2,
+            0.025, 0.4, 0.1
+        )))
+        .insert((
+            Ingredient,
+            crate::deposit::Value::new(5),
+            Name::new("Donut 2"),
+            Slottable::default(),
+        ))
+        .id();
+
+    let _donut = commands
+        .spawn(PbrBundle {
+            /*
+                       mesh: meshes.add(Mesh::from(shape::Torus {
+                           radius: 0.4,
+                           ring_radius: 0.2,
+                           ..default()
+                       })),
+            */
+            transform: Transform::from_xyz(1.0, 6.0, -2.0),
+            ..default()
+        })
+        .insert(RigidBodyBundle::dynamic())
+        .insert(ColliderBundle::collider(Collider::cylinder(
+            0.025, 0.4
         )))
         .insert((
             Ingredient,

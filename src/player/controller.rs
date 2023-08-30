@@ -29,6 +29,7 @@ impl Plugin for ControllerPlugin {
                 player_swivel_and_tilt,
                 teleport_player_back,
             )
+                .chain()
                 .in_set(ControllerSet)
                 .before(WanderlustSet)
                 .in_set(crate::FixedSet::Update),
@@ -112,7 +113,7 @@ pub fn rotate_inputs(
             }
 
             inputs.yaw +=
-                (ground.point_velocity.y as f64 * crate::TICK_RATE.as_secs_f64()).min(0.5);
+                (ground.angular_velocity.y as f64 * crate::TICK_RATE.as_secs_f64()).min(0.5);
             *input = *inputs;
         }
     }

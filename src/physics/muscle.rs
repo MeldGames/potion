@@ -41,10 +41,12 @@ impl Default for Muscle {
 }
 
 pub fn muscle_target(
+    ctx: Res<RapierContext>,
     targets: Query<(Entity, &Muscle)>,
     mut impulses: Query<Option<&mut ExternalImpulse>>,
     particles: Query<RapierParticleQuery>,
 ) {
+    let dt = ctx.integration_parameters.dt;
     for (current_entity, muscle) in &targets {
         if !muscle.tense {
             continue;
@@ -100,11 +102,11 @@ pub fn muscle_target(
         }
 
         if let Some(mut impulse_a) = impulse_a {
-            impulse_a.torque_impulse -= angular_impulse + velocity * 0.0;
+            impulse_a.torque_impulse -= angular_impulse * dt;
         }
 
         if let Some(mut impulse_b) = impulse_b {
-            impulse_b.torque_impulse += angular_impulse + velocity * 0.0;
+            impulse_b.torque_impulse += angular_impulse * dt;
         }
     }
 }

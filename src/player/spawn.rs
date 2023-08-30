@@ -124,9 +124,9 @@ pub fn setup_player(
                             float: Float {
                                 min_offset: -0.3,
                                 max_offset: 0.05,
-                                distance: 1.0,
+                                distance: 2.0,
                                 spring: Spring {
-                                    strength: SpringStrength::AngularFrequency(30.0),
+                                    strength: SpringStrength::AngularFrequency(10.0),
                                     damping: 0.9,
                                 },
                             },
@@ -343,6 +343,7 @@ pub fn attach_arm(
     let twist_damping = 1.0;
     let resting_stiffness = 10.0;
     let resting_damping = 1.0;
+
     let arm_radius = 0.25;
     let hand_radius = arm_radius + 0.05;
     let motor_model = MotorModel::ForceBased;

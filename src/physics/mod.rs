@@ -129,7 +129,7 @@ impl Default for RigidBodyBundle {
 pub struct ColliderBundle {
     pub collider: Collider,
     pub mass_properties: ColliderMassProperties,
-    pub colliding_entities: CollidingEntities,
+    //pub colliding_entities: CollidingEntities,
     pub collision_groups: CollisionGroups,
     pub solver_groups: SolverGroups,
 }
@@ -148,7 +148,6 @@ impl Default for ColliderBundle {
         Self {
             collider: Collider::default(),
             mass_properties: ColliderMassProperties::default(),
-            colliding_entities: CollidingEntities::default(),
             collision_groups: CollisionGroups::default(),
             solver_groups: SolverGroups::default(),
         }
@@ -234,7 +233,7 @@ pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     integration.joint_damping_ratio = 0.5;
     */
     // Try to avoid launching players in weird situations
-    integration.max_penetration_correction = 500.0;
+    integration.max_penetration_correction = 1000.0;
     integration.dt = crate::TICK_RATE.as_secs_f32();
 }
 
@@ -278,7 +277,7 @@ pub fn prevent_oob(
 ) {
     for (entity, name, position) in &bodies {
         let translation = position.translation();
-        if translation.length() > 100_000.0f32 {
+        if translation.length() > 50_000.0f32 {
             warn!("Entity {:?} went too far out", name);
             commands.entity(entity).remove::<RigidBody>();
         }
@@ -288,12 +287,13 @@ pub fn prevent_oob(
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<ReadMassProperties>();
+        app.register_type::<ReadMassProperties>()
+        .register_type::<ColliderMassProperties>();
 
         app.insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Fixed {
                 dt: crate::TICK_RATE.as_secs_f32() / 1.0,
-                substeps: 4,
+                substeps: 8,
             },
             ..Default::default()
         });
@@ -334,10 +334,13 @@ impl Plugin for PhysicsPlugin {
             PhysicsPlugin::get_systems(PhysicsSet::Writeback).in_set(PhysicsSet::Writeback),
         );
 
+        /*
         app.add_systems(Update, fill_missing);
         app.add_systems(Update, cap_velocity)
             .add_systems(Update, cap_impulse);
+        */
         app.add_systems(Update, prevent_oob);
+        app.add_systems(Update, minimum_mass);
         app.add_systems(Startup, modify_rapier_context);
         //app.add_systems(Update, split_compound::split_compound);
 
@@ -345,5 +348,38 @@ impl Plugin for PhysicsPlugin {
         app.add_plugins(BreakJointPlugin);
         app.add_plugins(SlotPlugin);
         app.add_plugins(JointInterpolationPlugin);
+    }
+}
+
+const MINIMUM_MASS: f32 = 0.1;
+pub fn minimum_mass(mut masses: Query<(DebugName, &RigidBody, &mut ColliderMassProperties, &mut Damping, &ReadMassProperties), Changed<ReadMassProperties>>) {
+    for (name, body, mut mass, mut damping, read) in &mut masses {
+        if *body != RigidBody::Dynamic {
+            continue;
+        }
+
+        if read.0.mass == 0.0 {
+            continue;
+        }
+
+        let mut scale = 1.0;
+        if read.0.mass < MINIMUM_MASS {
+            scale = MINIMUM_MASS / read.0.mass;
+        }
+
+        if scale != 1.0 || read.0.mass <= 0.0 {
+            let mut new_mass = read.0;
+            if read.0.mass == 0.0 {
+                new_mass.mass = MINIMUM_MASS;
+                new_mass.principal_inertia = Vec3::splat(MINIMUM_MASS);
+            } else {
+                new_mass.mass *= scale;
+                new_mass.principal_inertia *= scale * scale;
+            }
+
+            info!("changed mass for {:?}: {:.2?} -> {:.2?}", name, read.0.mass, new_mass.mass);
+            *mass = ColliderMassProperties::MassProperties(new_mass);
+            damping.angular_damping += 1.0;
+        }
     }
 }
