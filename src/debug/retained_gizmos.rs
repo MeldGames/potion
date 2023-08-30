@@ -1,4 +1,3 @@
-
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -44,8 +43,18 @@ impl RetainedGizmos {
     }
 
     pub fn filter(&mut self) {
-        self.lines = self.lines.iter().cloned().filter(|(timer, ..)| *timer > 0.0).collect();
-        self.spheres = self.spheres.iter().cloned().filter(|(timer, ..)| *timer > 0.0).collect();
+        self.lines = self
+            .lines
+            .iter()
+            .cloned()
+            .filter(|(timer, ..)| *timer > 0.0)
+            .collect();
+        self.spheres = self
+            .spheres
+            .iter()
+            .cloned()
+            .filter(|(timer, ..)| *timer > 0.0)
+            .collect();
     }
 }
 
@@ -57,7 +66,11 @@ impl Plugin for RetainedGizmoPlugin {
     }
 }
 
-pub fn retained_gizmos(ctx: Res<RapierContext>, mut retained: ResMut<RetainedGizmos>, mut gizmos: Gizmos) {
+pub fn retained_gizmos(
+    ctx: Res<RapierContext>,
+    mut retained: ResMut<RetainedGizmos>,
+    mut gizmos: Gizmos,
+) {
     retained.apply(&mut gizmos);
     retained.tick(ctx.integration_parameters.dt);
 }

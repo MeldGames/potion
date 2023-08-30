@@ -1,15 +1,15 @@
 use bevy::prelude::*;
 
 pub mod physics_mesh;
-pub mod texture;
 pub mod retained_gizmos;
+pub mod texture;
 
-pub use texture::TestMaterial;
 pub use retained_gizmos::*;
+pub use texture::TestMaterial;
 
 pub mod prelude {
-    pub use super::DebugVisible;
     pub use super::retained_gizmos::RetainedGizmos;
+    pub use super::DebugVisible;
 }
 
 #[derive(Debug, Clone, Resource)]

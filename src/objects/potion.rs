@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::objects::Thrown;
+use crate::prelude::*;
 
 pub struct PotionPlugin;
 
@@ -82,15 +82,37 @@ pub fn potion_contact_explode(
         if cracked {
             info!("entity {:?} cracked at force {:?}", entity, hit_force);
             commands.entity(entity).despawn_recursive();
-            let translation = globals.get(entity).unwrap_or(&GlobalTransform::default()).translation();
-            gizmos.sphere(4.0, translation, Quat::IDENTITY, 3.0, Color::PURPLE);
+            let global = globals.get(entity).unwrap_or(&GlobalTransform::IDENTITY);
+
+            commands
+                .spawn(SpatialBundle {
+                    transform: global.compute_transform(),
+                    ..default()
+                })
+                .insert(crate::objects::vine::VineEffect);
+
+            gizmos.sphere(
+                4.0,
+                global.translation(),
+                Quat::IDENTITY,
+                3.0,
+                Color::PURPLE,
+            );
         }
 
         cracked
     };
 
     for contact_force in contact_forces.iter() {
-        check_crack(contact_force.collider1, contact_force.collider2, &contact_force);
-        check_crack(contact_force.collider2, contact_force.collider1, &contact_force);
+        check_crack(
+            contact_force.collider1,
+            contact_force.collider2,
+            &contact_force,
+        );
+        check_crack(
+            contact_force.collider2,
+            contact_force.collider1,
+            &contact_force,
+        );
     }
 }

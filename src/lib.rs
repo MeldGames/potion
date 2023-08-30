@@ -131,6 +131,7 @@ impl Plugin for PotionCellarPlugin {
                 crate::debug::DebugPlugin,
                 //TreesPlugin,
                 PhysicsPlugin,
+                crate::objects::EffectPlugin,
             ))
             .add_plugins(RapierDebugRenderPlugin {
                 enabled: true,

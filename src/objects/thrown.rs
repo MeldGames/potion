@@ -1,6 +1,4 @@
-
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
+use crate::prelude::*;
 
 pub struct ThrowPlugin;
 impl Plugin for ThrowPlugin {
@@ -9,7 +7,6 @@ impl Plugin for ThrowPlugin {
         app.add_systems(FixedUpdate, (throw_decay,));
     }
 }
-
 
 #[derive(Component, Debug, Copy, Clone, Reflect)]
 #[reflect(Component)]
@@ -20,13 +17,15 @@ pub struct Thrown {
 
 impl Default for Thrown {
     fn default() -> Self {
-        Self {
-            timer: 1.0,
-        }
+        Self { timer: 1.0 }
     }
 }
 
-pub fn throw_decay(mut commands: Commands, ctx: Res<RapierContext>, mut thrown: Query<(Entity, &mut Thrown, Option<&Velocity>)>) {
+pub fn throw_decay(
+    mut commands: Commands,
+    ctx: Res<RapierContext>,
+    mut thrown: Query<(Entity, &mut Thrown, Option<&Velocity>)>,
+) {
     let dt = ctx.integration_parameters.dt;
     for (entity, mut thrown, velocity) in &mut thrown {
         thrown.timer -= dt;
