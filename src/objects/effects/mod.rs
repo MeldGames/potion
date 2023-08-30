@@ -3,7 +3,9 @@ use crate::prelude::*;
 pub mod vine;
 
 #[derive(Component)]
-pub struct EffectVelocity;
+pub struct EffectVelocity {
+    pub linear: Vec3,
+}
 
 pub struct EffectPlugin;
 impl Plugin for EffectPlugin {

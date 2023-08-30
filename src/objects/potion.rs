@@ -60,6 +60,7 @@ pub fn potion_contact_explode(
     mut commands: Commands,
     potions: Query<&CrackThreshold, (With<Potion>, With<Thrown>)>,
     globals: Query<&GlobalTransform>,
+    velocities: Query<&Velocity>,
     mut contact_forces: EventReader<ContactForceEvent>,
     rigid_body: Query<Entity, With<RigidBody>>,
     parent: Query<&Parent>,
@@ -82,12 +83,16 @@ pub fn potion_contact_explode(
         if cracked {
             info!("entity {:?} cracked at force {:?}", entity, hit_force);
             commands.entity(entity).despawn_recursive();
-            let global = globals.get(entity).unwrap_or(&GlobalTransform::IDENTITY);
+            let global = globals.get(entity).cloned().unwrap_or(GlobalTransform::IDENTITY);
+            let velocity = velocities.get(entity).cloned().unwrap_or(Velocity::default());
 
             commands
                 .spawn(SpatialBundle {
                     transform: global.compute_transform(),
                     ..default()
+                })
+                .insert(crate::objects::EffectVelocity {
+                    linear: velocity.linvel,
                 })
                 .insert(crate::objects::vine::VineEffect);
 

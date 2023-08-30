@@ -13,13 +13,28 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
 
 pub fn vine_effect(
     ctx: Res<RapierContext>,
-    potions: Query<(&GlobalTransform), With<VineEffect>>,
+    potions: Query<(&GlobalTransform, Option<&EffectVelocity>), With<VineEffect>>,
     mut gizmos: ResMut<RetainedGizmos>,
 ) {
     let dt = ctx.integration_parameters.dt;
-    for (global) in &potions {
-        let dir = Vec3::NEG_Y;
-        let from = global.translation() + -dir * 3.0;
+    for (global, velocity) in &potions {
+        let default = Vec3::NEG_Y;
+        let velocity = if let Some(velocity) = velocity {
+            if velocity.linear.length_squared() == 0.0 {
+                default
+            } else {
+                velocity.linear
+            }
+        } else {
+            default
+        };
+
+        let dir = velocity.normalize_or_zero();
+
+        let from = global.translation() + -dir * 1.5;
+        gizmos.sphere(dt * 3.0, from, Quat::IDENTITY, 0.2, Color::BLUE);
+        gizmos.ray(dt * 3.0, from, dir * 4.0, Color::BLUE);
+
         let points = sample_points(&*ctx, from, dir, 0.5, 4.0);
 
         for (entity, ray) in points {
