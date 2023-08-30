@@ -489,7 +489,7 @@ pub fn setup(
         })
         .insert(RigidBodyBundle::dynamic())
         .insert(ColliderBundle::collider(Collider::round_cylinder(
-            0.025, 0.4, 0.1
+            0.025, 0.4, 0.1,
         )))
         .insert((
             Ingredient,
@@ -512,9 +512,7 @@ pub fn setup(
             ..default()
         })
         .insert(RigidBodyBundle::dynamic())
-        .insert(ColliderBundle::collider(Collider::cylinder(
-            0.025, 0.4
-        )))
+        .insert(ColliderBundle::collider(Collider::cylinder(0.025, 0.4)))
         .insert((
             Ingredient,
             crate::deposit::Value::new(5),

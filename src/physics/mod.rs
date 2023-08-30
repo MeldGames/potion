@@ -288,7 +288,7 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ReadMassProperties>()
-        .register_type::<ColliderMassProperties>();
+            .register_type::<ColliderMassProperties>();
 
         app.insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Fixed {
@@ -352,7 +352,18 @@ impl Plugin for PhysicsPlugin {
 }
 
 const MINIMUM_MASS: f32 = 0.1;
-pub fn minimum_mass(mut masses: Query<(DebugName, &RigidBody, &mut ColliderMassProperties, &mut Damping, &ReadMassProperties), Changed<ReadMassProperties>>) {
+pub fn minimum_mass(
+    mut masses: Query<
+        (
+            DebugName,
+            &RigidBody,
+            &mut ColliderMassProperties,
+            &mut Damping,
+            &ReadMassProperties,
+        ),
+        Changed<ReadMassProperties>,
+    >,
+) {
     for (name, body, mut mass, mut damping, read) in &mut masses {
         if *body != RigidBody::Dynamic {
             continue;
@@ -377,7 +388,10 @@ pub fn minimum_mass(mut masses: Query<(DebugName, &RigidBody, &mut ColliderMassP
                 new_mass.principal_inertia *= scale * scale;
             }
 
-            info!("changed mass for {:?}: {:.2?} -> {:.2?}", name, read.0.mass, new_mass.mass);
+            info!(
+                "changed mass for {:?}: {:.2?} -> {:.2?}",
+                name, read.0.mass, new_mass.mass
+            );
             *mass = ColliderMassProperties::MassProperties(new_mass);
             damping.angular_damping += 1.0;
         }
