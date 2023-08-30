@@ -14,6 +14,14 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
     }
 }
 
+/// Vine potion effect
+/// 
+/// Goals:
+/// - Grabs and joints dynamic bodies to other dynamic bodies
+///   or to kinematic/fixed bodies.
+/// - Travel upwards, away from gravity, if the slope is steep
+///   enough.
+/// - Burnable
 pub fn vine_effect(
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
