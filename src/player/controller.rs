@@ -34,12 +34,7 @@ impl Plugin for ControllerPlugin {
                 .in_set(crate::FixedSet::Update),
         );
 
-        app.add_systems(
-            PostUpdate,
-            (
-                avoid_intersecting,
-            )
-        );
+        app.add_systems(PostUpdate, (avoid_intersecting,));
     }
 }
 
@@ -293,7 +288,11 @@ pub fn avoid_intersecting(
                 true,
                 filter,
             ) {
-            (intersection.toi, intersection.normal)
+            if intersection.toi < 0.001 {
+                (intersection.toi, Vec3::ZERO)
+            } else {
+                (intersection.toi, intersection.normal)
+            }
         } else {
             (avoid.max_toi + avoid.buffer, Vec3::ZERO)
         };

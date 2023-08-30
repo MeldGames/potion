@@ -32,12 +32,12 @@ pub fn vine_effect(
     for (effect_entity, global, velocity) in &potions {
         let velocity = if let Some(velocity) = velocity {
             if velocity.linear.length_squared() == 0.0 {
-Vec3::NEG_Y
+                Vec3::NEG_Y
             } else {
                 velocity.linear
             }
         } else {
-Vec3::NEG_Y
+            Vec3::NEG_Y
         };
 
         let dir = velocity.normalize_or_zero();
@@ -65,9 +65,7 @@ Vec3::NEG_Y
                 })
                 .insert(Vine)
                 .insert(material.clone())
-                .insert(ColliderBundle::collider(Collider::cylinder(
-                    0.25, 0.5,
-                )));
+                .insert(ColliderBundle::collider(Collider::cylinder(0.25, 0.5)));
             gizmos.ray(8.0, ray.point, ray.normal * 3.8, Color::PURPLE);
         }
 

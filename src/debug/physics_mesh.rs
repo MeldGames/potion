@@ -136,7 +136,10 @@ impl<'a> AsMesh for ColliderView<'a> {
 pub fn init_physics_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    colliders: Query<(Entity, &Collider, Option<&Handle<StandardMaterial>>), (Changed<Collider>, Without<Sensor>)>,
+    colliders: Query<
+        (Entity, &Collider, Option<&Handle<StandardMaterial>>),
+        (Changed<Collider>, Without<Sensor>),
+    >,
     childrens: Query<&Children>,
     physics_mesh: Query<&PhysicsDebugMesh>,
     mut removed: RemovedComponents<Collider>,
