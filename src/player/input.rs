@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{input::mouse::MouseMotion, math::DVec2, prelude::*, window::PrimaryWindow};
+use bevy::{input::mouse::MouseMotion, math::DVec2, prelude::*, window::{PrimaryWindow, CursorGrabMode}};
 //use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -27,27 +27,26 @@ pub struct TickEnd;
 pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(IgnoreNextCursor(true));
         app.add_state::<MouseState>();
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.insert_resource(PlayerInput::default());
         app.configure_sets(PreUpdate, (CollectInputs, MetaInputs).in_set(InputSet));
-        /*app.configure_sets(
-            PreUpdate,
-            (CollectInputs,)
-                .run_if(crate::mouse_locked)
-                .run_if(crate::window_focused)
-                .run_if(not(crate::editor_active)),
-        );*/
         app.add_systems(
             Update,
             (
                 player_binary_inputs,
                 zoom_on_scroll,
                 zoom_scroll_for_toi,
-                player_mouse_inputs,
             )
                 .in_set(CollectInputs),
+        )
+        .add_systems(
+            Update,
+            (player_mouse_inputs,)
+                .after(mouse_lock)
+                .in_set(CollectInputs)
         )
         .add_systems(
             Update,
@@ -322,10 +321,14 @@ pub fn toggle_mouse_lock(
     }
 }
 
+#[derive(Resource)]
+pub struct CursorMoved(pub bool);
+
 pub fn mouse_lock(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
     editor: Option<Res<bevy_editor_pls::editor::Editor>>,
     state: Res<State<MouseState>>,
+    mut ignore_next_cursor: ResMut<IgnoreNextCursor>,
 ) {
     let editor_active = editor.map(|state| state.active()).unwrap_or(false);
     let locked = *state == MouseState::Locked && !editor_active;
@@ -347,6 +350,7 @@ pub fn mouse_lock(
                 info!("position: {:?}", window.cursor_position());
                 let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
                 window.set_cursor_position(Some(center_cursor));
+                ignore_next_cursor.0 = true;
             }
             window.cursor.grab_mode = bevy::window::CursorGrabMode::Locked;
         } else {
@@ -446,15 +450,30 @@ pub fn zoom_scroll_for_toi(
     }
 }
 
+#[derive(Resource)]
+pub struct IgnoreNextCursor(pub bool);
+
 pub fn player_mouse_inputs(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
     mut player_input: ResMut<PlayerInput>,
     kb: Res<Input<KeyCode>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+
+    mut ignore: ResMut<IgnoreNextCursor>,
 ) {
+    let Ok(window) = windows.get_single() else { return };
+
     let mut cumulative_delta = DVec2::ZERO;
     for ev in ev_mouse.iter() {
         cumulative_delta += ev.delta.as_dvec2();
+    }
+
+    if ignore.0 {
+        if cumulative_delta.length() > 0.0 {
+            ignore.0 = false;
+        }
+        return;
     }
 
     if kb.pressed(KeyCode::ControlRight) {

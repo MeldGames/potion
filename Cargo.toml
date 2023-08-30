@@ -31,7 +31,7 @@ bevy_mod_billboard = "0.4"
 bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
 #bevy_framepace = "0.13"
 bevy_mod_inverse_kinematics = "0.4"
-bevy_rapier3d = {version = "0.22", features = ["serde-serialize"]}
+bevy_rapier3d = {version = "0.22", features = ["serde-serialize", "simd-stable", "parallel"]}
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 bincode = "1.3"
 bitflags = "1.3"
@@ -75,6 +75,7 @@ obj = "0.10.2"
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
 #bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "38e1b79169303c47d639d64558b7d9adeed99211"}
 bevy_rapier3d = {git = "https://github.com/aceeri/bevy_rapier", branch = "with_query_filter"}
+rapier3d = {path = "../rapier/crates/rapier3d"}
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}

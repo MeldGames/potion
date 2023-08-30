@@ -397,3 +397,58 @@ pub fn minimum_mass(
         }
     }
 }
+
+use bevy_rapier3d::parry::{query::{PersistentQueryDispatcher, DefaultQueryDispatcher}, bounding_volume::BoundingVolume};
+use bevy_rapier3d::rapier::geometry::ContactManifold;
+use bevy_rapier3d::na::Isometry3;
+
+/// Get a list of contacts for a given shape.
+pub fn contact_manifolds(
+    ctx: &RapierContext,
+    position: Vec3,
+    rotation: Quat,
+    collider: &Collider,
+    filter: &QueryFilter,
+) -> Vec<(Entity, ContactManifold)> {
+    const FUDGE: f32 = 0.05;
+
+    let physics_scale = ctx.physics_scale();
+
+    let shape = &collider.raw;
+    let shape_iso = Isometry3 {
+        translation: (position * physics_scale).into(),
+        rotation: rotation.into(),
+    };
+
+    let shape_aabb = shape.compute_aabb(&shape_iso).loosened(FUDGE);
+
+    let mut manifolds = Vec::new();
+    ctx.query_pipeline
+        .colliders_with_aabb_intersecting_aabb(&shape_aabb, |handle| {
+            if let Some(collider) = ctx.colliders.get(*handle) {
+                if RapierContext::with_query_filter(&ctx, *filter, |rapier_filter| {
+                    rapier_filter.test(&ctx.bodies, *handle, collider)
+                }) {
+                    let mut new_manifolds = Vec::new();
+                    let pos12 = shape_iso.inv_mul(collider.position());
+                    let _ = DefaultQueryDispatcher.contact_manifolds(
+                        &pos12,
+                        shape.as_ref(),
+                        collider.shape(),
+                        0.01,
+                        &mut new_manifolds,
+                        &mut None,
+                    );
+
+                    if let Some(entity) = ctx.collider_entity(*handle) {
+                        manifolds
+                            .extend(new_manifolds.into_iter().map(|manifold| (entity, manifold)));
+                    }
+                }
+            }
+
+            true
+        });
+
+    manifolds
+}

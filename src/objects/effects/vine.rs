@@ -8,7 +8,7 @@ pub struct VineEffect;
 pub struct Vine;
 
 pub fn sunflower_effect(mut gizmos: Gizmos) {
-    for point in sunflower(500, 0.0) {
+    for point in super::sunflower(500, 0.0) {
         let point = Vec3::new(point.x, 0.0, point.y);
         gizmos.sphere(Vec3::Y + point, Quat::IDENTITY, 0.01, Color::ORANGE);
     }
@@ -17,10 +17,14 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
 pub fn vine_effect(
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    can_delete: Query<(), With<RapierRigidBodyHandle>>,
+
     ctx: Res<RapierContext>,
     vine_effect: Query<(), Or<(With<VineEffect>, With<Vine>)>>,
     potions: Query<(Entity, &GlobalTransform, Option<&EffectVelocity>), With<VineEffect>>,
     mut gizmos: ResMut<RetainedGizmos>,
+
+    mut increment: Local<usize>,
 ) {
     let material = materials.add(StandardMaterial {
         base_color: Color::DARK_GREEN,
@@ -28,8 +32,20 @@ pub fn vine_effect(
         ..default()
     });
 
-    let dt = ctx.integration_parameters.dt;
+    let per_step = 3;
+    let count = potions.iter().count().max(per_step).max(1) / per_step;
+    *increment = *increment % count;
+
+    //info!("increment: {:?}", increment);
+
     for (effect_entity, global, velocity) in &potions {
+        if can_delete.contains(effect_entity) {
+            //commands.entity(effect_entity).remove::<VineEffect>();
+        }
+    }
+
+    let dt = ctx.integration_parameters.dt;
+    for (effect_entity, global, velocity) in potions.iter().skip(*increment * per_step).take(per_step) {
         let velocity = if let Some(velocity) = velocity {
             if velocity.linear.length_squared() == 0.0 {
                 Vec3::NEG_Y
@@ -43,10 +59,10 @@ pub fn vine_effect(
         let dir = velocity.normalize_or_zero();
 
         let from = global.translation() + -dir * 1.5;
-        gizmos.sphere(dt * 3.0, from, Quat::IDENTITY, 0.2, Color::BLUE);
-        gizmos.ray(dt * 3.0, from, dir * 4.0, Color::BLUE);
+        //gizmos.sphere(dt * 3.0, from, Quat::IDENTITY, 0.2, Color::BLUE);
+        //gizmos.ray(dt * 3.0, from, dir * 4.0, Color::BLUE);
 
-        let points = sample_points(&*ctx, from, dir, 0.5, 4.0);
+        let points = sample_points(&*ctx, from, dir, 1.0, 4.0);
 
         for (entity, ray) in points {
             if vine_effect.contains(entity) {
@@ -64,13 +80,15 @@ pub fn vine_effect(
                     ..default()
                 })
                 .insert(Vine)
+                //.insert(VineEffect)
                 .insert(material.clone())
+                .insert(RigidBody::Fixed)
                 .insert(ColliderBundle::collider(Collider::cylinder(0.25, 0.5)));
-            gizmos.ray(8.0, ray.point, ray.normal * 3.8, Color::PURPLE);
+            //gizmos.ray(8.0, ray.point, ray.normal * 3.8, Color::PURPLE);
         }
-
-        commands.entity(effect_entity).despawn_recursive();
     }
+
+    *increment += 1;
 }
 
 pub fn sample_points(
@@ -87,7 +105,7 @@ pub fn sample_points(
     }
 
     let diameter = radius * 2.0;
-    for sample in sunflower(10, 0.0) {
+    for sample in super::sunflower(10, 0.0) {
         let sample = Vec3::new(sample.x, 0.0, sample.y) * diameter;
 
         let Some(result) = ctx.cast_ray_and_get_normal(
@@ -105,49 +123,3 @@ pub fn sample_points(
 
     results
 }
-
-/*
-def sunflower(n, alpha=0, geodesic=False):
-    points = []
-    angle_stride = 360 * phi if geodesic else 2 * pi / phi ** 2
-    b = round(alpha * sqrt(n))  # number of boundary points
-    for k in range(1, n + 1):
-        r = radius(k, n, b)
-        theta = k * angle_stride
-        points.append((r * cos(theta), r * sin(theta)))
-    return points
-*/
-
-pub fn sunflower(n: usize, alpha: f32) -> Vec<Vec2> {
-    let PHI: f32 = (1.0 + 5.0f32.sqrt()) / 2.0;
-    let mut points = Vec::new();
-
-    let angle_stride = 360.0 * PHI;
-    let boundary_points = (alpha * (n as f32).sqrt());
-    for k in 1..(n + 1) {
-        let r = boundary_radius(k as f32, n as f32, boundary_points);
-        let theta = k as f32 * angle_stride;
-        points.push(Vec2::new(r * theta.cos(), r * theta.sin()));
-    }
-
-    points
-}
-
-pub fn boundary_radius(k: f32, n: f32, b: f32) -> f32 {
-    if k > n - b {
-        // put on the boundary
-        1.0
-    } else {
-        // apply square root
-        (k - 1.0 / 2.0).sqrt() / (n - (b + 1.0) / 2.0).sqrt()
-    }
-}
-/*
-function r = radius(k,n,b)
-    if k>n-b
-        r = 1;            % put on the boundary
-    else
-        r = sqrt(k-1/2)/sqrt(n-(b+1)/2);     % apply square root
-    end
-end
-*/
