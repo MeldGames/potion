@@ -92,7 +92,8 @@ pub fn potion_contact_explode(
                     ..default()
                 })
                 .insert(crate::objects::EffectVelocity {
-                    linear: velocity.linvel,
+                    //linear: velocity.linvel,
+                    linear: event.total_force,
                 })
                 .insert(crate::objects::vine::VineEffect);
 
