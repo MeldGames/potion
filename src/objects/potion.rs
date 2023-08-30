@@ -71,7 +71,9 @@ pub fn potion_contact_explode(
             }
         }
 
-        let Ok(crack_threshold) = potions.get(entity) else { return false };
+        let Ok(crack_threshold) = potions.get(entity) else {
+            return false;
+        };
         let hit_force = event.max_force_magnitude.abs();
         let cracked = hit_force > crack_threshold.0;
         if cracked {

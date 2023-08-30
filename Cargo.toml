@@ -78,7 +78,8 @@ bevy_rapier3d = {git = "https://github.com/aceeri/bevy_rapier", branch = "with_q
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
-bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
+#bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
+bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust", branch = "plugin-setup"}
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
 #bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }

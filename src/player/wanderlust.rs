@@ -11,10 +11,7 @@ pub struct WanderlustSet;
 pub struct CustomWanderlustPlugin;
 impl Plugin for CustomWanderlustPlugin {
     fn build(&self, app: &mut App) {
-
-
-        app.add_plugins(WanderlustPlugin::default()
-            .in_fixed_schedule());
+        app.add_plugins(WanderlustPlugin::default().in_fixed_schedule());
         /*
         app.add_systems(
             FixedUpdate,

@@ -227,15 +227,15 @@ pub fn fill_missing(
 }
 
 pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
-       let integration = &mut context.integration_parameters;
-       /*
-       integration.damping_ratio = 0.5;
-       integration.joint_erp = 0.8;
-       integration.joint_damping_ratio = 0.5;
-       */
-       // Try to avoid launching players in weird situations
-       integration.max_penetration_correction = 500.0;
-       integration.dt = crate::TICK_RATE.as_secs_f32();
+    let integration = &mut context.integration_parameters;
+    /*
+    integration.damping_ratio = 0.5;
+    integration.joint_erp = 0.8;
+    integration.joint_damping_ratio = 0.5;
+    */
+    // Try to avoid launching players in weird situations
+    integration.max_penetration_correction = 500.0;
+    integration.dt = crate::TICK_RATE.as_secs_f32();
 }
 
 pub const VELOCITY_CAP: f32 = 50.0;

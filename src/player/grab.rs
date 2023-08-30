@@ -212,7 +212,11 @@ pub fn grab_collider(
                     continue;
                 };
 
-                let Ok([(sensor_global, sensor_collider), (other_global, other_collider)]) = colliders.get_many([sensor.0, other_entity]) else { continue };
+                let Ok([(sensor_global, sensor_collider), (other_global, other_collider)]) =
+                    colliders.get_many([sensor.0, other_entity])
+                else {
+                    continue;
+                };
 
                 let sensor_transform = sensor_global.compute_transform();
                 let sensor_iso = Isometry {
@@ -571,8 +575,12 @@ pub fn arm_target_position(
 
                 let upper_arm =
                     find_parent_with(&upper_arm, &parents, &joints, hand_entity).unwrap();
-                let Ok(joint) = joints.get(upper_arm) else { continue };
-                let Ok(upper_global) = globals.get(upper_arm) else { continue };
+                let Ok(joint) = joints.get(upper_arm) else {
+                    continue;
+                };
+                let Ok(upper_global) = globals.get(upper_arm) else {
+                    continue;
+                };
                 let shoulder = joint.data.local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 

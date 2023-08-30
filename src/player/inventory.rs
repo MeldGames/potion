@@ -185,7 +185,9 @@ pub fn transform_stored(
         if !still_stored {
             info!("removing from storage");
 
-            let Ok(mut transform) = transforms.get_mut(entity) else { continue };
+            let Ok(mut transform) = transforms.get_mut(entity) else {
+                continue;
+            };
 
             let ratio = 1.0 / stored.scaled_ratio;
             transform.scale *= ratio;
@@ -249,7 +251,9 @@ pub fn transform_stored(
             if stored.contains(item.entity) {
                 continue;
             }
-            let Ok(mut transform) = transforms.get_mut(item.entity) else { continue };
+            let Ok(mut transform) = transforms.get_mut(item.entity) else {
+                continue;
+            };
 
             //let slots = inventory.items.len();
             let slots = 4;
@@ -266,7 +270,9 @@ pub fn transform_stored(
 
             let extents: Vec3 = {
                 if let Ok(collider_handle) = colliders.get(item.entity) {
-                    let Some(rapier_collider) = rapier.colliders.get(collider_handle.0) else { continue };
+                    let Some(rapier_collider) = rapier.colliders.get(collider_handle.0) else {
+                        continue;
+                    };
 
                     let mut collider = rapier_collider.clone();
                     collider.set_rotation(default());
@@ -382,7 +388,9 @@ pub fn store_item(
             target
         });
 
-        let Ok(mut grabbing) = grabbing.get_mut(hand) else { continue };
+        let Ok(mut grabbing) = grabbing.get_mut(hand) else {
+            continue;
+        };
         if let Some(grabbed) = grabbing.grabbed {
             if !storeable.contains(grabbed.entity) {
                 info!("Object is not storeable");

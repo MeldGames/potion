@@ -8,8 +8,12 @@ pub fn split_compound(
     colliders: Query<(Entity, &Collider), Changed<Collider>>,
 ) {
     for (entity, collider) in &colliders {
-        let ColliderView::Compound(compound) = collider.as_unscaled_typed_shape() else { continue };
-        let Some(parent) = ctx.collider_parent(entity) else { continue };
+        let ColliderView::Compound(compound) = collider.as_unscaled_typed_shape() else {
+            continue;
+        };
+        let Some(parent) = ctx.collider_parent(entity) else {
+            continue;
+        };
 
         commands
             .entity(entity)

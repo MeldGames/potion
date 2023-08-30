@@ -174,10 +174,14 @@ pub fn insert_slot(
         }
 
         for slot_entity in &*deposit_slots {
-            let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) else { continue };
+            let Ok((mut slot, mut grace_period)) = slots.get_mut(*slot_entity) else {
+                continue;
+            };
             if slot.containing.is_none() {
                 while let Some(next_item) = attempting.pop_front() {
-                    let Ok(mut slottable) = slotted.get_mut(next_item) else { continue };
+                    let Ok(mut slottable) = slotted.get_mut(next_item) else {
+                        continue;
+                    };
                     if *slottable == Slottable::Free {
                         info!("slotting {:?}", names.get(next_item).unwrap());
                         slot.containing = Some(next_item);
