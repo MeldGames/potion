@@ -381,8 +381,9 @@ pub fn setup(
         .spawn((
             SpatialBundle {
                 transform: Transform {
-                    translation: Vec3::new(-10.5, 7.3, -10.),
+                    translation: Vec3::new(-10.5, 0.3, -10.),
                     rotation: Quat::from_axis_angle(Vec3::Z, PI / 2.),
+                    scale: Vec3::splat(1.5),
                     ..default()
                 },
                 ..default()
@@ -390,7 +391,8 @@ pub fn setup(
             Name::new("cart collider"),
         ))
         .insert(RigidBodyBundle {
-            rigid_body: RigidBody::Dynamic,
+            //rigid_body: RigidBody::Dynamic,
+            rigid_body: RigidBody::Fixed,
             ..default()
         })
         .insert(ColliderBundle {

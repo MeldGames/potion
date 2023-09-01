@@ -254,13 +254,13 @@ pub fn cap_impulse(
     mut impulses: Query<(&mut ExternalImpulse, &ReadMassProperties), Changed<ExternalImpulse>>,
 ) {
     for (mut impulse, mass) in &mut impulses {
-        if mass.0.mass < 2.0 {
+        if mass.get().mass < 2.0 {
             impulse.impulse = impulse
                 .impulse
-                .clamp_length_max(IMPULSE_CAP / 500.0 / mass.0.mass);
+                .clamp_length_max(IMPULSE_CAP / 500.0 / mass.get().mass);
             impulse.torque_impulse = impulse
                 .torque_impulse
-                .clamp_length_max(ANG_IMPULSE_CAP / 100.0 / mass.0.mass);
+                .clamp_length_max(ANG_IMPULSE_CAP / 100.0 / mass.get().mass);
         } else {
             impulse.impulse = impulse.impulse.clamp_length_max(IMPULSE_CAP);
             impulse.torque_impulse = impulse.torque_impulse.clamp_length_max(ANG_IMPULSE_CAP);
@@ -306,7 +306,6 @@ impl Plugin for PhysicsPlugin {
             FixedUpdate,
             (
                 PhysicsSet::SyncBackend,
-                PhysicsSet::SyncBackendFlush,
                 PhysicsSet::StepSimulation,
                 PhysicsSet::Writeback,
             )
@@ -318,11 +317,6 @@ impl Plugin for PhysicsPlugin {
         app.add_systems(
             FixedUpdate,
             PhysicsPlugin::get_systems(PhysicsSet::SyncBackend).in_set(PhysicsSet::SyncBackend),
-        );
-        app.add_systems(
-            FixedUpdate,
-            PhysicsPlugin::get_systems(PhysicsSet::SyncBackendFlush)
-                .in_set(PhysicsSet::SyncBackendFlush),
         );
         app.add_systems(
             FixedUpdate,
@@ -372,18 +366,18 @@ pub fn minimum_mass(
             continue;
         }
 
-        if read.0.mass == 0.0 {
+        if read.get().mass == 0.0 {
             continue;
         }
 
         let mut scale = 1.0;
-        if read.0.mass < MINIMUM_MASS {
-            scale = MINIMUM_MASS / read.0.mass;
+        if read.get().mass < MINIMUM_MASS {
+            scale = MINIMUM_MASS / read.get().mass;
         }
 
-        if scale != 1.0 || read.0.mass <= 0.0 {
-            let mut new_mass = read.0;
-            if read.0.mass == 0.0 {
+        if scale != 1.0 || read.get().mass <= 0.0 {
+            let mut new_mass = read.get().clone();
+            if read.get().mass == 0.0 {
                 new_mass.mass = MINIMUM_MASS;
                 new_mass.principal_inertia = Vec3::splat(MINIMUM_MASS);
             } else {
@@ -393,7 +387,9 @@ pub fn minimum_mass(
 
             info!(
                 "changed mass for {:?}: {:.2?} -> {:.2?}",
-                name, read.0.mass, new_mass.mass
+                name,
+                read.get().mass,
+                new_mass.mass
             );
             *mass = ColliderMassProperties::MassProperties(new_mass);
             damping.angular_damping += 1.0;

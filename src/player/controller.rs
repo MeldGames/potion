@@ -108,7 +108,7 @@ pub fn rotate_inputs(
     for (ground, mut inputs) in &mut inputs {
         if let Some(ground) = ground.current() {
             if let Ok(mass) = masses.get(ground.entity) {
-                if mass.0.mass < 3.0 {
+                if mass.get().mass < 3.0 {
                     continue;
                 }
             }

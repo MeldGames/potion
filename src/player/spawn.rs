@@ -13,8 +13,8 @@ use bevy_mod_wanderlust::*;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
-use crate::prelude::*;
 use crate::physics::IgnoreMinimumMass;
+use crate::prelude::*;
 
 pub struct PlayerSpawnPlugin;
 

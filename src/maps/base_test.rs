@@ -16,8 +16,8 @@ pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
             transform: Transform {
-                translation: Vec3::new(0.0, -3.5, 0.0),
-                scale: Vec3::new(100.0, 2.0, 100.0),
+                translation: Vec3::new(0.0, -0.5, 0.0),
+                scale: Vec3::new(1000.0, 1.0, 100.0),
                 ..default()
             },
             ..default()

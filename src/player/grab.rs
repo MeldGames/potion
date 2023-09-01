@@ -54,8 +54,10 @@ pub fn grab_joint(
     grabbers: Query<(Entity, &Grabbing, Option<&Children>, &GlobalTransform)>,
     mut transforms: Query<&mut Transform>,
     grab_joints: Query<(Entity, &ImpulseJoint), With<GrabJoint>>,
+    bodies: Query<(), With<RigidBody>>,
 
     globals: Query<&GlobalTransform>,
+    names: Query<DebugName>,
 ) {
     for (grabber, grabbing, children, global) in &grabbers {
         let joint = if let Some(children) = children {
@@ -80,10 +82,8 @@ pub fn grab_joint(
             }) => {
                 if let Some((joint_entity, joint)) = joint {
                     if grabbed_entity == joint.parent {
-                        //info!("grab joint already exists");
                         continue;
                     } else {
-                        //info!("joint entity {:?} isnt the same as the grabbed {:?}, cleaning up", joint_entity, grabbed_entity);
                         commands
                             .entity(joint_entity)
                             .remove::<ImpulseJoint>()
@@ -97,19 +97,20 @@ pub fn grab_joint(
                     }
                 }
 
-                let local_grabber_point = if let Ok([grabbed_global, grabber_global]) =
+                // Get the grabbers original position in the grabbed entities local-space.
+                let initial_grabber_location = if let Ok([grabbed_global, grabber_global]) =
                     globals.get_many([grabbed_entity, grabber])
                 {
-                    //let global_grab_point = grabbed_global.affine().transform_point3(grab_point);
-                    info!("worldspace grab: {:.1?}", global_grab_point);
-                    let local_grab_point = grabber_global
-                        .affine()
+                    let grabbed_transform = grabbed_global
+                        .compute_transform()
+                        .with_scale(Vec3::splat(1.0));
+
+                    grabbed_transform
+                        .compute_affine()
                         .inverse()
-                        .transform_point3(global_grab_point);
-                    info!("localspace grab: {:.1?}", local_grab_point);
-                    local_grab_point
+                        .transform_point3(grabber_global.translation())
                 } else {
-                    Vec3::ZERO
+                    local_grab_point
                 };
 
                 let motor_model = MotorModel::ForceBased;
@@ -120,7 +121,6 @@ pub fn grab_joint(
                     .local_anchor1(local_grab_point)
                     // use the center of the hand instead of exact grab point
                     .local_anchor2(Vec3::ZERO)
-                    //.local_anchor2(local_grabber_point)
                     .motor_model(JointAxis::X, motor_model)
                     .motor_model(JointAxis::Y, motor_model)
                     .motor_model(JointAxis::Z, motor_model)
@@ -144,7 +144,12 @@ pub fn grab_joint(
                 grab_joint.set_contacts_enabled(false);
 
                 let mut start_joint = grab_joint.clone();
-                start_joint.set_local_anchor2(local_grabber_point);
+                start_joint.set_local_anchor1(initial_grabber_location);
+
+                if !bodies.contains(grabbed_entity) {
+                    warn!("Fixed collider {:?} grabbed, adding rigid body bundle", names.get(grabbed_entity).unwrap());
+                    commands.entity(grabbed_entity).insert(RigidBodyBundle::fixed());
+                }
 
                 commands.entity(grabber).with_children(|children| {
                     children
@@ -192,6 +197,8 @@ pub fn grab_collider(
         &GlobalTransform,
         &CharacterEntities,
     )>,
+
+    mut gizmos: ResMut<RetainedGizmos>,
 ) {
     for (entity, mut grabbing, sensor, global, character) in &mut grabbers {
         if grabbing.trying_grab {
@@ -238,6 +245,7 @@ pub fn grab_collider(
                     0.0,
                 ) {
                     let global_anchor: Vec3 = collider_contact.point2.into();
+                    info!("anchor: {:.2?}", global_anchor);
 
                     let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_entity) {
                         let closest_point = auto_aim.closest_point(other_global, global_anchor);
@@ -255,13 +263,18 @@ pub fn grab_collider(
                     let root_entity = ctx.collider_parent(other_entity).unwrap_or(other_entity);
 
                     // convert back to local space.
-                    let other_transform = other_global.compute_transform();
-                    let local_anchor = other_global
-                        .affine()
-                        .inverse()
-                        .transform_point3(global_anchor)
-                        * other_transform.scale;
+                    let root_global = globals
+                        .get(root_entity)
+                        .unwrap_or(&GlobalTransform::IDENTITY);
+                    let root_transform = root_global.compute_transform();
 
+                    let local_anchor = root_transform
+                        .with_scale(Vec3::splat(1.0))
+                        .compute_affine()
+                        .inverse()
+                        .transform_point3(global_anchor);
+
+                    gizmos.sphere(5.0, global_anchor, Quat::IDENTITY, 0.3, Color::PURPLE);
                     info!("grabbing {:?}", names.get(root_entity).unwrap());
 
                     grabbing.grabbed = Some(Grabbed {
@@ -273,82 +286,6 @@ pub fn grab_collider(
                     break;
                 }
             }
-
-            /*
-                       for contact_pair in rapier_context.intersections_with(grab_sensor) {
-                           let other_collider = if contact_pair.collider1() == hand {
-                               contact_pair.collider2()
-                           } else {
-                               contact_pair.collider1()
-                           };
-
-                           let other_rigidbody = if let Some(entity) = ctx.collider_parent(other_collider) {
-                               entity
-                           } else {
-                               continue;
-                           };
-
-                           if character.contains(&other_rigidbody) {
-                               continue;
-                           }
-
-                           let contact_points = contact_pair
-                               .manifolds()
-                               .map(|manifold| {
-                                   manifold
-                                       .solver_contacts()
-                                       .map(|contact| contact.point())
-                                       .collect::<Vec<_>>()
-                               })
-                               .flatten()
-                               .collect::<Vec<_>>();
-                           if contact_points.len() == 0 {
-                               continue;
-                           }
-
-                           let mut closest_point = Vec3::ZERO;
-                           let mut closest_distance = f32::MAX;
-                           for point in &contact_points {
-                               let dist = point.distance(global.translation());
-                               if dist < closest_distance {
-                                   closest_point = *point;
-                                   closest_distance = dist;
-                               }
-                           }
-                           if let Ok(other_global) = globals.get(other_collider) {
-                               let auto_anchor = if let Ok(auto_aim) = auto_aim.get(other_rigidbody) {
-                                   let closest_point = auto_aim.closest_point(other_global, closest_point);
-                                   closest_point
-                               } else {
-                                   None
-                               };
-
-                               let global_anchor = if let Some(auto_anchor) = auto_anchor {
-                                   auto_anchor
-                               } else {
-                                   closest_point
-                               };
-
-                               // convert back to local space.
-                               let other_transform = other_global.compute_transform();
-                               let local_anchor = other_global
-                                   .affine()
-                                   .inverse()
-                                   .transform_point3(global_anchor)
-                                   * other_transform.scale;
-
-                               info!("grabbing {:?}", names.get(other_rigidbody));
-
-                               grabbing.grabbed = Some(Grabbed {
-                                   entity: other_rigidbody,
-                                   local_grab_point: local_anchor,
-                                   global_grab_point: global_anchor,
-                                   teleport_entity: false,
-                               });
-                           }
-                       }
-
-            */
         } else {
             if let Some(grabbed) = grabbing.grabbed.take() {
                 if let Ok(name) = names.get(grabbed.entity) {
