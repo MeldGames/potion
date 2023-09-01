@@ -177,7 +177,7 @@ pub fn setup_player(
                     .insert(GrabSphere::default())
                     .id();
 
-                let distance_from_body = player_radius + 0.3;
+                let distance_from_body = player_radius + 0.10;
 
                 // for some body horror set this to > 2
                 let arms = 2;
@@ -345,8 +345,8 @@ pub fn attach_arm(
     let resting_stiffness = 10.0;
     let resting_damping = 1.0;
 
-    let arm_radius = 0.25;
-    let hand_radius = arm_radius + 0.05;
+    let arm_radius = 0.15;
+    let hand_radius = arm_radius + 0.01;
     let motor_model = MotorModel::ForceBased;
     //let motor_model = MotorModel::AccelerationBased;
     const DISPLAY_IK: bool = false;
@@ -602,7 +602,7 @@ pub fn attach_arm(
         })
         .insert(Sensor)
         .insert(ActiveCollisionTypes::all())
-        .insert(Attach::all(hand_entity))
+        .set_parent(hand_entity)
         .id();
 
     commands.entity(hand_entity).insert(GrabSensor(hand_sensor));

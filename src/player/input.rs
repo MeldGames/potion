@@ -31,7 +31,6 @@ impl Plugin for PlayerInputPlugin {
         app.add_state::<MouseState>();
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
-        app.insert_resource(PlayerInput::default());
         app.configure_sets(PreUpdate, (CollectInputs, MetaInputs).in_set(InputSet));
         app.add_systems(
             Update,
@@ -54,16 +53,11 @@ impl Plugin for PlayerInputPlugin {
                 initial_mouse_click,
                 toggle_mouse_lock,
                 mouse_lock,
-                update_local_player_inputs,
             )
                 .in_set(MetaInputs),
         );
 
-        app.add_systems(
-            FixedUpdate,
-            update_local_player_inputs.in_set(crate::FixedSet::First),
-        )
-        .add_systems(FixedUpdate, reset_inputs.in_set(crate::FixedSet::Last));
+        app.add_systems(FixedUpdate, reset_inputs.in_set(crate::FixedSet::Last));
     }
 }
 
@@ -134,7 +128,7 @@ impl Debug for Radians {
     }
 }
 
-#[derive(Resource, Clone, Copy, Default, Component, Serialize, Deserialize)]
+#[derive(Clone, Copy, Default, Component, Serialize, Deserialize)]
 pub struct PlayerInput {
     /// Movement inputs
     pub binary_inputs: PlayerInputSet,
@@ -359,15 +353,20 @@ pub fn mouse_lock(
     }
 }
 
-pub fn reset_inputs(mut player_input: ResMut<PlayerInput>) {
+pub fn reset_inputs(
+    mut player_input: Query<&mut PlayerInput>,
+) {
+    let Ok(mut player_input) = player_input.get_single_mut() else { return };
     player_input.inventory_swap = None;
 }
 
 pub fn player_binary_inputs(
     keyboard_input: Res<Input<KeyCode>>,
     mouse_input: Res<Input<MouseButton>>,
-    mut player_input: ResMut<PlayerInput>,
+    mut player_input: Query<&mut PlayerInput>,
 ) {
+    let Ok(mut player_input) = player_input.get_single_mut() else { return };
+
     player_input
         .set_left(keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left));
     player_input
@@ -456,13 +455,14 @@ pub struct IgnoreNextCursor(pub bool);
 pub fn player_mouse_inputs(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
-    mut player_input: ResMut<PlayerInput>,
+    mut player_input: Query<&mut PlayerInput>,
     kb: Res<Input<KeyCode>>,
     windows: Query<&Window, With<PrimaryWindow>>,
 
     mut ignore: ResMut<IgnoreNextCursor>,
 ) {
     let Ok(window) = windows.get_single() else { return };
+    let Ok(mut input) = player_input.get_single_mut() else { return };
 
     let mut cumulative_delta = DVec2::ZERO;
     for ev in ev_mouse.iter() {
@@ -480,13 +480,14 @@ pub fn player_mouse_inputs(
         return;
     }
 
-    player_input.pitch -= sensitivity.0 * cumulative_delta.y / 180.0;
-    player_input.pitch = player_input.pitch.clamp(-PI / 2.0, PI / 2.0);
+    input.pitch -= sensitivity.0 * cumulative_delta.y / 180.0;
+    input.pitch = input.pitch.clamp(-PI / 2.0, PI / 2.0);
 
-    player_input.yaw -= sensitivity.0 * cumulative_delta.x / 180.0;
-    player_input.yaw = player_input.yaw.rem_euclid(std::f64::consts::TAU);
+    input.yaw -= sensitivity.0 * cumulative_delta.x / 180.0;
+    input.yaw = input.yaw.rem_euclid(std::f64::consts::TAU);
 }
 
+/*
 pub fn update_local_player_inputs(
     player_input: Res<PlayerInput>,
     //mut query: Query<&mut PlayerInput, With<Owned>>,
@@ -499,3 +500,4 @@ pub fn update_local_player_inputs(
         //warn!("no player to provide input for");
     }
 }
+*/

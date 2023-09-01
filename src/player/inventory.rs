@@ -55,7 +55,6 @@ impl Plugin for InventoryPlugin {
         app.add_systems(
             FixedUpdate,
             store_item
-                .after(update_local_player_inputs)
                 .before(reset_inputs),
         );
 

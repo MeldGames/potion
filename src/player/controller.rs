@@ -83,6 +83,7 @@ pub fn player_movement(
 
         controller.movement = dir;
         controller.jumping = player_input.jump();
+        //controller.jumping = !controller.jumping;
 
         let current_dir = Vec2::new(global.forward().x, global.forward().z);
         //let mut desired_dir = Vec2::new(dir.x, dir.z);
@@ -103,7 +104,6 @@ pub fn player_movement(
 pub fn rotate_inputs(
     mut inputs: Query<(&ViableGroundCast, &mut PlayerInput)>,
     masses: Query<&ReadMassProperties>,
-    mut input: ResMut<PlayerInput>,
 ) {
     for (ground, mut inputs) in &mut inputs {
         if let Some(ground) = ground.current() {
@@ -115,7 +115,6 @@ pub fn rotate_inputs(
 
             inputs.yaw +=
                 (ground.angular_velocity.y as f64 * crate::TICK_RATE.as_secs_f64()).min(0.5);
-            *input = *inputs;
         }
     }
 }
