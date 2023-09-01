@@ -15,7 +15,7 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
 }
 
 /// Vine potion effect
-/// 
+///
 /// Goals:
 /// - Grabs and joints dynamic bodies to other dynamic bodies
 ///   or to kinematic/fixed bodies.
@@ -48,12 +48,14 @@ pub fn vine_effect(
 
     for (effect_entity, global, velocity) in &potions {
         if can_delete.contains(effect_entity) {
-            //commands.entity(effect_entity).remove::<VineEffect>();
+            commands.entity(effect_entity).remove::<VineEffect>();
         }
     }
 
     let dt = ctx.integration_parameters.dt;
-    for (effect_entity, global, velocity) in potions.iter().skip(*increment * per_step).take(per_step) {
+    for (effect_entity, global, velocity) in
+        potions.iter().skip(*increment * per_step).take(per_step)
+    {
         let velocity = if let Some(velocity) = velocity {
             if velocity.linear.length_squared() == 0.0 {
                 Vec3::NEG_Y

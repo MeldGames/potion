@@ -74,7 +74,8 @@ impl Plugin for PotionCellarPlugin {
 
         app.add_systems(
             Startup,
-            move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>, mut ignore: ResMut<IgnoreNextCursor>| {
+            move |mut windows: Query<&mut Window, With<bevy::window::PrimaryWindow>>,
+                  mut ignore: ResMut<IgnoreNextCursor>| {
                 if let Ok(mut window) = windows.get_single_mut() {
                     let center_cursor = Vec2::new(window.width() / 2.0, window.height() / 2.0);
                     window.set_cursor_position(Some(center_cursor));

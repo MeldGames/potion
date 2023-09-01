@@ -52,11 +52,7 @@ impl Plugin for InventoryPlugin {
             .register_type::<Inventory>();
 
         // Core
-        app.add_systems(
-            FixedUpdate,
-            store_item
-                .before(reset_inputs),
-        );
+        app.add_systems(FixedUpdate, store_item.before(reset_inputs));
 
         app.add_systems(FixedUpdate, transform_stored.after(store_item));
 

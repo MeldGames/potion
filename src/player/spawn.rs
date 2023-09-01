@@ -14,6 +14,7 @@ use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
 use crate::prelude::*;
+use crate::physics::IgnoreMinimumMass;
 
 pub struct PlayerSpawnPlugin;
 
@@ -436,7 +437,10 @@ pub fn attach_arm(
     commands.entity(forearm_target).add_child(hand_target);
     commands.entity(to).add_child(pole_target);
 
-    let arm_density = 0.25;
+    //let arm_density = 0.25;
+    //let arm_density = 0.025;
+    let arm_density = 3.0;
+    let arm_strength = 0.02;
 
     let mut upperarm_joint = SphericalJointBuilder::new()
         .local_anchor1(at) // body local
@@ -447,10 +451,10 @@ pub fn attach_arm(
         .motor_max_force(JointAxis::AngX, max_force)
         .motor_max_force(JointAxis::AngY, max_force)
         .motor_max_force(JointAxis::AngZ, max_force)
-        .motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
-        .motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
+        //.motor_position(JointAxis::AngX, 0.0, resting_stiffness, resting_damping)
+        //.motor_position(JointAxis::AngZ, 0.0, resting_stiffness, resting_damping)
         //.motor_position(JointAxis::AngZ, 0.0, 0.0, 0.0)
-        .motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
+        //.motor_position(JointAxis::AngY, 0.0, twist_stiffness, twist_damping)
         .build();
     upperarm_joint.set_contacts_enabled(false);
 
@@ -465,6 +469,10 @@ pub fn attach_arm(
         .insert(UpperArm)
         .insert(RigidBodyBundle {
             rigid_body: RigidBody::Dynamic,
+            damping: Damping {
+                linear_damping: 0.0,
+                angular_damping: 50.0,
+            },
             ..default()
         })
         .insert(ColliderBundle {
@@ -473,6 +481,7 @@ pub fn attach_arm(
             mass_properties: ColliderMassProperties::Density(arm_density),
             ..default()
         })
+        .insert(IgnoreMinimumMass)
         .insert(ImpulseJoint::new(to, upperarm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -481,7 +490,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         .insert(Muscle {
             target: Some(upperarm_target),
-            strength: 0.5,
+            strength: arm_strength,
             ..default()
         })
         .id();
@@ -515,9 +524,10 @@ pub fn attach_arm(
         .insert(ColliderBundle {
             collider: Collider::capsule(Vec3::ZERO, forearm_height, arm_radius),
             collision_groups: REST_GROUPING,
-            mass_properties: ColliderMassProperties::Density(arm_density),
+            mass_properties: ColliderMassProperties::Density(arm_density / 3.0),
             ..default()
         })
+        .insert(IgnoreMinimumMass)
         .insert(ImpulseJoint::new(upperarm_entity, forearm_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         .insert(ContactFilter::default())
@@ -526,7 +536,7 @@ pub fn attach_arm(
         .insert(ArmId(index))
         .insert(Muscle {
             target: Some(forearm_target),
-            strength: 0.1,
+            strength: arm_strength * 8.0,
             ..default()
         })
         .id();
@@ -584,6 +594,7 @@ pub fn attach_arm(
             mass_properties: ColliderMassProperties::Density(arm_density),
             ..default()
         })
+        .insert(IgnoreMinimumMass)
         .insert(ImpulseJoint::new(forearm_entity, hand_joint))
         .insert(ActiveHooks::MODIFY_SOLVER_CONTACTS)
         //.insert(crate::Slottable) // kind of funny lol

@@ -1,7 +1,12 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{input::mouse::MouseMotion, math::DVec2, prelude::*, window::{PrimaryWindow, CursorGrabMode}};
+use bevy::{
+    input::mouse::MouseMotion,
+    math::DVec2,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 //use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -34,27 +39,17 @@ impl Plugin for PlayerInputPlugin {
         app.configure_sets(PreUpdate, (CollectInputs, MetaInputs).in_set(InputSet));
         app.add_systems(
             Update,
-            (
-                player_binary_inputs,
-                zoom_on_scroll,
-                zoom_scroll_for_toi,
-            )
-                .in_set(CollectInputs),
+            (player_binary_inputs, zoom_on_scroll, zoom_scroll_for_toi).in_set(CollectInputs),
         )
         .add_systems(
             Update,
             (player_mouse_inputs,)
                 .after(mouse_lock)
-                .in_set(CollectInputs)
+                .in_set(CollectInputs),
         )
         .add_systems(
             Update,
-            (
-                initial_mouse_click,
-                toggle_mouse_lock,
-                mouse_lock,
-            )
-                .in_set(MetaInputs),
+            (initial_mouse_click, toggle_mouse_lock, mouse_lock).in_set(MetaInputs),
         );
 
         app.add_systems(FixedUpdate, reset_inputs.in_set(crate::FixedSet::Last));
@@ -353,10 +348,10 @@ pub fn mouse_lock(
     }
 }
 
-pub fn reset_inputs(
-    mut player_input: Query<&mut PlayerInput>,
-) {
-    let Ok(mut player_input) = player_input.get_single_mut() else { return };
+pub fn reset_inputs(mut player_input: Query<&mut PlayerInput>) {
+    let Ok(mut player_input) = player_input.get_single_mut() else {
+        return;
+    };
     player_input.inventory_swap = None;
 }
 
@@ -365,7 +360,9 @@ pub fn player_binary_inputs(
     mouse_input: Res<Input<MouseButton>>,
     mut player_input: Query<&mut PlayerInput>,
 ) {
-    let Ok(mut player_input) = player_input.get_single_mut() else { return };
+    let Ok(mut player_input) = player_input.get_single_mut() else {
+        return;
+    };
 
     player_input
         .set_left(keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left));
@@ -461,8 +458,12 @@ pub fn player_mouse_inputs(
 
     mut ignore: ResMut<IgnoreNextCursor>,
 ) {
-    let Ok(window) = windows.get_single() else { return };
-    let Ok(mut input) = player_input.get_single_mut() else { return };
+    let Ok(window) = windows.get_single() else {
+        return;
+    };
+    let Ok(mut input) = player_input.get_single_mut() else {
+        return;
+    };
 
     let mut cumulative_delta = DVec2::ZERO;
     for ev in ev_mouse.iter() {

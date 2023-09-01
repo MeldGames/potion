@@ -351,6 +351,9 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct IgnoreMinimumMass;
+
 const MINIMUM_MASS: f32 = 0.1;
 pub fn minimum_mass(
     mut masses: Query<
@@ -361,7 +364,7 @@ pub fn minimum_mass(
             &mut Damping,
             &ReadMassProperties,
         ),
-        Changed<ReadMassProperties>,
+        (Changed<ReadMassProperties>, Without<IgnoreMinimumMass>),
     >,
 ) {
     for (name, body, mut mass, mut damping, read) in &mut masses {
@@ -398,9 +401,12 @@ pub fn minimum_mass(
     }
 }
 
-use bevy_rapier3d::parry::{query::{PersistentQueryDispatcher, DefaultQueryDispatcher}, bounding_volume::BoundingVolume};
-use bevy_rapier3d::rapier::geometry::ContactManifold;
 use bevy_rapier3d::na::Isometry3;
+use bevy_rapier3d::parry::{
+    bounding_volume::BoundingVolume,
+    query::{DefaultQueryDispatcher, PersistentQueryDispatcher},
+};
+use bevy_rapier3d::rapier::geometry::ContactManifold;
 
 /// Get a list of contacts for a given shape.
 pub fn contact_manifolds(
