@@ -5,10 +5,10 @@ fn main() {
     app.add_plugins(PotionCellarPlugin);
     app.add_plugins(PlayerInputPlugin);
     app.add_systems(Startup, spawn_local_player);
-    //app.add_plugins(potion::maps::showcase::SetupPlugin);
+    app.add_plugins(potion::maps::showcase::SetupPlugin);
     //app.add_plugins(potion::maps::puzzle::SetupPlugin);
     //app.add_plugins(potion::maps::base_test::SetupPlugin);
-    app.add_plugins(potion::maps::colliders::SetupPlugin);
+    //app.add_plugins(potion::maps::colliders::SetupPlugin);
     //app.add_startup_system(spawn_multibody);
 
     app.run();
