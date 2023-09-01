@@ -24,7 +24,7 @@ use crate::prelude::*;
 use bevy::window::{CursorGrabMode, WindowPlugin};
 
 use bevy_editor_pls::editor::Editor;
-//use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
+use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use obj::Obj;
 
@@ -99,11 +99,10 @@ impl Plugin for PotionCellarPlugin {
         //app.add_plugins(crate::egui::SetupEguiPlugin);
         app.add_plugins(bevy_editor_pls::EditorPlugin::default());
 
-        const MSAA: bool = true;
-        if MSAA {
+        const EDGE: bool = false;
+        if !EDGE {
             app.insert_resource(Msaa::Sample8);
         } else {
-            /*
             app.insert_resource(Msaa::Off)
                 .add_plugins(EdgeDetectionPlugin)
                 .insert_resource(EdgeDetectionConfig {
@@ -111,8 +110,11 @@ impl Plugin for PotionCellarPlugin {
                     enabled: 1,
                     ..default()
                 })
+                .insert_resource(GizmoConfig {
+                    enabled: false,
+                    ..default()
+                })
                 .add_systems(Update, edge_detect_swap);
-            */
         }
 
         app.configure_sets(
@@ -156,8 +158,9 @@ impl Plugin for PotionCellarPlugin {
     }
 }
 
-/*
-fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionConfig>) {
+fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: Option<ResMut<EdgeDetectionConfig>>) {
+    let Some(mut config) = config else { return };
+
     if key.just_pressed(KeyCode::T) {
         config.debug = match config.debug {
             0 => 1,
@@ -165,7 +168,6 @@ fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: ResMut<EdgeDetectionCo
         };
     }
 }
- */
 
 fn fallback_camera(mut commands: Commands) {
     commands
