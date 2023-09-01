@@ -103,6 +103,7 @@ pub fn potion_contact_explode(
                 })
                 .insert(crate::objects::vine::VineEffect);
 
+            /*
             gizmos.sphere(
                 4.0,
                 global.translation(),
@@ -110,6 +111,7 @@ pub fn potion_contact_explode(
                 3.0,
                 Color::PURPLE,
             );
+            */
         }
 
         cracked

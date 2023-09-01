@@ -52,7 +52,6 @@ pub fn no_rigidbody(mut commands: Commands) {
     ));
 }
 
-
 pub fn compound(mut commands: Commands) {
     commands.spawn((
         SpatialBundle {

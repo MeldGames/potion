@@ -144,8 +144,6 @@ impl Plugin for PotionCellarPlugin {
             })
             .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
 
-        //app.add_system(bevy_mod_picking::debug::debug_draw_egui);
-
         app.add_event::<AssetEvent<Mesh>>();
 
         app.add_systems(Startup, fallback_camera);
@@ -154,7 +152,6 @@ impl Plugin for PotionCellarPlugin {
             Update,
             (update_level_collision, active_cameras, decomp_load),
         );
-        //app.add_systems(Update, prepare_scene);
     }
 }
 

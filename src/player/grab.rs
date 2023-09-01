@@ -147,8 +147,13 @@ pub fn grab_joint(
                 start_joint.set_local_anchor1(initial_grabber_location);
 
                 if !bodies.contains(grabbed_entity) {
-                    warn!("Fixed collider {:?} grabbed, adding rigid body bundle", names.get(grabbed_entity).unwrap());
-                    commands.entity(grabbed_entity).insert(RigidBodyBundle::fixed());
+                    warn!(
+                        "Fixed collider {:?} grabbed, adding rigid body bundle",
+                        names.get(grabbed_entity).unwrap()
+                    );
+                    commands
+                        .entity(grabbed_entity)
+                        .insert(RigidBodyBundle::fixed());
                 }
 
                 commands.entity(grabber).with_children(|children| {
@@ -274,7 +279,7 @@ pub fn grab_collider(
                         .inverse()
                         .transform_point3(global_anchor);
 
-                    gizmos.sphere(5.0, global_anchor, Quat::IDENTITY, 0.3, Color::PURPLE);
+                    //gizmos.sphere(5.0, global_anchor, Quat::IDENTITY, 0.3, Color::PURPLE);
                     info!("grabbing {:?}", names.get(root_entity).unwrap());
 
                     grabbing.grabbed = Some(Grabbed {
