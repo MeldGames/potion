@@ -1,6 +1,7 @@
 use super::EffectVelocity;
 use crate::prelude::*;
-use crate::objects::shape_closest_point;
+use bevy_rapier3d::parry::{math::Isometry, query::PointQuery, shape::TypedShape};
+use bevy::render::primitives::Aabb;
 
 #[derive(Component)]
 pub struct VineEffect;
@@ -19,6 +20,37 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
         let shifted = Vec3::Y * 2.0 + Vec3::Z * 2.0;
         let point = shifted + point;
         gizmos.sphere(point, Quat::IDENTITY, 0.01, Color::ORANGE);
+    }
+}
+
+/// Despawn a vine if it isn't in contact with anything
+/// other than another vine.
+pub fn vine_despawn(
+    mut commands: Commands,
+    ctx: Res<RapierContext>,
+    vines: Query<(Entity, &GlobalTransform, &Collider), With<Vine>>,
+) {
+    for (entity, global, collider) in &vines {
+        let manifolds = crate::physics::contact_manifolds(
+            &*ctx,
+            global.translation(),
+            Quat::IDENTITY,
+            collider,
+            &QueryFilter::default().exclude_sensors(),
+        );
+
+        let mut despawn = true;
+        for (contact_entity, _) in manifolds {
+            if vines.contains(contact_entity) {
+                continue;
+            }
+
+            despawn = false;
+        }
+
+        if despawn {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
 
@@ -41,6 +73,8 @@ pub fn vine_effect(
     colliders: Query<&Collider>,
     mut gizmos: ResMut<RetainedGizmos>,
 ) {
+    const DEBUG_TIME: f32 = 10.0;
+
     let material = materials.add(StandardMaterial {
         base_color: Color::DARK_GREEN,
         perceptual_roughness: 0.2,
@@ -63,100 +97,121 @@ pub fn vine_effect(
             Vec3::NEG_Y
         };
 
-        let effect_radius = 3.0;
+        //let effect_radius = 3.0;
+        let vine_range = 2.0;
+        let vine_radius = 0.5;
+        let vine_height = 0.10;
+        let half_height = vine_height / 2.0;
 
-        let manifolds = crate::physics::contact_manifolds(
-            &*ctx,
-            global.translation(),
-            Quat::IDENTITY,
-            &Collider::ball(effect_radius),
-            &QueryFilter::default().exclude_sensors(),
-        );
         gizmos.sphere(
-            2.0,
+            DEBUG_TIME,
             global.translation(),
             Quat::IDENTITY,
-            effect_radius,
-            Color::CYAN,
+            vine_range,
+            Color::PURPLE,
         );
 
-        let contacting = manifolds
-            .into_iter()
-            .map(|(entity, _)| entity)
-            .collect::<Vec<_>>();
-        for c1 in &contacting {
-            let c1 = *c1;
-            let Ok(c1_collider) = colliders.get(c1) else {
-                continue;
-            };
-            let c1_global = globals.get(c1).unwrap_or(&GlobalTransform::IDENTITY);
+        // Sample in a sphere around the impact point.
+        let mut groups = Vec::new();
+        let samples = sample_points(&*ctx, global.translation(), 300, vine_range);
+        let mut to_sort = samples.clone();
 
-            let point = shape_closest_point(c1_global, &*c1_collider, c1_global.translation());
-            info!("closest: {:?}", point);
-            gizmos.sphere(1000.0, point, Quat::IDENTITY, 0.05, Color::RED);
+        while let Some((center_entity, center)) = to_sort.pop() {
+            let mut group_entities = Vec::new();
+            let mut group_points = Vec::new();
+            group_entities.push(center_entity);
+            group_points.push(center);
 
-            for c2 in &contacting {
-                let c2 = *c2;
-                if c1 == c2 {
-                    continue;
+            let mut to_remove = Vec::new();
+            for (index, (other_entity, other_ray)) in to_sort.iter().enumerate() {
+                let offset = center.point - other_ray.point;
+
+                // accumulate points within this vine
+                let height = center.normal.dot(offset).abs();
+                let (x, z) = center.normal.any_orthonormal_pair();
+                let x_diff = x.dot(offset).abs();
+                let z_diff = z.dot(offset).abs();
+
+                let within_bounds = height <= vine_radius && x_diff <= vine_radius && z_diff <= vine_radius;
+                let aligned = center.normal.dot(other_ray.normal) >= 0.8;
+                if within_bounds && aligned {
+                    group_entities.push(*other_entity);
+                    group_points.push(*other_ray);
+                    to_remove.push(index);
                 }
             }
-        }
-        /*
-        for (entity, manifold) in &manifolds {
-            let contact_global = globals.get(*entity).unwrap_or(&GlobalTransform::IDENTITY);
 
-            for point in &manifold.points {
-                let point = contact_global.transform_point(point.local_p2.into());
-                //let normal = contact_global.transform_point(manifold.local_n2.into());
-                let normal = manifold.local_n2.into();
-                gizmos.sphere(1000.0, point, Quat::IDENTITY, 0.05, Color::RED);
-                gizmos.ray(1000.0, point, normal, Color::RED);
-
-                let (x, z) = normal.any_orthonormal_pair();
-                commands
-                    .spawn(SpatialBundle {
-                        transform: Transform {
-                            translation: point,
-                            ..default()
-                        }
-                        .looking_to(x, normal),
-                        ..default()
-                    })
-                    .insert(Vine)
-                    //.insert(VineEffect)
-                    .insert(material.clone())
-                    //.insert(RigidBody::Fixed)
-                    .insert(Sensor)
-                    .insert(ColliderBundle::collider(Collider::cylinder(0.25, 0.5)));
+            to_remove.sort_by(|a, b| b.cmp(a)); // descending
+            for index in to_remove {
+                to_sort.swap_remove(index);
             }
+
+            groups.push((group_entities, center, group_points));
         }
-        */
-        /*
+
+        for (entity, ray) in &samples {
+            //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, Color::RED);
+            //gizmos.ray(10.0, ray.point, ray.normal * 0.2, Color::ORANGE);
+        }
+
+        for (entities, center, rays) in &groups {
+            let mut sum = rays.iter().map(|ray| ray.normal).sum::<Vec3>();
+            let normal = sum / rays.len() as f32;
+
+            if normal.length_squared() <= 0.01 {
+                continue;
+            }
+
+            /*
+            gizmos.sphere(DEBUG_TIME, center.point, Quat::IDENTITY, 0.05, Color::RED);
+            gizmos.sphere(
+                DEBUG_TIME,
+                center.point,
+                Quat::IDENTITY,
+                vine_radius,
+                Color::ORANGE,
+            );
+            gizmos.ray(DEBUG_TIME, center.point, normal * 0.5, Color::BLUE);
+            */
+
+            let (x, z) = normal.any_orthonormal_pair();
+            let vine_align = x.normalize_or_zero();
+
+            gizmos.ray(DEBUG_TIME, center.point, normal * 0.5, Color::BLUE);
+            gizmos.ray(DEBUG_TIME, center.point, vine_align * 0.5, Color::RED);
+
+            let default_size = 0.1;
+            let mut min = Vec3::splat(-default_size / 2.0);
+            let mut max = Vec3::splat(default_size / 2.0);
+            for ray in rays {
+                let offset = ray.point - center.point;
+                let aligned = Vec3::new(z.dot(offset), normal.dot(offset), x.dot(offset));
+                min = min.min(aligned);
+                max = max.max(aligned);
+            }
+
+            let aabb = Aabb::from_min_max(min, max);
+            let transform = Transform {
+                translation: center.point - Vec3::from(aabb.center),
+                scale: Vec3::from(aabb.half_extents * 2.0),
+                ..default()
+            }
+            .looking_to(vine_align, normal);
+            gizmos.sphere(DEBUG_TIME, center.point - Vec3::from(aabb.center), Quat::IDENTITY, 0.05, Color::CYAN);
+            gizmos.sphere(DEBUG_TIME, center.point, Quat::IDENTITY, 0.05, Color::RED);
+            //gizmos.cuboid(DEBUG_TIME, transform, Color::CYAN);
             commands
                 .spawn(SpatialBundle {
-                    transform: Transform {
-                        translation: ray.point,
-                        ..default()
-                    }
-                    .looking_to(z, ray.normal),
+                    transform: transform,
                     ..default()
                 })
                 .insert(Vine)
                 //.insert(VineEffect)
                 .insert(material.clone())
-                .insert(RigidBody::Fixed)
-                .insert(ColliderBundle::collider(Collider::cylinder(0.25, 0.5)));
-            //gizmos.ray(8.0, ray.point, ray.normal * 3.8, Color::PURPLE);
+                //.insert(RigidBody::Fixed)
+                .insert(Sensor)
+                .insert(ColliderBundle::collider(Collider::cuboid(0.5, 0.5, 0.5)));
         }
-        */
-
-        /*
-        for (entity, ray) in sample_points(&*ctx, global.translation() + Vec3::Y, 100, 3.0) {
-            gizmos.sphere(1000.0, ray.point, Quat::IDENTITY, 0.05, Color::RED);
-            gizmos.ray(1000.0, ray.point, ray.normal * 0.2, Color::ORANGE);
-        }
-        */
     }
 }
 
@@ -175,6 +230,7 @@ pub fn sample_points(
             max_toi,
             false,
             QueryFilter::default().exclude_sensors(),
+            //QueryFilter::default().exclude_sensors().exclude_dynamic(),
         ) else {
             continue;
         };

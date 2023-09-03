@@ -30,6 +30,7 @@ impl Plugin for SetupPlugin {
         app.add_systems(Startup, (setup, moving_ground));
         app.add_systems(FixedUpdate, circle_velocity);
         app.add_systems(Startup, ramps);
+        app.add_systems(Startup, potions);
     }
 }
 
@@ -37,7 +38,7 @@ pub fn moving_ground(mut commands: Commands) {
     commands
         .spawn(SpatialBundle {
             transform: Transform {
-                translation: Vec3::new(-25.0, 1.0, 0.0),
+                translation: Vec3::new(-25.0, 1.0, 15.0),
                 ..default()
             },
             ..default()
@@ -87,41 +88,18 @@ pub fn circle_velocity(mut t: Local<f32>, mut query: Query<&mut Velocity, With<C
     *t += 0.01;
 }
 
-pub fn setup(
+pub fn potions(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    commands
-        .spawn((
-            SceneBundle {
-                //scene: asset_server.load("models/map.gltf#Scene0"),
-                ..default()
-            },
-            NotShadowCaster,
-            NotShadowReceiver,
-            Name::new("Ground"),
-        ))
-        .with_children(|children| {
-            children
-                .spawn(TransformBundle::from_transform(Transform::from_xyz(
-                    0.0, -10.0, 0.0,
-                )))
-                .insert((
-                    RigidBody::Fixed,
-                    Collider::cuboid(30.0, 10.0, 30.0),
-                    Name::new("Plane"),
-                    crate::physics::TERRAIN_GROUPING,
-                    NotShadowReceiver,
-                ));
-        });
-
+    let location = Vec3::new(-15.0, 2.0, 0.0);
     commands
         .spawn((
             SceneBundle {
                 scene: asset_server.load("models/potion_square.glb#Scene0"),
                 transform: Transform {
-                    translation: Vec3::new(5.0, 3.5, 0.0),
+                    translation: location + Vec3::new(0.0, 0.0, 0.0),
                     scale: Vec3::new(0.5, 0.5, 0.5),
                     ..default()
                 },
@@ -155,7 +133,7 @@ pub fn setup(
             SceneBundle {
                 scene: asset_server.load("models/potion_coil.glb#Scene0"),
                 transform: Transform {
-                    translation: Vec3::new(1.0, 3.5, 0.0),
+                    translation: location + Vec3::new(1.0, 0.0, 0.0),
                     scale: Vec3::new(0.5, 0.5, 0.5),
                     ..default()
                 },
@@ -178,7 +156,7 @@ pub fn setup(
             SceneBundle {
                 scene: asset_server.load("models/potion_flask.glb#Scene0"),
                 transform: Transform {
-                    translation: Vec3::new(8.0, 3.5, 0.0),
+                    translation: location + Vec3::new(2.0, 0.0, 0.0),
                     scale: Vec3::new(0.5, 0.5, 0.5),
                     ..default()
                 },
@@ -194,6 +172,37 @@ pub fn setup(
             collider: Collider::cuboid(0.5, 0.5, 0.5),
             collision_groups: crate::physics::TERRAIN_GROUPING,
             ..default()
+        });
+
+}
+
+pub fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    commands
+        .spawn((
+            SceneBundle {
+                //scene: asset_server.load("models/map.gltf#Scene0"),
+                ..default()
+            },
+            NotShadowCaster,
+            NotShadowReceiver,
+            Name::new("Ground"),
+        ))
+        .with_children(|children| {
+            children
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
+                    0.0, -10.0, 0.0,
+                )))
+                .insert((
+                    RigidBody::Fixed,
+                    Collider::cuboid(30.0, 10.0, 30.0),
+                    Name::new("Plane"),
+                    crate::physics::TERRAIN_GROUPING,
+                    NotShadowReceiver,
+                ));
         });
 
     commands.insert_resource(AmbientLight {

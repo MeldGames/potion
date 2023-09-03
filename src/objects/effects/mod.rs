@@ -10,7 +10,7 @@ pub struct EffectVelocity {
 pub struct EffectPlugin;
 impl Plugin for EffectPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (vine::vine_effect));
+        app.add_systems(FixedUpdate, (vine::vine_effect, vine::vine_despawn));
         app.add_systems(Update, (vine::sunflower_effect));
     }
 }
@@ -91,7 +91,7 @@ pub fn shape_closest_point(
         TypedShape::HeightField(raw) => raw.project_point(&iso, &point.into(), true),
         _ => {
             unimplemented!("{:?}", collider.raw.shape_type());
-        },
+        }
     };
 
     point_projection.point.into()
