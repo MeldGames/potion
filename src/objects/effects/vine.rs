@@ -1,7 +1,7 @@
 use super::EffectVelocity;
 use crate::prelude::*;
-use bevy_rapier3d::parry::{math::Isometry, query::PointQuery, shape::TypedShape};
 use bevy::render::primitives::Aabb;
+use bevy_rapier3d::parry::{math::Isometry, query::PointQuery, shape::TypedShape};
 
 #[derive(Component)]
 pub struct VineEffect;
@@ -73,7 +73,7 @@ pub fn vine_effect(
     colliders: Query<&Collider>,
     mut gizmos: ResMut<RetainedGizmos>,
 ) {
-    const DEBUG_TIME: f32 = 10.0;
+    const DEBUG_TIME: f32 = 1000.0;
 
     let material = materials.add(StandardMaterial {
         base_color: Color::DARK_GREEN,
@@ -111,95 +111,72 @@ pub fn vine_effect(
             Color::PURPLE,
         );
 
-        // Sample in a sphere around the impact point.
-        let mut groups = Vec::new();
-        let samples = sample_points(&*ctx, global.translation(), 300, vine_range);
-        let mut to_sort = samples.clone();
+        let points = sample_points(&*ctx, global.translation(), 500, vine_range);
+        info!("points: {:?}", points.len());
+        let groups = crate::objects::group_points(points, |center, ray| {
+            let alignment = center.normal.dot(ray.normal);
 
-        while let Some((center_entity, center)) = to_sort.pop() {
-            let mut group_entities = Vec::new();
-            let mut group_points = Vec::new();
-            group_entities.push(center_entity);
-            group_points.push(center);
+            let center_y = center.normal;
+            let (center_x, center_z) = center_y.any_orthonormal_pair();
+            let center_x = -center_x;
+            let center_z = center_z;
 
-            let mut to_remove = Vec::new();
-            for (index, (other_entity, other_ray)) in to_sort.iter().enumerate() {
-                let offset = center.point - other_ray.point;
+            let offset = ray.point - center.point;
+            let y = offset.dot(center_y);
+            let x = offset.dot(center_x);
+            let z = offset.dot(center_z);
+            alignment >= 0.8 && y.abs() <= vine_radius && x.abs() <= vine_radius && z.abs() <= vine_radius
+        });
+        let colors = crate::objects::debug_colors(groups.len());
+        info!("groups: {:?}", groups.len());
 
-                // accumulate points within this vine
-                let height = center.normal.dot(offset).abs();
-                let (x, z) = center.normal.any_orthonormal_pair();
-                let x_diff = x.dot(offset).abs();
-                let z_diff = z.dot(offset).abs();
+        for (index, group) in groups.iter().enumerate() {
+            let center_y = group.center.normal;
+            let (center_x, center_z) = center_y.any_orthonormal_pair();
+            let center_x = -center_x;
+            let center_z = center_z;
 
-                let within_bounds = height <= vine_radius && x_diff <= vine_radius && z_diff <= vine_radius;
-                let aligned = center.normal.dot(other_ray.normal) >= 0.8;
-                if within_bounds && aligned {
-                    group_entities.push(*other_entity);
-                    group_points.push(*other_ray);
-                    to_remove.push(index);
-                }
+            let color = colors[index % colors.len()];
+            for ray in &group.points {
+                gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, color);
             }
 
-            to_remove.sort_by(|a, b| b.cmp(a)); // descending
-            for index in to_remove {
-                to_sort.swap_remove(index);
-            }
+            let vine_align = center_x.normalize_or_zero();
 
-            groups.push((group_entities, center, group_points));
-        }
-
-        for (entity, ray) in &samples {
-            //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, Color::RED);
-            //gizmos.ray(10.0, ray.point, ray.normal * 0.2, Color::ORANGE);
-        }
-
-        for (entities, center, rays) in &groups {
-            let mut sum = rays.iter().map(|ray| ray.normal).sum::<Vec3>();
-            let normal = sum / rays.len() as f32;
-
-            if normal.length_squared() <= 0.01 {
-                continue;
-            }
-
-            /*
-            gizmos.sphere(DEBUG_TIME, center.point, Quat::IDENTITY, 0.05, Color::RED);
-            gizmos.sphere(
-                DEBUG_TIME,
-                center.point,
-                Quat::IDENTITY,
-                vine_radius,
-                Color::ORANGE,
-            );
-            gizmos.ray(DEBUG_TIME, center.point, normal * 0.5, Color::BLUE);
-            */
-
-            let (x, z) = normal.any_orthonormal_pair();
-            let vine_align = x.normalize_or_zero();
-
-            gizmos.ray(DEBUG_TIME, center.point, normal * 0.5, Color::BLUE);
-            gizmos.ray(DEBUG_TIME, center.point, vine_align * 0.5, Color::RED);
+            gizmos.ray(DEBUG_TIME, group.center.point, center_y * 0.5, Color::BLUE);
+            gizmos.ray(DEBUG_TIME, group.center.point, vine_align * 0.5, Color::RED);
 
             let default_size = 0.1;
             let mut min = Vec3::splat(-default_size / 2.0);
             let mut max = Vec3::splat(default_size / 2.0);
-            for ray in rays {
-                let offset = ray.point - center.point;
-                let aligned = Vec3::new(z.dot(offset), normal.dot(offset), x.dot(offset));
+
+            for ray in &group.points {
+                let offset = ray.point - group.center.point;
+                let aligned = Vec3::new(center_z.dot(offset), center_y.dot(offset), center_x.dot(offset));
                 min = min.min(aligned);
                 max = max.max(aligned);
             }
 
+            gizmos.ray(DEBUG_TIME, group.center.point, center_y, Color::BLUE);
+            gizmos.ray(DEBUG_TIME, group.center.point, center_x, Color::RED);
+            gizmos.ray(DEBUG_TIME, group.center.point, center_z, Color::GREEN);
+
+            // local space center
+
             let aabb = Aabb::from_min_max(min, max);
-            let transform = Transform {
-                translation: center.point - Vec3::from(aabb.center),
+            let mut transform = Transform {
+                translation: group.center.point, // + Vec3::from(aabb.center),
                 scale: Vec3::from(aabb.half_extents * 2.0),
                 ..default()
             }
-            .looking_to(vine_align, normal);
-            gizmos.sphere(DEBUG_TIME, center.point - Vec3::from(aabb.center), Quat::IDENTITY, 0.05, Color::CYAN);
-            gizmos.sphere(DEBUG_TIME, center.point, Quat::IDENTITY, 0.05, Color::RED);
-            //gizmos.cuboid(DEBUG_TIME, transform, Color::CYAN);
+            .looking_to(vine_align, center_y);
+
+            let offset = transform.rotation * aabb.center;
+            transform.translation -= Vec3::from(offset);
+            gizmos.cuboid(DEBUG_TIME, transform, Color::CYAN);
+            //gizmos.sphere(DEBUG_TIME, center.point - Vec3::from(aabb.center), Quat::IDENTITY, 0.05, Color::CYAN);
+            //gizmos.sphere(DEBUG_TIME, center.point, Quat::IDENTITY, 0.05, Color::RED);
+            /*
             commands
                 .spawn(SpatialBundle {
                     transform: transform,
@@ -211,6 +188,7 @@ pub fn vine_effect(
                 //.insert(RigidBody::Fixed)
                 .insert(Sensor)
                 .insert(ColliderBundle::collider(Collider::cuboid(0.5, 0.5, 0.5)));
+            */
         }
     }
 }

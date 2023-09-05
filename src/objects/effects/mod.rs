@@ -96,3 +96,71 @@ pub fn shape_closest_point(
 
     point_projection.point.into()
 }
+
+#[derive(Debug, Clone)]
+pub struct Group {
+    pub center_entity: Entity,
+    pub center: RayIntersection,
+    pub entities: Vec<Entity>,
+    pub points: Vec<RayIntersection>,
+}
+
+impl Group {
+    pub fn average_normal(&self) -> Vec3 {
+        let sum = self.points.iter().map(|ray| ray.normal).sum::<Vec3>();
+        sum / self.points.len() as f32
+    }
+}
+
+/// Group points based on a given "shape intersection".
+pub fn group_points(
+    mut points: Vec<(Entity, RayIntersection)>,
+    intersects: impl Fn(RayIntersection, RayIntersection) -> bool,
+) -> Vec<Group> {
+    let mut groups = Vec::new();
+    while let Some((center_entity, center)) = points.pop() {
+        let mut group_entities = Vec::new();
+        let mut group_points = Vec::new();
+        group_entities.push(center_entity);
+        group_points.push(center);
+
+        let mut to_remove = Vec::new();
+        for (index, (other_entity, other_ray)) in points.iter().enumerate() {
+            if intersects(center, *other_ray) {
+                group_entities.push(*other_entity);
+                group_points.push(*other_ray);
+                to_remove.push(index);
+            }
+        }
+
+        to_remove.sort_by(|a, b| b.cmp(a)); // descending
+        for index in to_remove {
+            points.swap_remove(index);
+        }
+
+        groups.push(Group {
+            center_entity,
+            center,
+            entities: group_entities,
+            points: group_points,
+        });
+    }
+
+    groups
+}
+
+pub fn debug_colors(n: usize) -> Vec<Color> {
+    let colors = [
+        Color::RED,
+        Color::GREEN,
+        Color::BLUE,
+        Color::BLACK,
+        Color::WHITE,
+        Color::PINK,
+        Color::SEA_GREEN,
+        Color::ORANGE,
+        Color::PURPLE,
+    ];
+
+    colors.to_vec()
+}

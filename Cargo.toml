@@ -40,6 +40,7 @@ egui = "0.22"
 leafwing-input-manager = "0.10"
 wgpu-types = "0.15"
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
+rand = "0.8"
  
 #bevy_mod_component_mirror = "0.9"
 #bevy_renet = {git = "https://github.com/lucaspoffo/renet"}

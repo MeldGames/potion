@@ -173,7 +173,6 @@ pub fn potions(
             collision_groups: crate::physics::TERRAIN_GROUPING,
             ..default()
         });
-
 }
 
 pub fn setup(

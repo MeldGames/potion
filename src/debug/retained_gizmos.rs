@@ -37,7 +37,6 @@ impl RetainedGizmos {
         for (_, start, end, color) in &self.lines {
             gizmos.line(*start, *end, *color);
         }
-
     }
 
     pub fn tick(&mut self, dt: f32) {
