@@ -115,7 +115,7 @@ impl Group {
 /// Group points based on a given "shape intersection".
 pub fn group_points(
     mut points: Vec<(Entity, RayIntersection)>,
-    intersects: impl Fn(RayIntersection, RayIntersection) -> bool,
+    intersects: impl Fn(RayIntersection, RayIntersection, &[Entity], &[RayIntersection]) -> bool,
 ) -> Vec<Group> {
     let mut groups = Vec::new();
     while let Some((center_entity, center)) = points.pop() {
@@ -126,7 +126,7 @@ pub fn group_points(
 
         let mut to_remove = Vec::new();
         for (index, (other_entity, other_ray)) in points.iter().enumerate() {
-            if intersects(center, *other_ray) {
+            if intersects(center, *other_ray, &group_entities, &group_points) {
                 group_entities.push(*other_entity);
                 group_points.push(*other_ray);
                 to_remove.push(index);

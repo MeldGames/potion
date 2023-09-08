@@ -120,7 +120,7 @@ pub fn setup_player(
                                 exclude_from_ground: HashSet::new(),
                                 cast_collider: Some(Collider::ball(player_radius)),
                                 cast_origin: Vec3::new(0., 0., 0.),
-                                cast_length: 1.0,
+                                cast_length: 2.0,
                                 ..default()
                             },
                             float: Float {
