@@ -183,8 +183,8 @@ pub fn teleport_player_back(
 }
 
 pub fn character_crouch(mut controllers: Query<(&PlayerInput, &mut Float)>) {
-    let crouch_height = 0.15;
-    let full_height = 1.0;
+    let crouch_height = 0.65;
+    let full_height = 1.2;
     let threshold = -PI / 4.0;
     for (input, mut float) in &mut controllers {
         // Are we looking sufficiently down?

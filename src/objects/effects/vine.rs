@@ -5,7 +5,7 @@ use bevy_rapier3d::parry::{math::Isometry, query::PointQuery, shape::TypedShape}
 
 use std::{cmp::Ordering, f32::consts::PI};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct VineEffect;
 
 #[derive(Component)]
@@ -113,10 +113,53 @@ pub fn vine_effect(
             Color::PURPLE,
         );
 
+        info!("blah");
+        if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
+            global.translation(),
+            -Vec3::Y,
+            vine_range,
+            true,
+            QueryFilter::default().exclude_sensors(),
+        ) {
+            info!("new vine");
+            let normal = ray.normal;
+            let (center_x, center_z) = normal.any_orthonormal_pair();
+
+            let mut rotation = Transform::default().looking_to(normal, center_x).rotation;
+
+            // Lie the cylinder flat.
+            //rotation = Quat::from_axis_angle(Vec3::X, 90f32.to_radians()) * rotation;
+
+            for step in 0..6 {
+                //rotation = Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * rotation;
+                rotation = rotation * Quat::from_axis_angle(Vec3::Z, 45f32.to_radians());
+
+                commands
+                    .spawn(SpatialBundle {
+                        transform: Transform {
+                            translation: ray.point,
+                            rotation: rotation,
+                            ..default()
+                        },
+                        ..default()
+                    })
+                    .insert(Name::new("Vine"))
+                    .insert(Vine)
+                    //.insert(VineEffect)
+                    .insert(material.clone())
+                    .insert(RigidBody::Fixed)
+                    .insert(Sensor)
+                    .insert(ColliderBundle::collider(Collider::cylinder(
+                        half_height,
+                        vine_radius,
+                    )));
+            }
+        }
+
         //let points = scatter_sampling(&*ctx, global.translation(), 500, vine_range, &mut *gizmos);
-        let points = sunflower_sampling(&*ctx, global.translation(), 500, vine_range, &mut *gizmos);
-        info!("points: {:?}", points.len());
-        let groups = crate::objects::group_points(points, |center, ray, entities, rays| {
+        //let points = sunflower_sampling(&*ctx, global.translation(), 500, vine_range, &mut *gizmos);
+        //info!("points: {:?}", points.len());
+        /*let groups = crate::objects::group_points(points, |center, ray, entities, rays| {
             let alignment = center.normal.dot(ray.normal);
             let center_y = center.normal;
             let (center_x, center_z) = center_y.any_orthonormal_pair();
@@ -152,10 +195,15 @@ pub fn vine_effect(
                 center.point.distance(ray.point) <= vine_radius.max(half_height)
             }
         });
+        */
+        /*
         let colors = crate::objects::debug_colors(groups.len());
         info!("groups: {:?}", groups.len());
 
         for (index, group) in groups.iter().enumerate() {
+            */
+
+        /*
             let center_y = group.center.normal;
             let (center_x, center_z) = center_y.any_orthonormal_pair();
             let center_x = -center_x;
@@ -220,6 +268,7 @@ pub fn vine_effect(
                 .insert(Sensor)
                 .insert(ColliderBundle::collider(Collider::cylinder(half_height, vine_radius)));
         }
+        */
     }
 }
 
