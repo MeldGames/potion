@@ -90,7 +90,7 @@ fn ramps(mut commands: Commands) {
     let center = Vec3::new(-10.0, 1.0, 10.0);
     effect(&mut commands, center);
 
-    let radius = 3.0;
+    let radius = 7.0;
     let steps = 8;
     for step in 1..=steps {
         let per = step as f32 / steps as f32;
@@ -100,7 +100,7 @@ fn ramps(mut commands: Commands) {
             &mut commands,
             center + Vec3::new(radians.sin(), 0.0, radians.cos()) * radius,
             Quat::from_rotation_y(radians) * Quat::from_rotation_x(45f32.to_radians()),
-        //Quat::IDENTITY,
+            //Quat::IDENTITY,
         );
     }
 }

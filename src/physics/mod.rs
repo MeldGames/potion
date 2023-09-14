@@ -418,7 +418,7 @@ pub fn contact_manifolds(
 
     let shape = &collider.raw;
     let shape_iso = Isometry3 {
-        translation: (position * physics_scale).into(),
+        translation: (position / physics_scale).into(),
         rotation: rotation.into(),
     };
 

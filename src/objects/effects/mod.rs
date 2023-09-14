@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::prelude::*;
 
 pub mod vine;
@@ -10,7 +12,10 @@ pub struct EffectVelocity {
 pub struct EffectPlugin;
 impl Plugin for EffectPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (vine::vine_effect, vine::vine_despawn));
+        app.add_systems(
+            FixedUpdate,
+            (vine::vine_effect, vine::vine_growth, vine::vine_despawn),
+        );
         app.add_systems(Update, (vine::sunflower_effect));
     }
 }
@@ -163,4 +168,201 @@ pub fn debug_colors(n: usize) -> Vec<Color> {
     ];
 
     colors.to_vec()
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Scatter {
+    pub from: Vec3,
+    pub dir: Quat,
+
+    pub angle: f32,
+}
+
+pub fn scatter_sampling(
+    ctx: &RapierContext,
+    from: Vec3,
+    samples: usize,
+    radius: f32,
+    gizmos: &mut RetainedGizmos,
+) -> Vec<(Entity, RayIntersection)> {
+    let mut results = Vec::new();
+
+    let scatter_dirs = |scatter: &Scatter| {
+        let outwards = Quat::from_axis_angle(Vec3::Y, scatter.angle)
+            * Quat::from_axis_angle(Vec3::X, scatter.angle);
+        [
+            scatter.dir,
+            scatter.dir
+                * Quat::from_axis_angle(Vec3::Y, scatter.angle)
+                * Quat::from_axis_angle(Vec3::X, scatter.angle),
+            scatter.dir
+                * Quat::from_axis_angle(Vec3::Y, -scatter.angle)
+                * Quat::from_axis_angle(Vec3::X, scatter.angle),
+            scatter.dir
+                * Quat::from_axis_angle(Vec3::Y, -scatter.angle)
+                * Quat::from_axis_angle(Vec3::X, -scatter.angle),
+            scatter.dir
+                * Quat::from_axis_angle(Vec3::Y, scatter.angle)
+                * Quat::from_axis_angle(Vec3::X, -scatter.angle),
+            scatter.dir * Quat::from_axis_angle(Vec3::Y, scatter.angle),
+            scatter.dir * Quat::from_axis_angle(Vec3::Y, -scatter.angle),
+            scatter.dir * Quat::from_axis_angle(Vec3::X, scatter.angle),
+            scatter.dir * Quat::from_axis_angle(Vec3::X, -scatter.angle),
+            //scatter.dir * Quat::from_axis_angle(Vec3::X, scatter.angle * 1.5),
+            //scatter.dir * Quat::from_axis_angle(Vec3::Y, 90f32.to_radians()) * outwards,
+            //scatter.dir * Quat::from_axis_angle(Vec3::X, scatter.angle * 2.5),
+            //scatter.dir * Quat::from_axis_angle(Vec3::Y, 180f32.to_radians()) * outwards,
+            //scatter.dir * Quat::from_axis_angle(Vec3::X, scatter.angle * 3.5),
+            //scatter.dir * Quat::from_axis_angle(Vec3::Y, 270f32.to_radians()) * outwards,
+        ]
+    };
+
+    let mut scatters = Vec::new();
+
+    let dirs = [
+        Quat::from_axis_angle(Vec3::Y, 0f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 90f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 180f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 270f32.to_radians()),
+        Quat::from_axis_angle(Vec3::X, 90f32.to_radians()),
+        Quat::from_axis_angle(Vec3::X, 270f32.to_radians()),
+        //Quat::from_axis_angle(Vec3::Y, 180f32.to_radians()),
+        //Quat::from_axis_angle(Vec3::Y, 270f32.to_radians()),
+        //Quat::from_axis_angle(Vec3::Z, 0f32.to_radians()),
+        /*
+        Quat::from_axis_angle(Vec3::Z, 90f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Z, 180f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Z, 270f32.to_radians()),
+        */
+
+        /*
+        Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 90f32.to_radians()) * Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 180f32.to_radians()) * Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 270f32.to_radians()) * Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        */
+        /*Quat::from_axis_angle(Vec3::Y, -45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, -45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, -45f32.to_radians()) * Quat::from_axis_angle(Vec3::X, -45f32.to_radians()),
+
+        Quat::from_axis_angle(Vec3::Y, 135f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, -135f32.to_radians()) * Quat::from_axis_angle(Vec3::X, 45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, 135f32.to_radians()) * Quat::from_axis_angle(Vec3::X, -45f32.to_radians()),
+        Quat::from_axis_angle(Vec3::Y, -135f32.to_radians()) * Quat::from_axis_angle(Vec3::X, -45f32.to_radians()),
+        */
+    ];
+    scatters.extend(
+        dirs.iter()
+            .map(|dir| Scatter {
+                from,
+                dir: *dir,
+                angle: 45f32.to_radians(),
+            })
+            .map(|scatter| {
+                scatter_dirs(&scatter)
+                    .iter()
+                    .map(|dir| Scatter {
+                        from: scatter.from,
+                        dir: *dir,
+                        angle: scatter.angle / 2.0,
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .flatten(),
+    );
+
+    let step = radius / 4.0;
+    while let Some(scatter) = scatters.pop() {
+        if scatter.angle < 1f32.to_radians() || scatter.from.distance(from) + 0.25 >= radius {
+            continue;
+        }
+
+        //let color = colors[(step as usize % colors.len()) - 1];
+
+        let mut toi = step;
+        if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
+            scatter.from,
+            scatter.dir * Vec3::NEG_Z,
+            step,
+            true,
+            QueryFilter::default().exclude_sensors(),
+        ) {
+            toi = ray.toi;
+            results.push((entity, ray));
+        } else {
+            let traveled = scatter.from + scatter.dir * Vec3::NEG_Z * step;
+
+            let new = scatter_dirs(&scatter);
+
+            for new_dir in new {
+                scatters.push(Scatter {
+                    from: traveled,
+                    dir: new_dir.normalize(),
+                    angle: scatter.angle / 2.0,
+                });
+            }
+        }
+
+        /*
+        gizmos.ray(
+            1000.0,
+            scatter.from,
+            scatter.dir * Vec3::NEG_Z * toi,
+            Color::CRIMSON,
+        );
+        */
+    }
+
+    results
+}
+
+fn biased_orthonormal_basis(up: Vec3) -> (Vec3, Vec3) {
+    let (x, z) = up.any_orthonormal_pair();
+    (bias_vec(x), bias_vec(z))
+}
+
+fn bias_vec(vec: Vec3) -> Vec3 {
+    bias_vec_basis(vec, Vec3::Y, Vec3::X, Vec3::Z)
+}
+
+fn bias_vec_basis(vec: Vec3, up: Vec3, right: Vec3, back: Vec3) -> Vec3 {
+    let mut biased = [
+        vec.project_onto(up),
+        vec.project_onto(right),
+        vec.project_onto(back),
+    ];
+
+    // sort by longest
+    biased.sort_by(|a, b| {
+        b.length()
+            .partial_cmp(&a.length())
+            .unwrap_or(Ordering::Less)
+    });
+    (biased[0] + biased[1]).normalize_or_zero()
+}
+
+pub fn sunflower_sampling(
+    ctx: &RapierContext,
+    from: Vec3,
+    samples: usize,
+    radius: f32,
+    gizmos: &mut RetainedGizmos,
+) -> Vec<(Entity, RayIntersection)> {
+    let mut results = Vec::new();
+
+    for point in crate::objects::sunflower_circle(samples, 0.0) {
+        let point = Vec3::new(point.x, 0.0, point.y) * radius;
+
+        if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
+            from + point,
+            -Vec3::Y,
+            radius,
+            true,
+            QueryFilter::default().exclude_sensors(),
+        ) {
+            results.push((entity, ray));
+        }
+    }
+
+    results
 }
