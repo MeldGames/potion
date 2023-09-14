@@ -213,17 +213,15 @@ pub fn vine_effect(
             QueryFilter::default().exclude_sensors(),
         ) {
             let normal = ray.normal;
-            let (center_x, center_z) = normal.any_orthonormal_pair();
 
-            let mut rotation = Transform::default().looking_to(normal, center_x).rotation;
+            let mut rotation = Transform::default().looking_to(normal, Vec3::Y).rotation;
 
-            for step in 0..3 {
+            for _ in 0..3 {
                 let vine_offset = rotation * (Vec3::Y * vine.half_height());
-                let growth_stem = rotation * (Vec3::Y * vine.height);
 
                 let color = colors[vine_effect.vine.growth % colors.len()];
-                commands
-                    .spawn((SpatialBundle {
+                commands.spawn((
+                    SpatialBundle {
                         transform: Transform {
                             translation: ray.point + vine_offset + ray.normal * vine.radius,
                             rotation: rotation,
@@ -282,23 +280,36 @@ pub fn vine_growth(
                 true,
                 QueryFilter::default().exclude_sensors(),
             ) {
-                info!("ray: {:?}", ray);
-                // Attach the vine to the hit obstacle
+                let normal = ray.normal;
+                let (x, z) = normal.any_orthonormal_pair();
+                let current = transform.rotation * Vec3::Y;
+                let current_x = current.project_onto_normalized(x);
+                let current_z = current.project_onto_normalized(z);
+                let projected = (current_x + current_z).normalize_or_zero();
+
+                let axis = current.cross(projected);
+                let angle = current.angle_between(projected);
+                let rot_delta = Quat::from_axis_angle(axis, angle);
+                let rotation = transform.rotation * rot_delta;
+
+                let vine_offset = rotation * (Vec3::Y * vine.half_height());
+
+                //let color = colors[vine_effect.vine.growth % colors.len()];
                 commands.spawn((
                     SpatialBundle {
                         transform: Transform {
-                            translation: global_growth_point + global_direction * ray.toi,
-                            rotation: transform.rotation,
+                            translation: ray.point + vine_offset + ray.normal * vine.radius,
+                            rotation: rotation,
                             ..default()
                         },
                         ..default()
                     },
                     Name::new("Vine"),
-                    Sensor,
-                    ColliderBundle::collider(collider),
-                    //ColliderDebugColor(color),
+                    vine.clone(),
                     //RigidBody::Fixed,
-                    vine,
+                    //Sensor,
+                    //ColliderDebugColor(color),
+                    //ColliderBundle::collider(vine.collider()),
                 ));
             } else {
                 // Cast shape with angular velocity towards gravity
@@ -313,7 +324,8 @@ pub fn vine_growth(
 
                 let current = transform.rotation * Vec3::Y;
                 let dangling = -Vec3::Y;
-                let axis = current.cross(dangling);
+                let axis = current.cross(dangling).normalize_or_zero();
+                let angle = current.angle_between(dangling);
 
                 gizmos.ray(DEBUG_TIME, global_center, axis * 0.5, Color::GREEN);
                 gizmos.ray(DEBUG_TIME, global_center, -axis * 0.5, Color::GREEN);
@@ -332,13 +344,13 @@ pub fn vine_growth(
                     },
                     collider.raw.as_ref(),
                     0.0,
-                    1.0,
+                    angle,
                     true,
                     bevy_rapier3d::rapier::pipeline::QueryFilter::default().exclude_sensors(),
                 ) {
                     toi.toi
                 } else {
-                    1.0
+                    angle
                 };
 
                 let local_translation = adjusted_global.translation - global_center;
@@ -350,9 +362,8 @@ pub fn vine_growth(
                 commands.spawn((
                     SpatialBundle {
                         transform: Transform {
-                            //translation: adjusted_global.translation,
                             translation: rotated_translation,
-                            rotation: rotation * adjusted_global.rotation,
+                            rotation: rotated_rotation,
                             ..default()
                         },
                         ..default()

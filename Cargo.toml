@@ -16,13 +16,13 @@ bevy_egui = "0.21"
 #sabi = { path = "../sabi/sabi", features = ["public"] }
 #sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
-springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
-#springy = {path = "../springy", features = ["rapier3d"]}
+#springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
+springy = {path = "../springy", features = ["rapier3d"]}
 
 #bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
 bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
 #bevy_mod_edge_detection = {path = "../bevy_mod_edge_detection"}
-bevy_mod_edge_detection = {git = "https://github.com/IceSentry/bevy_mod_edge_detection"}
+#bevy_mod_edge_detection = {git = "https://github.com/IceSentry/bevy_mod_edge_detection"}
 
 bevy-inspector-egui = "0.19"
 bevy_mod_billboard = "0.4"

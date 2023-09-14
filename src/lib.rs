@@ -24,7 +24,7 @@ use crate::prelude::*;
 use bevy::window::{CursorGrabMode, WindowPlugin};
 
 use bevy_editor_pls::editor::Editor;
-use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
+//use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use obj::Obj;
 
@@ -103,6 +103,7 @@ impl Plugin for PotionCellarPlugin {
         if !EDGE {
             app.insert_resource(Msaa::Sample8);
         } else {
+            /*
             app.insert_resource(Msaa::Off)
                 .add_plugins(EdgeDetectionPlugin)
                 .insert_resource(EdgeDetectionConfig {
@@ -115,6 +116,7 @@ impl Plugin for PotionCellarPlugin {
                     ..default()
                 })
                 .add_systems(Update, edge_detect_swap);
+            */
         }
 
         app.configure_sets(
@@ -155,6 +157,7 @@ impl Plugin for PotionCellarPlugin {
     }
 }
 
+/*
 fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: Option<ResMut<EdgeDetectionConfig>>) {
     let Some(mut config) = config else { return };
 
@@ -165,6 +168,7 @@ fn edge_detect_swap(key: Res<Input<KeyCode>>, mut config: Option<ResMut<EdgeDete
         };
     }
 }
+*/
 
 fn fallback_camera(mut commands: Commands) {
     commands
