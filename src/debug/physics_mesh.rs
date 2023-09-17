@@ -135,9 +135,12 @@ impl<'a> AsMesh for ColliderView<'a> {
 /// If the collider has changed, then produce a new debug mesh for it.
 pub fn init_physics_meshes(
     mut commands: Commands,
+    ctx: Res<RapierContext>,
+
+    materials: Query<&Handle<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     colliders: Query<
-        (Entity, &Collider, Option<&Handle<StandardMaterial>>),
+        (Entity, &Collider),
         (Changed<Collider>, Without<Sensor>),
     >,
     childrens: Query<&Children>,
@@ -154,7 +157,15 @@ pub fn init_physics_meshes(
         }
     }
 
-    for (entity, collider, material) in &colliders {
+    for (entity, collider) in &colliders {
+        let material = if let Some(parent) = ctx.collider_parent(entity) {
+            materials.get(parent).ok()
+        } else {
+            materials.get(entity).ok()
+        };
+
+        let material = material.cloned().unwrap_or(Default::default());
+
         if let Ok(children) = childrens.get(entity) {
             for child in children.iter() {
                 if physics_mesh.contains(*child) {
@@ -184,6 +195,7 @@ pub fn init_physics_meshes(
                     .spawn(PbrBundle {
                         mesh: handle,
                         transform: transform,
+                        material: material.clone(),
                         ..default()
                     })
                     .insert(PhysicsDebugMesh)

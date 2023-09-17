@@ -95,7 +95,7 @@ impl Default for Vine {
             growth: 20,
             growth_points: Vec::new(),
             radius: 0.05,
-            height: 0.65,
+            height: 0.15,
             parent: None,
             root: None,
         }
@@ -205,40 +205,105 @@ pub fn vine_effect(
                 );
         */
 
-        if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
-            global.translation(),
-            -Vec3::Y,
-            vine_effect.explode_radius,
-            true,
-            QueryFilter::default().exclude_sensors(),
-        ) {
-            let normal = ray.normal;
+        // (Plane: (Dot, Normal), Hull Points)
+        let mut hulls: Vec<((f32, Vec3), Vec<Vec3>)> = Vec::new();
 
-            let mut rotation = Transform::default().looking_to(normal, Vec3::Y).rotation;
+        for sample in spiral_sphere(5000) {
+            let sample = sample * vine_effect.explode_radius;
+            if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
+                global.translation(),
+                sample, //-Vec3::Y,
+                vine_effect.explode_radius,
+                true,
+                QueryFilter::default().exclude_sensors(),
+            ) {
+                if ray.toi == 0.0 {
+                    continue;
+                }
 
-            for _ in 0..3 {
-                let vine_offset = rotation * (Vec3::Y * vine.half_height());
+                //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.11, Color::CYAN);
 
-                let color = colors[vine_effect.vine.growth % colors.len()];
-                commands.spawn((
-                    SpatialBundle {
-                        transform: Transform {
-                            translation: ray.point + vine_offset + ray.normal * vine.radius,
-                            rotation: rotation,
+                let mut new_points = Vec::new();
+                let pushed_point = ray.point + ray.normal * vine.radius;
+                new_points.push(ray.point);
+                new_points.push(pushed_point);
+
+                let mut accounted = false;
+                for ((center_dot, plane_normal), ref mut points) in &mut hulls {
+                    if ray.normal.dot(*plane_normal) < 0.9 {
+                        continue;
+                    }
+                    // check if it is inside the plane + radius
+                    let ray_dot = ray.point.dot(*plane_normal);
+                    let diff = ray_dot - *center_dot;
+                    let plane_fudge = vine.radius;
+                    if diff > -plane_fudge && diff < plane_fudge {
+                        points.extend(new_points.clone());
+                        accounted = true;
+                    }
+                }
+
+                if !accounted {
+                    let center_dot = ray.normal.dot(ray.point);
+                    hulls.push(((center_dot, ray.normal), new_points.clone()));
+                }
+
+                //let normal = ray.normal;
+
+                /*
+                let mut rotation = Transform::default().looking_to(normal, Vec3::Y).rotation;
+
+                for _ in 0..3 {
+                    let vine_offset = rotation * (Vec3::Y * vine.half_height());
+
+                    let color = colors[vine_effect.vine.growth % colors.len()];
+                    commands.spawn((
+                        SpatialBundle {
+                            transform: Transform {
+                                translation: ray.point + vine_offset + ray.normal * vine.radius,
+                                rotation: rotation,
+                                ..default()
+                            },
                             ..default()
                         },
-                        ..default()
-                    },
-                    Name::new("Vine"),
-                    vine.clone(),
-                    material.clone(),
-                    RigidBody::Fixed,
-                    Sensor,
-                    ColliderDebugColor(color),
-                    ColliderBundle::collider(vine.collider()),
-                ));
+                        Name::new("Vine"),
+                        vine.clone(),
+                        material.clone(),
+                        RigidBody::Fixed,
+                        Sensor,
+                        ColliderDebugColor(color),
+                        ColliderBundle::collider(vine.collider()),
+                    ));
 
-                rotation = rotation * Quat::from_axis_angle(Vec3::Z, 45f32.to_radians());
+                    rotation = rotation * Quat::from_axis_angle(Vec3::Z, 45f32.to_radians());
+                }
+                */
+            }
+        }
+
+        info!("hulls: {:?}", hulls.len());
+        for ((center_dot, normal), points) in hulls {
+            if points.len() >= 2 {
+                info!("points: {:?}", points.len());
+                if let Some(collider) = Collider::convex_hull(&points) {
+                    commands.spawn((
+                        SpatialBundle {
+                            transform: Transform {
+                                translation: Vec3::ZERO, //ray.point + vine_offset + ray.normal * vine.radius,
+                                //rotation: rotation,
+                                ..default()
+                            },
+                            ..default()
+                        },
+                        Name::new("Vine"),
+                        vine.clone(),
+                        material.clone(),
+                        RigidBody::Fixed,
+                        //Sensor,
+                        //ColliderDebugColor(color),
+                        ColliderBundle::collider(collider),
+                    ));
+                }
             }
         }
     }
@@ -254,6 +319,8 @@ pub fn vine_growth(
     colliders: Query<&Collider>,
     mut gizmos: ResMut<RetainedGizmos>,
 ) {
+    // cylinder raycast + angular velocity method:
+    /*
     for (entity, mut vine, global) in &mut vines {
         for growth in vine.growth_points.clone() {
             if vine.growth == 0 {
@@ -295,6 +362,7 @@ pub fn vine_growth(
                 let vine_offset = rotation * (Vec3::Y * vine.half_height());
 
                 //let color = colors[vine_effect.vine.growth % colors.len()];
+                /*
                 commands.spawn((
                     SpatialBundle {
                         transform: Transform {
@@ -311,6 +379,7 @@ pub fn vine_growth(
                     //ColliderDebugColor(color),
                     //ColliderBundle::collider(vine.collider()),
                 ));
+                */
             } else {
                 // Cast shape with angular velocity towards gravity
                 let adjusted_global = Transform {
@@ -395,4 +464,5 @@ pub fn vine_growth(
 
         vine.growth_points = Vec::new();
     }
+    */
 }

@@ -36,6 +36,7 @@ pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             shadows_enabled: true,
+            illuminance: 100_000.0,
             ..default()
         },
         transform: Transform {
