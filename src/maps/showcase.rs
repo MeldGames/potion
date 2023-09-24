@@ -204,15 +204,18 @@ pub fn setup(
                 ));
         });
 
+    /*
     commands.insert_resource(AmbientLight {
         color: Color::ALICE_BLUE,
         brightness: 0.72,
     });
+    */
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
             shadows_enabled: true,
+            illuminance: 50_000.0,
             ..default()
         },
         transform: Transform {

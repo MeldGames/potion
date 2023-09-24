@@ -7,7 +7,11 @@
 ///   enough.
 /// - Burnable
 use super::{spiral_sphere, EffectVelocity};
-use crate::{prelude::*, previous::Previous, objects::{sunflower_sampling, sunflower_circle}};
+use crate::{
+    objects::{sunflower_circle, sunflower_sampling},
+    prelude::*,
+    previous::Previous,
+};
 use bevy::render::primitives::Aabb;
 use bevy_rapier3d::parry::{
     math::Isometry,
@@ -124,8 +128,7 @@ pub fn vine_despawn(
     vines: Query<(Entity, &GlobalTransform, &Collider), With<Vine>>,
 ) {
     for (entity, global, collider) in &vines {
-        let manifolds = crate::physics::contact_manifolds(
-            &*ctx,
+        let manifolds = ctx.contact_manifolds(
             global.translation(),
             Quat::IDENTITY,
             collider,
@@ -164,7 +167,9 @@ pub fn vine_effect(
     )>,
     globals: Query<&GlobalTransform>,
     colliders: Query<&Collider>,
+    bodies: Query<&RigidBody>,
     mut gizmos: ResMut<RetainedGizmos>,
+    names: Query<DebugName>,
 ) {
     let material = materials.add(StandardMaterial {
         base_color: Color::DARK_GREEN,
@@ -176,8 +181,11 @@ pub fn vine_effect(
 
     let dt = ctx.integration_parameters.dt;
     for (effect_entity, mut vine_effect, global, velocity) in &mut potions {
+        let mut effect_origin = global.translation();
+
         let mut vine = vine_effect.vine.clone();
         vine.growth_points = vine.basic_growth_points();
+        let filter = QueryFilter::default().exclude_sensors();
 
         commands.entity(effect_entity).remove::<VineEffect>();
         if vine.growth == 0 {
@@ -190,20 +198,22 @@ pub fn vine_effect(
 
         //let effect_radius = 3.0;
 
-                gizmos.sphere(
-                    DEBUG_TIME,
-                    global.translation(),
-                    Quat::IDENTITY,
-                    //vine_range,
-                    0.1,
-                    Color::PURPLE,
-                );
+        gizmos.sphere(
+            DEBUG_TIME,
+            effect_origin,
+            Quat::IDENTITY,
+            //vine_range,
+            0.1,
+            Color::PURPLE,
+        );
 
         // (CenterRay, Hull Points)
         let mut hulls: Vec<(RayIntersection, Vec<Vec3>)> = Vec::new();
 
         let mut hull_size = |points: &Vec<Vec3>| -> f32 {
-            if points.is_empty() { return 0.0; }
+            if points.is_empty() {
+                return 0.0;
+            }
 
             let mut min = points[0];
             let mut max = points[0];
@@ -261,8 +271,32 @@ pub fn vine_effect(
             }
         };
 
-        let sphere_bottom = global.translation() - Vec3::new(0.0, vine_effect.explode_radius, 0.0);
+        let push_radius = vine_effect.explode_radius / 2.0;
+        gizmos.sphere(
+            DEBUG_TIME,
+            effect_origin,
+            Quat::IDENTITY,
+            push_radius,
+            Color::CYAN,
+        );
+        effect_origin = ctx.correct_penetration(
+            effect_origin,
+            Quat::IDENTITY,
+            &Collider::ball(push_radius),
+            &filter,
+        );
+
+        let sphere_bottom = effect_origin - Vec3::new(0.0, vine_effect.explode_radius, 0.0);
         //gizmos.ray(DEBUG_TIME, global.translation(), -average_normal, Color::BLUE);
+
+        gizmos.sphere(DEBUG_TIME, effect_origin, Quat::IDENTITY, 0.08, Color::GREEN);
+        gizmos.sphere(
+            DEBUG_TIME,
+            effect_origin,
+            Quat::IDENTITY,
+            push_radius,
+            Color::GREEN,
+        );
 
         for sample in spiral_sphere(5_000) {
             //let sample = sample.extend(0.0);
@@ -273,13 +307,18 @@ pub fn vine_effect(
             let color = colors[effect_entity.index() as usize % (colors.len() - 1)];
 
             if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
-                global.translation(),
+                effect_origin,
                 sample,
                 vine_effect.explode_radius,
                 true,
-                QueryFilter::default().exclude_sensors(),
+                filter,
             ) {
                 if ray.toi == 0.0 {
+                    continue;
+                }
+
+                let body = bodies.get(entity).copied().unwrap_or(RigidBody::Fixed);
+                if body == RigidBody::Dynamic {
                     continue;
                 }
 
@@ -287,7 +326,7 @@ pub fn vine_effect(
                 //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, color);
                 add_ray(ray);
             } else {
-                let traveled_point = global.translation() + sample * vine_effect.explode_radius;
+                let traveled_point = effect_origin + sample * vine_effect.explode_radius;
                 let y_diff = traveled_point.y - sphere_bottom.y;
 
                 if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
@@ -308,9 +347,7 @@ pub fn vine_effect(
         }
 
         // cull hulls that are too small
-        hulls.retain(|(center_ray, points)| {
-            hull_size(points) >= 1.5
-        });
+        hulls.retain(|(center_ray, points)| hull_size(points) >= 1.5);
 
         info!("hulls: {:?}", hulls.len());
         for (center_ray, points) in hulls {
