@@ -251,6 +251,7 @@ pub fn vine_effect(
                 let diff = ray_dot - center_dot;
                 let plane_fudge = vine.radius;
                 if ray.normal.dot(plane_normal) < 0.9 {
+                    continue;
                     let close = points.iter().any(|point| point.distance(ray.point) < 0.25);
                     if !close {
                         continue;
@@ -298,7 +299,7 @@ pub fn vine_effect(
             Color::GREEN,
         );
 
-        for sample in spiral_sphere(5_000) {
+        for sample in spiral_sphere(50_000) {
             //let sample = sample.extend(0.0);
             //let sample = sample * vine_effect.explode_radius;
             //let origin = global.translation() + sample * vine_effect.explode_radius;
