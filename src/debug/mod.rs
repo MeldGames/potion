@@ -2,10 +2,10 @@ use bevy::prelude::*;
 
 pub mod physics_mesh;
 pub mod retained_gizmos;
-pub mod texture;
+//pub mod texture;
 
 pub use retained_gizmos::*;
-pub use texture::TestMaterial;
+//pub use texture::TestMaterial;
 
 pub mod prelude {
     pub use super::retained_gizmos::RetainedGizmos;
@@ -53,12 +53,13 @@ impl Plugin for DebugPlugin {
         app.insert_resource(Debug(true));
 
         app.add_plugins(RetainedGizmoPlugin);
+        app.add_plugins(bevy_debug_texture::DebugTexturePlugin);
 
         app.add_systems(Update, toggle_debug);
         app.add_systems(Update, debug_visible.after(toggle_debug));
 
-        app.add_systems(Startup, texture::setup_test_texture);
-        app.add_systems(Update, texture::replace_blank_textures);
+        //app.add_systems(Startup, texture::setup_test_texture);
+        //app.add_systems(Update, texture::replace_blank_textures);
 
         app.add_systems(Update, physics_mesh::init_physics_meshes);
     }

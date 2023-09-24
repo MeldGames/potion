@@ -7,6 +7,7 @@ pub mod maps;
 pub mod objects;
 pub mod physics;
 pub mod player;
+pub mod previous;
 pub mod traversal;
 
 pub mod prelude {

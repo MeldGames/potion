@@ -1,5 +1,6 @@
 use crate::objects::vine::VineEffect;
 use crate::prelude::*;
+use crate::previous::Previous;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -13,6 +14,7 @@ impl Plugin for SetupPlugin {
         app.add_plugins(super::base_test::SetupPlugin);
         app.add_systems(Startup, (ramps, flat));
         app.add_systems(Last, frame_delay_effect);
+        //app.add_systems(PostUpdate, add_previous);
     }
 }
 
@@ -76,6 +78,7 @@ fn flat(mut commands: Commands) {
 fn effect(commands: &mut Commands, translation: Vec3) {
     commands.spawn((
         DelayedEffect,
+        Previous::<Velocity>(Velocity::default()),
         SpatialBundle {
             transform: Transform {
                 translation: translation + Vec3::Y,

@@ -139,10 +139,7 @@ pub fn init_physics_meshes(
 
     materials: Query<&Handle<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    colliders: Query<
-        (Entity, &Collider),
-        (Changed<Collider>, Without<Sensor>),
-    >,
+    colliders: Query<(Entity, &Collider), (Changed<Collider>, Without<Sensor>)>,
     childrens: Query<&Children>,
     physics_mesh: Query<&PhysicsDebugMesh>,
     mut removed: RemovedComponents<Collider>,

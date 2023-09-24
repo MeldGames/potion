@@ -7,7 +7,7 @@
 ///   enough.
 /// - Burnable
 use super::{spiral_sphere, EffectVelocity};
-use crate::prelude::*;
+use crate::{prelude::*, previous::Previous, objects::{sunflower_sampling, sunflower_circle}};
 use bevy::render::primitives::Aabb;
 use bevy_rapier3d::parry::{
     math::Isometry,
@@ -27,7 +27,7 @@ impl Default for VineEffect {
     fn default() -> Self {
         Self {
             vine: Vine::default(),
-            explode_radius: 2.0,
+            explode_radius: 4.0,
         }
     }
 }
@@ -159,7 +159,8 @@ pub fn vine_effect(
         Entity,
         &VineEffect,
         &GlobalTransform,
-        Option<&EffectVelocity>,
+        //Option<&EffectVelocity>,
+        Option<&Previous<Velocity>>,
     )>,
     globals: Query<&GlobalTransform>,
     colliders: Query<&Collider>,
@@ -183,36 +184,97 @@ pub fn vine_effect(
             continue;
         }
 
-        let velocity = if let Some(velocity) = velocity {
-            if velocity.linear.length_squared() == 0.0 {
-                Vec3::NEG_Y
-            } else {
-                velocity.linear
-            }
-        } else {
-            Vec3::NEG_Y
-        };
+        let velocity = velocity
+            .map(|velocity| velocity.0.linvel)
+            .unwrap_or(Vec3::ZERO);
 
         //let effect_radius = 3.0;
 
-        /*
                 gizmos.sphere(
                     DEBUG_TIME,
                     global.translation(),
                     Quat::IDENTITY,
-                    vine_range,
+                    //vine_range,
+                    0.1,
                     Color::PURPLE,
                 );
-        */
 
-        // (Plane: (Dot, Normal), Hull Points)
-        let mut hulls: Vec<((f32, Vec3), Vec<Vec3>)> = Vec::new();
+        // (CenterRay, Hull Points)
+        let mut hulls: Vec<(RayIntersection, Vec<Vec3>)> = Vec::new();
 
-        for sample in spiral_sphere(5000) {
-            let sample = sample * vine_effect.explode_radius;
+        let mut hull_size = |points: &Vec<Vec3>| -> f32 {
+            if points.is_empty() { return 0.0; }
+
+            let mut min = points[0];
+            let mut max = points[0];
+
+            for point in points {
+                min = min.min(*point);
+                max = max.max(*point);
+            }
+
+            let aabb = Aabb::from_min_max(min, max);
+            let transform = Transform {
+                translation: aabb.center.into(),
+                scale: Vec3::from(aabb.half_extents) * 2.0,
+                ..default()
+            };
+            //gizmos.cuboid(DEBUG_TIME, transform, Color::GREEN);
+
+            let dist = max.distance(min);
+            dist
+        };
+
+        let mut add_ray = |ray: RayIntersection| {
+            let mut new_points = Vec::new();
+            let pushed_point = ray.point + ray.normal * vine.radius;
+            new_points.push(ray.point);
+            new_points.push(pushed_point);
+
+            let mut accounted = false;
+            for (center_ray, ref mut points) in &mut hulls {
+                let plane_normal = center_ray.normal;
+                let center_dot = center_ray.normal.dot(center_ray.point);
+
+                // check if it is inside the plane + radius
+                let ray_dot = ray.point.dot(plane_normal);
+                let diff = ray_dot - center_dot;
+                let plane_fudge = vine.radius;
+                if ray.normal.dot(plane_normal) < 0.9 {
+                    let close = points.iter().any(|point| point.distance(ray.point) < 0.25);
+                    if !close {
+                        continue;
+                    }
+                }
+
+                if diff > -plane_fudge && diff < plane_fudge {
+                    points.extend(new_points.clone());
+                    let center_push = pushed_point + plane_normal * vine.radius;
+                    points.push(center_push);
+
+                    accounted = true;
+                }
+            }
+
+            if !accounted {
+                hulls.push((ray, new_points.clone()));
+            }
+        };
+
+        let sphere_bottom = global.translation() - Vec3::new(0.0, vine_effect.explode_radius, 0.0);
+        //gizmos.ray(DEBUG_TIME, global.translation(), -average_normal, Color::BLUE);
+
+        for sample in spiral_sphere(5_000) {
+            //let sample = sample.extend(0.0);
+            //let sample = sample * vine_effect.explode_radius;
+            //let origin = global.translation() + sample * vine_effect.explode_radius;
+            //gizmos.sphere(DEBUG_TIME, origin, Quat::IDENTITY, 0.1, Color::RED);
+
+            let color = colors[effect_entity.index() as usize % (colors.len() - 1)];
+
             if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
                 global.translation(),
-                sample, //-Vec3::Y,
+                sample,
                 vine_effect.explode_radius,
                 true,
                 QueryFilter::default().exclude_sensors(),
@@ -221,70 +283,38 @@ pub fn vine_effect(
                     continue;
                 }
 
-                //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.11, Color::CYAN);
+                //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, Color::CYAN);
+                //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, color);
+                add_ray(ray);
+            } else {
+                let traveled_point = global.translation() + sample * vine_effect.explode_radius;
+                let y_diff = traveled_point.y - sphere_bottom.y;
 
-                let mut new_points = Vec::new();
-                let pushed_point = ray.point + ray.normal * vine.radius;
-                new_points.push(ray.point);
-                new_points.push(pushed_point);
-
-                let mut accounted = false;
-                for ((center_dot, plane_normal), ref mut points) in &mut hulls {
-                    if ray.normal.dot(*plane_normal) < 0.9 {
+                if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
+                    traveled_point,
+                    -Vec3::Y,
+                    y_diff,
+                    true,
+                    QueryFilter::default().exclude_sensors(),
+                ) {
+                    if ray.toi == 0.0 {
                         continue;
                     }
-                    // check if it is inside the plane + radius
-                    let ray_dot = ray.point.dot(*plane_normal);
-                    let diff = ray_dot - *center_dot;
-                    let plane_fudge = vine.radius;
-                    if diff > -plane_fudge && diff < plane_fudge {
-                        points.extend(new_points.clone());
-                        accounted = true;
-                    }
+
+                    //gizmos.sphere(DEBUG_TIME, ray.point, Quat::IDENTITY, 0.05, Color::RED);
+                    //add_ray(ray);
                 }
-
-                if !accounted {
-                    let center_dot = ray.normal.dot(ray.point);
-                    hulls.push(((center_dot, ray.normal), new_points.clone()));
-                }
-
-                //let normal = ray.normal;
-
-                /*
-                let mut rotation = Transform::default().looking_to(normal, Vec3::Y).rotation;
-
-                for _ in 0..3 {
-                    let vine_offset = rotation * (Vec3::Y * vine.half_height());
-
-                    let color = colors[vine_effect.vine.growth % colors.len()];
-                    commands.spawn((
-                        SpatialBundle {
-                            transform: Transform {
-                                translation: ray.point + vine_offset + ray.normal * vine.radius,
-                                rotation: rotation,
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        Name::new("Vine"),
-                        vine.clone(),
-                        material.clone(),
-                        RigidBody::Fixed,
-                        Sensor,
-                        ColliderDebugColor(color),
-                        ColliderBundle::collider(vine.collider()),
-                    ));
-
-                    rotation = rotation * Quat::from_axis_angle(Vec3::Z, 45f32.to_radians());
-                }
-                */
             }
         }
 
+        // cull hulls that are too small
+        hulls.retain(|(center_ray, points)| {
+            hull_size(points) >= 1.5
+        });
+
         info!("hulls: {:?}", hulls.len());
-        for ((center_dot, normal), points) in hulls {
+        for (center_ray, points) in hulls {
             if points.len() >= 2 {
-                info!("points: {:?}", points.len());
                 if let Some(collider) = Collider::convex_hull(&points) {
                     commands.spawn((
                         SpatialBundle {

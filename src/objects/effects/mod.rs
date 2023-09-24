@@ -12,6 +12,8 @@ pub struct EffectVelocity {
 pub struct EffectPlugin;
 impl Plugin for EffectPlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(Last, crate::previous::previous::<Velocity>);
+
         app.add_systems(
             FixedUpdate,
             (vine::vine_effect, vine::vine_growth, vine::vine_despawn),
