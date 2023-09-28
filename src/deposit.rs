@@ -3,10 +3,8 @@ use std::{
     ops::{Add, AddAssign, Sub, SubAssign},
 };
 
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-
 use crate::attach::Attach;
+use crate::prelude::*;
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]

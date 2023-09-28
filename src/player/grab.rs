@@ -1,13 +1,8 @@
 use std::fmt::Debug;
 
-use bevy::input::mouse::MouseMotion;
-
-use bevy::prelude::*;
-
-use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{Isometry, JointAxesMask, JointAxis, MotorModel};
-
 use crate::prelude::*;
+use bevy::input::mouse::MouseMotion;
+use bevy_rapier3d::rapier::prelude::{Isometry, JointAxesMask, JointAxis, MotorModel};
 
 pub struct GrabPlugin;
 
@@ -190,9 +185,6 @@ pub fn grab_collider(
     names: Query<DebugName>,
     globals: Query<&GlobalTransform>,
     auto_aim: Query<&AutoAim>,
-    rigid_bodies: Query<Entity, With<RigidBody>>,
-    parents: Query<&Parent>,
-    joints: Query<&ImpulseJoint>,
 
     colliders: Query<(&GlobalTransform, &Collider)>,
     mut grabbers: Query<(
@@ -519,7 +511,8 @@ pub fn arm_target_position(
             (neck_global.translation() - camera_global.translation()).normalize_or_zero();
 
         if input.extend_arm(arm_id.0) {
-            if let Ok((mut target_position, pull_offset)) = transforms.get_mut(muscle_ik_target.0) {
+            if let Ok((mut target_position, _pull_offset)) = transforms.get_mut(muscle_ik_target.0)
+            {
                 let _neck_yaw = Quat::from_axis_angle(Vec3::Y, input.yaw as f32);
 
                 let upper_arm =

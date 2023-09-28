@@ -5,7 +5,6 @@ use bevy::{
 
 use crate::prelude::*;
 use bevy_rapier3d::parry::shape::{TriMesh, TypedShape};
-use bevy_rapier3d::prelude::*;
 
 #[derive(Component, Copy, Clone, Debug, Reflect, Default)]
 #[reflect(Component)]

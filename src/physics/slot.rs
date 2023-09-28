@@ -1,10 +1,7 @@
 use std::{collections::VecDeque, time::Duration};
 
-use bevy::prelude::*;
-use bevy_rapier3d::{
-    prelude::*,
-    rapier::dynamics::{JointAxesMask, JointAxis},
-};
+use crate::prelude::*;
+use bevy_rapier3d::rapier::dynamics::{JointAxesMask, JointAxis};
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]

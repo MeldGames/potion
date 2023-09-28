@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use bevy_mod_wanderlust::{ControllerInput, WanderlustPlugin, *};
-
 pub mod controller;
 pub mod grab;
 pub mod input;

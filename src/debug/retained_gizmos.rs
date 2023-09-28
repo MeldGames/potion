@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
+use crate::prelude::*;
 
 #[derive(Resource, Default, Clone, Debug)]
 pub struct RetainedGizmos {

@@ -1,15 +1,13 @@
 use std::fmt::Debug;
 
-use bevy::prelude::*;
+use crate::prelude::*;
 use bevy::utils::HashSet;
 use std::f64::consts::PI;
 
-use bevy_mod_wanderlust::{ControllerInput, Float, GroundCast, GroundCaster, ViableGroundCast};
+use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster, ViableGroundCast};
 //use bevy_mod_wanderlust::{ControllerInput, ControllerSettings};
-use bevy_rapier3d::prelude::*;
 
 use super::input::PlayerInput;
-use crate::prelude::*;
 
 pub struct ControllerPlugin;
 

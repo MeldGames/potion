@@ -1,14 +1,8 @@
-use bevy::prelude::*;
-
-use bevy_rapier3d::prelude::*;
-
-use crate::{
-    attach::Attach,
-    physics::{
-        slot::{Slot, SlotDeposit},
-        ColliderBundle, RigidBodyBundle,
-    },
+use crate::physics::{
+    slot::{Slot, SlotDeposit},
+    ColliderBundle, RigidBodyBundle,
 };
+use crate::prelude::*;
 
 #[derive(Default, Debug, Copy, Clone, Component, Reflect)]
 #[reflect(Component)]

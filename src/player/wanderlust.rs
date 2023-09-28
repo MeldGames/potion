@@ -1,9 +1,5 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-
-use bevy_mod_wanderlust::*;
-
 use crate::prelude::*;
+use bevy_mod_wanderlust::*;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WanderlustSet;

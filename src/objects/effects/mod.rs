@@ -18,7 +18,7 @@ impl Plugin for EffectPlugin {
             FixedUpdate,
             (vine::vine_effect, vine::vine_growth, vine::vine_despawn),
         );
-        app.add_systems(Update, (vine::sunflower_effect));
+        app.add_systems(Update, vine::sunflower_effect);
     }
 }
 
@@ -32,7 +32,7 @@ pub fn sunflower_circle(samples: usize, boundary_smoothing: f32) -> Vec<Vec2> {
     let mut points = Vec::new();
 
     let angle_stride = 360.0 * phi;
-    let boundary_points = (alpha * (n as f32).sqrt());
+    let boundary_points = alpha * (n as f32).sqrt();
     for k in 1..(n + 1) {
         let r = boundary_radius(k as f32, n as f32, boundary_points);
         let theta = k as f32 * angle_stride;
@@ -185,7 +185,7 @@ pub fn scatter_sampling(
     from: Vec3,
     samples: usize,
     radius: f32,
-    gizmos: &mut RetainedGizmos,
+    _gizmos: &mut RetainedGizmos,
 ) -> Vec<(Entity, RayIntersection)> {
     let mut results = Vec::new();
 
@@ -316,31 +316,6 @@ pub fn scatter_sampling(
     }
 
     results
-}
-
-fn biased_orthonormal_basis(up: Vec3) -> (Vec3, Vec3) {
-    let (x, z) = up.any_orthonormal_pair();
-    (bias_vec(x), bias_vec(z))
-}
-
-fn bias_vec(vec: Vec3) -> Vec3 {
-    bias_vec_basis(vec, Vec3::Y, Vec3::X, Vec3::Z)
-}
-
-fn bias_vec_basis(vec: Vec3, up: Vec3, right: Vec3, back: Vec3) -> Vec3 {
-    let mut biased = [
-        vec.project_onto(up),
-        vec.project_onto(right),
-        vec.project_onto(back),
-    ];
-
-    // sort by longest
-    biased.sort_by(|a, b| {
-        b.length()
-            .partial_cmp(&a.length())
-            .unwrap_or(Ordering::Less)
-    });
-    (biased[0] + biased[1]).normalize_or_zero()
 }
 
 pub fn sunflower_sampling(

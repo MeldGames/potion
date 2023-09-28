@@ -1,8 +1,6 @@
 use crate::physics::{ColliderBundle, RigidBodyBundle};
 
-use bevy::prelude::*;
-
-use bevy_rapier3d::prelude::*;
+use crate::prelude::*;
 
 pub struct SetupPlugin;
 impl Plugin for SetupPlugin {

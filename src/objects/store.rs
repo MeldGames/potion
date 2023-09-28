@@ -1,7 +1,5 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-
 use crate::deposit::Value;
+use crate::prelude::*;
 
 #[derive(Debug, Component, Clone, Copy)]
 pub struct Store;

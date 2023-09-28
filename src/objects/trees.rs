@@ -9,7 +9,7 @@ use bevy::{
         },
     },
 };
-use bevy_rapier3d::prelude::*;
+use crate::prelude::*;
 
 pub struct TreesPlugin;
 impl Plugin for TreesPlugin {

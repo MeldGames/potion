@@ -1,11 +1,8 @@
 use std::cmp::Ordering;
 
 use crate::{objects::cauldron::Ingredient, prelude::*};
-use bevy::prelude::*;
-use bevy_rapier3d::{
-    parry::shape::{Cone, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape},
-    prelude::*,
-    rapier::dynamics::{JointAxesMask, JointAxis},
+use bevy_rapier3d::parry::shape::{
+    Cone, Cuboid, Cylinder, RoundShape, SharedShape, Triangle, TypedShape,
 };
 
 pub mod prelude {
@@ -114,9 +111,9 @@ pub fn scale_border_radius(collider: &mut Collider, ratio: f32) {
             border_radius,
         }) => {
             *collider = Collider::round_triangle(
-                (*a).into(),
-                (*b).into(),
-                (*c).into(),
+                Vect::from(*a),
+                Vect::from(*b),
+                Vect::from(*c),
                 border_radius * ratio,
             );
         }

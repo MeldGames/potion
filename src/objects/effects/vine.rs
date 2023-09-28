@@ -6,20 +6,9 @@
 /// - Travel upwards, away from gravity, if the slope is steep
 ///   enough.
 /// - Burnable
-use super::{spiral_sphere, EffectVelocity};
-use crate::{
-    objects::{sunflower_circle, sunflower_sampling},
-    prelude::*,
-    previous::Previous,
-};
+use super::spiral_sphere;
+use crate::{prelude::*, previous::Previous};
 use bevy::render::primitives::Aabb;
-use bevy_rapier3d::parry::{
-    math::Isometry,
-    query::{NonlinearRigidMotion, PointQuery},
-    shape::TypedShape,
-};
-
-use std::{cmp::Ordering, f32::consts::PI};
 
 #[derive(Component, Clone)]
 pub struct VineEffect {
@@ -290,7 +279,13 @@ pub fn vine_effect(
         let sphere_bottom = effect_origin - Vec3::new(0.0, vine_effect.explode_radius, 0.0);
         //gizmos.ray(DEBUG_TIME, global.translation(), -average_normal, Color::BLUE);
 
-        gizmos.sphere(DEBUG_TIME, effect_origin, Quat::IDENTITY, 0.08, Color::GREEN);
+        gizmos.sphere(
+            DEBUG_TIME,
+            effect_origin,
+            Quat::IDENTITY,
+            0.08,
+            Color::GREEN,
+        );
         gizmos.sphere(
             DEBUG_TIME,
             effect_origin,
@@ -331,9 +326,9 @@ pub fn vine_effect(
                 let y_diff = traveled_point.y - sphere_bottom.y;
 
                 if let Some((entity, ray)) = ctx.cast_ray_and_get_normal(
-                    traveled_point,
-                    -Vec3::Y,
-                    y_diff,
+                    traveled_point.into(),
+                    (-Vec3::Y).into(),
+                    y_diff.into(),
                     true,
                     QueryFilter::default().exclude_sensors(),
                 ) {
@@ -382,7 +377,7 @@ pub fn vine_growth(
     mut materials: ResMut<Assets<StandardMaterial>>,
 
     ctx: Res<RapierContext>,
-    mut vines: Query<(Entity, &mut Vine, &GlobalTransform)>,
+    vines: Query<(Entity, &mut Vine, &GlobalTransform)>,
     globals: Query<&GlobalTransform>,
     colliders: Query<&Collider>,
     mut gizmos: ResMut<RetainedGizmos>,

@@ -3,14 +3,12 @@ use std::fmt::Debug;
 use bevy::core_pipeline::fxaa::{Fxaa, Sensitivity};
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
 use bevy::ecs::query::ReadOnlyWorldQuery;
-use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_mod_inverse_kinematics::IkConstraint;
 
 use std::f32::consts::PI;
 
 use bevy_mod_wanderlust::*;
-use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{JointAxis, MotorModel};
 
 use crate::physics::IgnoreMinimumMass;

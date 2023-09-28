@@ -1,3 +1,6 @@
+//extern crate bevy_rapier3d_f64 as bevy_rapier3d;
+extern crate bevy_rapier3d as bevy_rapier3d;
+
 pub mod attach;
 pub mod debug;
 pub mod deposit;
@@ -20,7 +23,7 @@ pub mod prelude {
     pub use bevy_rapier3d::prelude::*;
 }
 
-use crate::prelude::*;
+use prelude::*;
 
 use bevy::window::{CursorGrabMode, WindowPlugin};
 

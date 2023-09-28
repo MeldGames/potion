@@ -1,9 +1,6 @@
+use crate::prelude::*;
 /// Collision Grouping Flags
-use bevy::{
-    ecs::{query::WorldQuery, system::EntityCommands},
-    prelude::*,
-};
-use bevy_rapier3d::prelude::*;
+use bevy::ecs::{query::WorldQuery, system::EntityCommands};
 
 pub mod contact_filter;
 pub mod context_ext;

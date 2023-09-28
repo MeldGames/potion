@@ -1,7 +1,6 @@
+use crate::prelude::*;
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy_rapier3d::prelude::*;
 
 /// Filter specific entities when solving contacts.
 #[derive(Default, Debug, Clone, Component)]

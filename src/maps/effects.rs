@@ -1,8 +1,6 @@
 use crate::objects::vine::VineEffect;
 use crate::prelude::*;
 use crate::previous::Previous;
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 use std::f32::consts::PI;
 

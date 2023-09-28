@@ -1,12 +1,7 @@
 use std::fmt::Debug;
 
 use bevy::input::mouse::MouseWheel;
-use bevy::{
-    input::mouse::MouseMotion,
-    math::DVec2,
-    prelude::*,
-    window::{CursorGrabMode, PrimaryWindow},
-};
+use bevy::{input::mouse::MouseMotion, math::DVec2, prelude::*, window::PrimaryWindow};
 //use bevy_editor_pls::editor::Editor;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -454,13 +449,9 @@ pub fn player_mouse_inputs(
     mut ev_mouse: EventReader<MouseMotion>,
     mut player_input: Query<&mut PlayerInput>,
     kb: Res<Input<KeyCode>>,
-    windows: Query<&Window, With<PrimaryWindow>>,
 
     mut ignore: ResMut<IgnoreNextCursor>,
 ) {
-    let Ok(window) = windows.get_single() else {
-        return;
-    };
     let Ok(mut input) = player_input.get_single_mut() else {
         return;
     };

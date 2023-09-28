@@ -1,8 +1,6 @@
 use std::fmt::Debug;
 
-use bevy::prelude::*;
-
-use bevy_rapier3d::prelude::*;
+use crate::prelude::*;
 use springy::RapierParticleQuery;
 
 pub struct MusclePlugin;

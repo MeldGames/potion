@@ -7,7 +7,6 @@ use bevy::{
     prelude::*,
     utils::HashSet,
 };
-use bevy_rapier3d::prelude::*;
 
 pub struct HierarchyTraversalPlugin;
 

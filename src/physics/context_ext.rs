@@ -101,13 +101,9 @@ impl ContextExt for RapierContext {
         filter: &QueryFilter,
     ) -> Vec3 {
         let mut push = Vec3::ZERO;
-        for i in 0..10 {
-            let manifolds = self.contact_manifolds(
-                position + push,
-                Quat::IDENTITY,
-                collider,
-                filter,
-            );
+        for _ in 0..10 {
+            let manifolds =
+                self.contact_manifolds(position + push, Quat::IDENTITY, collider, filter);
 
             for (entity, manifold) in manifolds {
                 let normal = Vec3::from(manifold.local_n1);

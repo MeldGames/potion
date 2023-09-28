@@ -15,13 +15,9 @@ use crate::{
 
 use crate::prelude::*;
 
-use bevy::{
-    pbr::{NotShadowCaster, NotShadowReceiver},
-    prelude::*,
-};
+use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
 
 use bevy_mod_billboard::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 pub struct SetupPlugin;
 impl Plugin for SetupPlugin {

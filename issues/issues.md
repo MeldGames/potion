@@ -1,6 +1,7 @@
 
 # Slots
-- Slots do not apply an impulse/torque to the container, ideally it should be applied on the rigid body it is attached to.
+- [X] Slots do not apply an impulse/torque to the container, ideally it should be applied on the rigid body it is attached to.
+  *Slots are now implemented using physics joints.*
 
 # Grabbing
 - Grabbing an object now allows you to fly, probably because the anchor of the hand is now the center of the hand.

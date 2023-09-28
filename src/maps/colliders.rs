@@ -1,7 +1,4 @@
 use crate::prelude::*;
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-
 use std::f32::consts::PI;
 
 pub struct SetupPlugin;
