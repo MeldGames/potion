@@ -116,9 +116,9 @@ pub fn grab_joint(
                     .local_anchor1(local_grab_point)
                     // use the center of the hand instead of exact grab point
                     .local_anchor2(Vec3::ZERO)
-                    .motor_model(JointAxis::X, motor_model)
-                    .motor_model(JointAxis::Y, motor_model)
-                    .motor_model(JointAxis::Z, motor_model)
+                    .motor_model(JointAxis::LinX, motor_model)
+                    .motor_model(JointAxis::LinY, motor_model)
+                    .motor_model(JointAxis::LinZ, motor_model)
                     .motor_model(JointAxis::AngX, motor_model)
                     .motor_model(JointAxis::AngY, motor_model)
                     /*
@@ -153,7 +153,7 @@ pub fn grab_joint(
 
                 commands.entity(grabber).with_children(|children| {
                     children
-                        .spawn(ImpulseJoint::new(grabbed_entity, grab_joint))
+                        .spawn(ImpulseJoint::new(grabbed_entity, TypedJoint::GenericJoint(grab_joint)))
                         .insert(JointInterpolation {
                             start: start_joint,
                             end: grab_joint,
@@ -204,7 +204,7 @@ pub fn grab_collider(
                 continue;
             }
 
-            for (e1, e2, intersecting) in ctx.intersections_with(sensor.0) {
+            for (e1, e2, intersecting) in ctx.intersection_pairs_with(sensor.0) {
                 if !intersecting {
                     continue;
                 }
@@ -366,12 +366,12 @@ pub fn tense_arms(
 }
 
 pub fn twist_grab(
-    kb: Res<Input<KeyCode>>,
+    kb: Res<ButtonInput<KeyCode>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut grabbing: Query<&mut Grabbing>,
     //mut impulses: Query<&mut ExternalImpulse>,
 ) {
-    let cumulative_delta: Vec2 = mouse_motion.iter().map(|event| event.delta).sum();
+    let cumulative_delta: Vec2 = mouse_motion.read().map(|event| event.delta).sum();
 
     for mut grabbing in &mut grabbing {
         /*
@@ -433,7 +433,7 @@ pub fn update_grab_sphere(
                 continue;
             };
 
-            let anchor = joint.data.local_anchor2();
+            let anchor = joint.data.as_ref().local_anchor2();
             let global_anchor = global.transform_point(anchor);
 
             anchors.push((grabber, global_anchor));
@@ -523,7 +523,7 @@ pub fn arm_target_position(
                 let Ok(upper_global) = globals.get(upper_arm) else {
                     continue;
                 };
-                let shoulder = joint.data.local_anchor2();
+                let shoulder = joint.data.as_ref().local_anchor2();
                 let shoulder_worldspace = upper_global.transform_point(shoulder);
 
                 let grab_sphere =
@@ -652,13 +652,13 @@ pub fn auto_aim_debug_lines(auto_aim: Query<(&GlobalTransform, &AutoAim)>, mut g
                 AimPrimitive::Point(point) => {
                     let center = global.transform_point(point);
 
-                    gizmos.sphere(center, Quat::IDENTITY, 0.1, Color::LIME_GREEN);
+                    gizmos.sphere(center, Quat::IDENTITY, 0.1, css::LIMEGREEN);
                 }
                 AimPrimitive::Line { start, end } => {
                     let start = global.transform_point(start);
                     let end = global.transform_point(end);
 
-                    gizmos.line(start, end, Color::LIME_GREEN);
+                    gizmos.line(start, end, css::LIMEGREEN);
                 }
             }
         }

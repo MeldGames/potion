@@ -28,7 +28,7 @@ pub struct PlayerInputPlugin;
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(IgnoreNextCursor(true));
-        app.add_state::<MouseState>();
+        app.init_state::<MouseState>();
         app.insert_resource(LockToggle::default());
         app.insert_resource(MouseSensitivity::default());
         app.configure_sets(PreUpdate, (CollectInputs, MetaInputs).in_set(InputSet));
@@ -258,7 +258,7 @@ pub struct InitialClick;
 pub fn initial_mouse_click(
     mut commands: Commands,
     primary_window: Query<&Window, With<PrimaryWindow>>,
-    mouse_input: Res<Input<MouseButton>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut toggle: ResMut<LockToggle>,
     initial_click: Option<Res<InitialClick>>,
 ) {
@@ -281,7 +281,7 @@ pub fn initial_mouse_click(
 
 pub fn toggle_mouse_lock(
     windows: Query<&Window, With<PrimaryWindow>>,
-    kb: Res<Input<KeyCode>>,
+    kb: Res<ButtonInput<KeyCode>>,
     state: Res<State<MouseState>>,
     mut next_state: ResMut<NextState<MouseState>>,
     mut toggle: ResMut<LockToggle>,
@@ -310,11 +310,12 @@ pub struct CursorMoved(pub bool);
 
 pub fn mouse_lock(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
-    editor: Option<Res<bevy_editor_pls::editor::Editor>>,
+    //editor: Option<Res<bevy_editor_pls::editor::Editor>>,
     state: Res<State<MouseState>>,
     mut ignore_next_cursor: ResMut<IgnoreNextCursor>,
 ) {
-    let editor_active = editor.map(|state| state.active()).unwrap_or(false);
+    //let editor_active = editor.map(|state| state.active()).unwrap_or(false);
+    let editor_active = false;
     let locked = *state == MouseState::Locked && !editor_active;
 
     if let Ok(mut window) = windows.get_single_mut() {
@@ -351,8 +352,8 @@ pub fn reset_inputs(mut player_input: Query<&mut PlayerInput>) {
 }
 
 pub fn player_binary_inputs(
-    keyboard_input: Res<Input<KeyCode>>,
-    mouse_input: Res<Input<MouseButton>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut player_input: Query<&mut PlayerInput>,
 ) {
     let Ok(mut player_input) = player_input.get_single_mut() else {
@@ -360,25 +361,25 @@ pub fn player_binary_inputs(
     };
 
     player_input
-        .set_left(keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left));
+        .set_left(keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft));
     player_input
-        .set_right(keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right));
+        .set_right(keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight));
     player_input
-        .set_forward(keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up));
+        .set_forward(keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp));
     player_input
-        .set_back(keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
+        .set_back(keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown));
     player_input
-        .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Back));
+        .set_jump(keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Backspace));
     player_input.set_extend_arm(
         0,
         mouse_input.pressed(MouseButton::Right)
-            || keyboard_input.pressed(KeyCode::K)
+            || keyboard_input.pressed(KeyCode::KeyK)
             || keyboard_input.pressed(KeyCode::ShiftLeft),
     );
     player_input.set_extend_arm(
         1,
         mouse_input.pressed(MouseButton::Left)
-            || keyboard_input.pressed(KeyCode::J)
+            || keyboard_input.pressed(KeyCode::KeyJ)
             || keyboard_input.pressed(KeyCode::ShiftLeft),
     );
 
@@ -388,13 +389,13 @@ pub fn player_binary_inputs(
 
     player_input.set_twist(keyboard_input.pressed(KeyCode::ControlLeft));
 
-    let inv_swap = if keyboard_input.just_pressed(KeyCode::Key1) {
+    let inv_swap = if keyboard_input.just_pressed(KeyCode::Digit1) {
         Some(0)
-    } else if keyboard_input.just_pressed(KeyCode::Key2) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit2) {
         Some(1)
-    } else if keyboard_input.just_pressed(KeyCode::Key3) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit3) {
         Some(2)
-    } else if keyboard_input.just_pressed(KeyCode::Key4) {
+    } else if keyboard_input.just_pressed(KeyCode::Digit4) {
         Some(3)
     } else {
         None
@@ -418,7 +419,7 @@ pub fn zoom_on_scroll(
     mut zooms: Query<&mut ZoomScroll>,
 ) {
     let mut cumulative_scroll = 0.0;
-    for event in mouse_scroll.iter() {
+    for event in mouse_scroll.read() {
         cumulative_scroll += event.y;
     }
 
@@ -448,7 +449,7 @@ pub fn player_mouse_inputs(
     sensitivity: Res<MouseSensitivity>,
     mut ev_mouse: EventReader<MouseMotion>,
     mut player_input: Query<&mut PlayerInput>,
-    kb: Res<Input<KeyCode>>,
+    kb: Res<ButtonInput<KeyCode>>,
 
     mut ignore: ResMut<IgnoreNextCursor>,
 ) {
@@ -457,7 +458,7 @@ pub fn player_mouse_inputs(
     };
 
     let mut cumulative_delta = DVec2::ZERO;
-    for ev in ev_mouse.iter() {
+    for ev in ev_mouse.read() {
         cumulative_delta += ev.delta.as_dvec2();
     }
 

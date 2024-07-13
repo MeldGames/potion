@@ -99,13 +99,13 @@ pub fn sunflower_effect(mut gizmos: Gizmos) {
     for point in super::sunflower_circle(500, 0.0) {
         let shifted = Vec3::Y;
         let point = shifted + Vec3::new(point.x, 0.0, point.y);
-        gizmos.sphere(point, Quat::IDENTITY, 0.01, Color::ORANGE);
+        gizmos.sphere(point, Quat::IDENTITY, 0.01, css::ORANGE);
     }
 
     for point in super::spiral_sphere(500) {
         let shifted = Vec3::Y * 2.0 + Vec3::Z * 2.0;
         let point = shifted + point;
-        gizmos.sphere(point, Quat::IDENTITY, 0.01, Color::ORANGE);
+        gizmos.sphere(point, Quat::IDENTITY, 0.01, css::ORANGE);
     }
 }
 
@@ -161,7 +161,7 @@ pub fn vine_effect(
     names: Query<DebugName>,
 ) {
     let material = materials.add(StandardMaterial {
-        base_color: Color::DARK_GREEN,
+        base_color: css::DARK_GREEN.into(),
         perceptual_roughness: 0.2,
         ..default()
     });
@@ -193,7 +193,7 @@ pub fn vine_effect(
             Quat::IDENTITY,
             //vine_range,
             0.1,
-            Color::PURPLE,
+            Color::from(css::PURPLE),
         );
 
         // (CenterRay, Hull Points)
@@ -267,7 +267,7 @@ pub fn vine_effect(
             effect_origin,
             Quat::IDENTITY,
             push_radius,
-            Color::CYAN,
+            Color::from(css::LIGHT_BLUE),
         );
         effect_origin = ctx.correct_penetration(
             effect_origin,
@@ -284,14 +284,14 @@ pub fn vine_effect(
             effect_origin,
             Quat::IDENTITY,
             0.08,
-            Color::GREEN,
+            Color::from(css::GREEN),
         );
         gizmos.sphere(
             DEBUG_TIME,
             effect_origin,
             Quat::IDENTITY,
             push_radius,
-            Color::GREEN,
+            css::GREEN.into(),
         );
 
         for sample in spiral_sphere(50_000) {
@@ -309,7 +309,7 @@ pub fn vine_effect(
                 true,
                 filter,
             ) {
-                if ray.toi == 0.0 {
+                if ray.time_of_impact == 0.0 {
                     continue;
                 }
 
@@ -332,7 +332,7 @@ pub fn vine_effect(
                     true,
                     QueryFilter::default().exclude_sensors(),
                 ) {
-                    if ray.toi == 0.0 {
+                    if ray.time_of_impact == 0.0 {
                         continue;
                     }
 

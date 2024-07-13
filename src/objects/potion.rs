@@ -117,7 +117,7 @@ pub fn potion_contact_explode(
         cracked
     };
 
-    for contact_force in contact_forces.iter() {
+    for contact_force in contact_forces.read() {
         check_crack(
             contact_force.collider1,
             contact_force.collider2,

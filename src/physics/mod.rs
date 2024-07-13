@@ -1,6 +1,6 @@
 use crate::prelude::*;
 /// Collision Grouping Flags
-use bevy::ecs::{query::WorldQuery, system::EntityCommands};
+use bevy::ecs::{query::QueryData, system::EntityCommands};
 
 pub mod contact_filter;
 pub mod context_ext;
@@ -151,7 +151,7 @@ impl Default for ColliderBundle {
     }
 }
 
-#[derive(WorldQuery)]
+#[derive(QueryData)]
 pub struct FillRigidBodyComponents {
     pub rigid_body: &'static RigidBody,
     pub velocity: Option<&'static Velocity>,
@@ -230,7 +230,7 @@ pub fn modify_rapier_context(mut context: ResMut<RapierContext>) {
     integration.joint_damping_ratio = 0.5;
     */
     // Try to avoid launching players in weird situations
-    integration.max_penetration_correction = 1000.0;
+    //integration.max_penetration_correction = 1000.0;
     integration.dt = crate::TICK_RATE.as_secs_f32();
 }
 
@@ -292,7 +292,7 @@ impl Plugin for PhysicsPlugin {
                 dt: crate::TICK_RATE.as_secs_f32() / 1.0,
                 substeps: 8,
             },
-            ..Default::default()
+            ..RapierConfiguration::new(1.0)
         });
 
         type PhysicsPlugin<'w, 's> = RapierPhysicsPlugin<ContactFilterHook<'w, 's>>;

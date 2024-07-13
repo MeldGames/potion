@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bevy::{
     ecs::{
         entity::Entities,
-        query::{ReadOnlyWorldQuery, WorldQuery},
+        query::{ReadOnlyQueryData, QueryFilter, WorldQuery, QueryData},
     },
     prelude::*,
     utils::HashSet,
@@ -22,12 +22,12 @@ pub mod prelude {
     pub use super::{find_children_with, find_parent_with, JointChildren};
 }
 
-pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
+pub fn find_parent_with<'a, Q: QueryData, F: QueryFilter>(
     query: &'a Query<Q, F>,
     parents: &'a Query<&Parent>,
     impulse: &'a Query<&ImpulseJoint>,
     base: Entity,
-) -> Option<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
+) -> Option<<<Q as QueryData>::ReadOnly as WorldQuery>::Item<'a>> {
     let mut checked = HashSet::new();
     let mut possibilities = vec![base];
     let mut queried = None;
@@ -52,12 +52,12 @@ pub fn find_parent_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
     queried
 }
 
-pub fn find_children_with<'a, Q: WorldQuery, F: ReadOnlyWorldQuery>(
+pub fn find_children_with<'a, Q: QueryData, F: QueryFilter>(
     query: &'a Query<Q, F>,
     children: &'a Query<&Children>,
     joint_children: &'a Query<&JointChildren>,
     base: Entity,
-) -> Vec<<<Q as WorldQuery>::ReadOnly as WorldQuery>::Item<'a>> {
+) -> Vec<<<Q as QueryData>::ReadOnly as WorldQuery>::Item<'a>> {
     let mut queried = Vec::new();
     let mut possibilities = vec![base];
 

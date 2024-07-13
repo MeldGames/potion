@@ -28,8 +28,8 @@ impl Debug {
 #[derive(Debug, Clone, Component)]
 pub struct DebugVisible;
 
-pub fn toggle_debug(kb: Res<Input<KeyCode>>, mut debug: ResMut<Debug>) {
-    if kb.just_pressed(KeyCode::P) {
+pub fn toggle_debug(kb: Res<ButtonInput<KeyCode>>, mut debug: ResMut<Debug>) {
+    if kb.just_pressed(KeyCode::KeyP) {
         info!("toggling debug");
         debug.toggle();
     }

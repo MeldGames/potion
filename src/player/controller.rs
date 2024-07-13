@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::prelude::*;
-use bevy::utils::HashSet;
+use bevy::{ecs::schedule::ScheduleLabel, utils::HashSet};
 use std::f64::consts::PI;
 
 use bevy_mod_wanderlust::{ControllerInput, Float, GroundCaster, ViableGroundCast};
@@ -16,6 +16,8 @@ pub struct ControllerSet;
 
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
+        //app.configure_sets(ControllerSet.before(WanderlustSet));
+        app.configure_sets(FixedUpdate, ControllerSet.in_set(crate::FixedSet::Update));
         app.add_systems(
             FixedUpdate,
             (
@@ -26,10 +28,8 @@ impl Plugin for ControllerPlugin {
                 player_swivel_and_tilt,
                 teleport_player_back,
             )
-                .chain()
                 .in_set(ControllerSet)
-                .before(WanderlustSet)
-                .in_set(crate::FixedSet::Update),
+                .chain()
         );
 
         app.add_systems(PostUpdate, (avoid_intersecting,));
@@ -119,7 +119,7 @@ pub fn rotate_inputs(
 
 pub fn teleport_player_back(
     mut players: Query<Entity, With<Player>>,
-    kb: Res<Input<KeyCode>>,
+    kb: Res<ButtonInput<KeyCode>>,
     _names: Query<&Name>,
 
     _parents: Query<&Parent>,
@@ -131,7 +131,7 @@ pub fn teleport_player_back(
     mut transforms: Query<&mut Transform>,
 ) {
     for entity in &mut players {
-        let mut should_teleport = kb.just_pressed(KeyCode::Equals);
+        let mut should_teleport = kb.just_pressed(KeyCode::Equal);
 
         if let Ok(transform) = transforms.get(entity) {
             should_teleport = should_teleport || transform.translation.y < -100.0;
@@ -285,10 +285,10 @@ pub fn avoid_intersecting(
                 true,
                 filter,
             ) {
-            if intersection.toi < 0.001 {
-                (intersection.toi, Vec3::ZERO)
+            if intersection.time_of_impact < 0.001 {
+                (intersection.time_of_impact, Vec3::ZERO)
             } else {
-                (intersection.toi, intersection.normal)
+                (intersection.time_of_impact, intersection.normal)
             }
         } else {
             (avoid.max_toi + avoid.buffer, Vec3::ZERO)

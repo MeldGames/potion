@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
+    render::{mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology},
 };
 
 use crate::prelude::*;
@@ -23,9 +23,9 @@ pub fn trimesh_to_mesh(trimesh: &TriMesh) -> Mesh {
         .collect();
     let indices: Vec<u32> = indices.iter().flatten().cloned().collect();
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD);
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
-    mesh.set_indices(Some(Indices::U32(indices)));
+    mesh.insert_indices(Indices::U32(indices));
     mesh.duplicate_vertices();
     mesh.compute_flat_normals();
     mesh
@@ -43,15 +43,14 @@ impl<'a> AsMesh for ColliderView<'a> {
         let mut meshes = Vec::new();
         match self {
             ColliderView::Ball(shape_views::BallView { raw: ball }) => {
-                let mesh = Mesh::from(shape::UVSphere {
+                let mesh = Mesh::from(Sphere {
                     radius: ball.radius,
-                    ..default()
                 });
                 meshes.push((mesh, Transform::default()));
             }
             ColliderView::Cuboid(shape_views::CuboidView { raw: cuboid }) => {
                 let dim = cuboid.half_extents * 2.0;
-                let mesh = Mesh::from(shape::Box::new(dim.x, dim.y, dim.z));
+                let mesh = Mesh::from(Cuboid::new(dim.x, dim.y, dim.z));
                 meshes.push((mesh, Transform::default()));
             }
             ColliderView::Capsule(shape_views::CapsuleView { raw: capsule }) => {
@@ -59,8 +58,8 @@ impl<'a> AsMesh for ColliderView<'a> {
                 let b: Vec3 = capsule.segment.b.into();
                 let midpoint = a * 0.5 + b * 0.5;
                 let length = (a - b).length();
-                let mesh = Mesh::from(shape::Capsule {
-                    depth: length,
+                let mesh = Mesh::from(Capsule3d {
+                    half_length: length / 2.0,
                     radius: capsule.radius,
                     ..default()
                 });
@@ -112,9 +111,9 @@ impl<'a> AsMesh for ColliderView<'a> {
                 meshes.push((mesh, Transform::default()));
             }
             ColliderView::Cylinder(shape_views::CylinderView { raw: cylinder }) => {
-                let mesh = Mesh::from(shape::Cylinder {
+                let mesh = Mesh::from(Cylinder {
                     radius: cylinder.radius,
-                    height: cylinder.half_height * 2.0,
+                    half_height: cylinder.half_height,
                     ..default()
                 });
                 meshes.push((mesh, Transform::default()));
@@ -143,7 +142,7 @@ pub fn init_physics_meshes(
     physics_mesh: Query<&PhysicsDebugMesh>,
     mut removed: RemovedComponents<Collider>,
 ) {
-    for entity in removed.iter() {
+    for entity in removed.read() {
         if let Ok(children) = childrens.get(entity) {
             for child in children.iter() {
                 if physics_mesh.contains(*child) {
@@ -182,7 +181,7 @@ pub fn init_physics_meshes(
             commands
                 .entity(entity)
                 .insert(Visibility::default())
-                .insert(ComputedVisibility::default())
+                .insert(InheritedVisibility::default())
                 .add_child(physics_meshes);
 
             for (mesh, transform) in collider_meshes {

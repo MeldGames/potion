@@ -196,14 +196,14 @@ mod tests {
         app.add_systems(Last, check_globals);
 
         let core = app
-            .world
+            .world_mut()
             .spawn(SpatialBundle {
                 transform: Transform::from_xyz(5.0, 0.0, 0.0),
                 ..default()
             })
             .id();
 
-        app.world
+        app.world_mut()
             .spawn(SpatialBundle::default())
             .insert(Attach::translation(core));
 

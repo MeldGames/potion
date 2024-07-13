@@ -49,6 +49,7 @@ pub fn push_item_back(
         &StoreItem,
     )>,
 ) {
+    /*
     for (security_entity, security_transform, security_check, _children) in &security_checks {
         for (collider1, collider2, intersecting) in
             rapier_context.intersections_with(security_entity)
@@ -100,6 +101,7 @@ pub fn push_item_back(
             }
         }
     }
+    */
 }
 
 pub fn buy_item(
@@ -110,6 +112,7 @@ pub fn buy_item(
     store_items: Query<(&Value, &StoreItem)>,
     mut player_value: ResMut<Value>,
 ) {
+    /*
     for (entity, _children) in &registers {
         for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
             let potential = if collider1 == entity {
@@ -129,6 +132,7 @@ pub fn buy_item(
             }
         }
     }
+    */
 }
 
 pub struct StorePlugin;

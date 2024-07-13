@@ -87,7 +87,7 @@ pub fn pending_slot(
     slottable: Query<(Entity, &Slottable)>,
     mut collision_events: EventReader<CollisionEvent>,
 ) {
-    for collision_event in collision_events.iter() {
+    for collision_event in collision_events.read() {
         let ((_slotter_entity, mut slotter), (ingredient_entity, slottable), colliding) =
             match collision_event {
                 &CollisionEvent::Started(collider1, collider2, _flags) => {
@@ -231,19 +231,19 @@ pub fn slot_joints(
                                         .build();
                     */
                     let slot_joint = GenericJointBuilder::new(JointAxesMask::empty())
-                        .motor_position(JointAxis::X, 0.0, strength, damping)
-                        .motor_max_force(JointAxis::X, 300.0)
-                        .motor_position(JointAxis::Y, 0.0, strength, damping)
-                        .motor_max_force(JointAxis::Y, 300.0)
-                        .motor_position(JointAxis::Z, 0.0, strength, damping)
-                        .motor_max_force(JointAxis::Z, 300.0)
+                        .motor_position(JointAxis::LinX, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::LinX, 300.0)
+                        .motor_position(JointAxis::LinY, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::LinY, 300.0)
+                        .motor_position(JointAxis::LinZ, 0.0, strength, damping)
+                        .motor_max_force(JointAxis::LinZ, 300.0)
                         .motor_position(JointAxis::AngX, 0.0, strength, damping)
                         .motor_position(JointAxis::AngY, 0.0, strength, damping)
                         .motor_position(JointAxis::AngZ, 0.0, strength, damping)
                         .build();
                     commands
                         .entity(entity)
-                        .insert(ImpulseJoint::new(item, slot_joint));
+                        .insert(ImpulseJoint::new(item, TypedJoint::GenericJoint(slot_joint)));
                 }
             }
             None => {

@@ -48,6 +48,6 @@ pub fn joint_interpolation(
 
     for (mut joint, mut interp) in &mut joints {
         interp.tick(dt);
-        interp.lerp_inplace(&mut joint.data);
+        interp.lerp_inplace(joint.data.as_mut());
     }
 }

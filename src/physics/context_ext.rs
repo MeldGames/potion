@@ -51,7 +51,7 @@ impl ContextExt for RapierContext {
     ) -> Vec<(Entity, ContactManifold)> {
         const FUDGE: f32 = 0.05;
 
-        let physics_scale = self.physics_scale();
+        let physics_scale = self.integration_parameters.length_unit;
 
         let shape = &collider.raw;
         let shape_iso = Isometry3 {

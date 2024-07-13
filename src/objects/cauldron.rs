@@ -30,9 +30,8 @@ pub fn spawn_cauldron(
         slots.push(
             commands
                 .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::UVSphere {
+                    mesh: meshes.add(Mesh::from(Sphere {
                         radius: 0.02,
-                        ..default()
                     })),
                     transform: Transform::from_translation(center + Vec3::new(x, 2.5, z) * radius),
                     ..default()

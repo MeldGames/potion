@@ -11,36 +11,37 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = "0.11"
-bevy_egui = "0.21"
-bevy_debug_texture = { git = "https://github.com/aceeri/bevy_debug_texture" }
-#sabi = { path = "../sabi/sabi", features = ["public"] }
+bevy = "0.14"
+bevy_egui = "0.28"
+bevy_debug_texture = "0.3"
 #sabi = {git = "https://github.com/aceeri/sabi", features = ["public"]}
 serde = {version = "1.0", features = ["derive"]}
 #springy = {git = "https://github.com/aceeri/springy", features = ["rapier3d"]}
-springy = {path = "../springy", features = ["rapier3d"]}
+springy = {version = "0.2", features = ["rapier3d"]}
+bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust", branch = "bevy-0.14"}
 
 #bevy_mod_wanderlust = {git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust"}
-bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
+#bevy_mod_wanderlust = { path = "../bevy_mod_wanderlust"}
 #bevy_mod_edge_detection = {path = "../bevy_mod_edge_detection"}
 #bevy_mod_edge_detection = {git = "https://github.com/IceSentry/bevy_mod_edge_detection"}
 
-bevy-inspector-egui = "0.19"
-bevy_mod_billboard = "0.4"
+bevy-inspector-egui = "0.25"
+bevy_mod_billboard = "0.7"
 #bevy_editor_pls = "0.5"
 #bevy_editor_pls = {git = "https://github.com/jakobhellermann/bevy_editor_pls"}
-bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
-#bevy_framepace = "0.13"
-bevy_mod_inverse_kinematics = "0.4"
-bevy_rapier3d = {version = "0.22", features = ["serde-serialize", "simd-stable", "parallel"]}
-bevy_rapier3d_f64 = {version = "0.22", features = ["serde-serialize", "simd-stable", "parallel"]}
+#bevy_editor_pls = {path = "../bevy_editor_pls/crates/bevy_editor_pls"}
+bevy_framepace = "0.17"
+#bevy_mod_inverse_kinematics = "0.6"
+bevy_mod_inverse_kinematics = {git = "https://github.com/aceeri/bevy_mod_inverse_kinematics", branch = "master"}
+bevy_rapier3d = {version = "0.27", features = ["serde-serialize", "simd-stable", "parallel"]}
+#bevy_rapier3d_f64 = {version = "0.27", features = ["serde-serialize", "simd-stable", "parallel"]}
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 bincode = "1.3"
 bitflags = "1.3"
 derive_more = "0.99"
-egui = "0.22"
-leafwing-input-manager = "0.10"
-wgpu-types = "0.15"
+egui = "0.28"
+leafwing-input-manager = "0.14"
+wgpu-types = "0.20"
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" } 
 rand = "0.8"
  
@@ -77,15 +78,15 @@ obj = "0.10.2"
 #renet = { git = "https://github.com/lucaspoffo/renet" }
 #renetcode = { git = "https://github.com/lucaspoffo/renet" }
 #bevy_rapier3d = {git = "https://github.com/dimforge/bevy_rapier", rev = "38e1b79169303c47d639d64558b7d9adeed99211"}
-bevy_rapier3d = {git = "https://github.com/aceeri/bevy_rapier", branch = "potion-master"}
-bevy_rapier3d_f64 = {git = "https://github.com/aceeri/bevy_rapier", branch = "potion-master"}
+#bevy_rapier3d = {git = "https://github.com/aceeri/bevy_rapier", branch = "potion-master"}
+#bevy_rapier3d_f64 = {git = "https://github.com/aceeri/bevy_rapier", branch = "potion-master"}
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 #rapier3d = {path = "../rapier/crates/rapier3d"}
 #bevy_rapier3d = {path = "../bevy_rapier/bevy_rapier3d"}
 #parry3d = {path = "../parry/crates/parry3d"}
 #bevy-inspector-egui = {path = "../bevy-inspector-egui"}
 #bevy_mod_wanderlust = {path = "../bevy_mod_wanderlust"}
-bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust", branch = "plugin-setup"}
+#bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust", branch = "plugin-setup"}
 #parry3d = {git = "https://github.com/aceeri/parry"}
 #bevy_mod_wanderlust = {git = "https://github.com/aceeri/bevy_mod_wanderlust"}
 #bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui" }

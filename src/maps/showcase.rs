@@ -267,7 +267,7 @@ pub fn setup(
                 value: "IMPORTANT".to_string(),
                 style: TextStyle {
                     font_size: 60.0,
-                    color: Color::ORANGE,
+                    color: css::ORANGE.into(),
                     ..default()
                 },
             },
@@ -279,8 +279,8 @@ pub fn setup(
                     ..default()
                 },
             },
-        ])
-        .with_alignment(TextAlignment::Center),
+        ]),
+        //.with_alignment(TextAlignment::Center),
         ..default()
     });
 
@@ -463,9 +463,8 @@ pub fn setup(
     let ball_radius = 0.6;
     let _ball = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
+            mesh: meshes.add(Mesh::from(Sphere {
                 radius: ball_radius,
-                ..default()
             })),
             transform: Transform::from_xyz(1.0, 8.0, -2.0),
             ..default()
@@ -596,9 +595,8 @@ pub fn setup(
 
     let _welt_slot = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
+            mesh: meshes.add(Mesh::from(Sphere {
                 radius: 0.05,
-                ..default()
             })),
             ..default()
         })
@@ -633,10 +631,7 @@ pub fn setup(
 
     let _mock = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.00,
-                ..default()
-            })),
+            mesh: meshes.add(Mesh::from(Sphere::new(0.0))),
             ..default()
         })
         .insert(TransformBundle::from_transform(Transform::from_xyz(

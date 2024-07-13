@@ -207,19 +207,19 @@ pub fn transform_stored(
                 }
 
                 if let Ok(mut impulse) = impulse_joints.get_mut(*child) {
-                    let anchor1 = impulse.data.local_anchor1();
-                    impulse.data.set_local_anchor1(anchor1 * ratio);
+                    let anchor1 = impulse.data.as_ref().local_anchor1();
+                    impulse.data.as_mut().set_local_anchor1(anchor1 * ratio);
 
-                    let anchor2 = impulse.data.local_anchor2();
-                    impulse.data.set_local_anchor2(anchor2 * ratio);
+                    let anchor2 = impulse.data.as_ref().local_anchor2();
+                    impulse.data.as_mut().set_local_anchor2(anchor2 * ratio);
                 }
 
                 if let Ok(mut multibody) = multibody_joints.get_mut(*child) {
-                    let anchor1 = multibody.data.local_anchor1();
-                    multibody.data.set_local_anchor1(anchor1 * ratio);
+                    let anchor1 = multibody.data.as_ref().local_anchor1();
+                    multibody.data.as_mut().set_local_anchor1(anchor1 * ratio);
 
-                    let anchor2 = multibody.data.local_anchor2();
-                    multibody.data.set_local_anchor2(anchor2 * ratio);
+                    let anchor2 = multibody.data.as_ref().local_anchor2();
+                    multibody.data.as_mut().set_local_anchor2(anchor2 * ratio);
                 }
             }
 
@@ -303,19 +303,19 @@ pub fn transform_stored(
                 }
 
                 if let Ok(mut impulse) = impulse_joints.get_mut(*child) {
-                    let anchor1 = impulse.data.local_anchor1();
-                    impulse.data.set_local_anchor1(anchor1 * ratio);
+                    let anchor1 = impulse.data.as_ref().local_anchor1();
+                    impulse.data.as_mut().set_local_anchor1(anchor1 * ratio);
 
-                    let anchor2 = impulse.data.local_anchor2();
-                    impulse.data.set_local_anchor2(anchor2 * ratio);
+                    let anchor2 = impulse.data.as_ref().local_anchor2();
+                    impulse.data.as_mut().set_local_anchor2(anchor2 * ratio);
                 }
 
                 if let Ok(mut multibody) = multibody_joints.get_mut(*child) {
-                    let anchor1 = multibody.data.local_anchor1();
-                    multibody.data.set_local_anchor1(anchor1 * ratio);
+                    let anchor1 = multibody.data.as_ref().local_anchor1();
+                    multibody.data.as_mut().set_local_anchor1(anchor1 * ratio);
 
-                    let anchor2 = multibody.data.local_anchor2();
-                    multibody.data.set_local_anchor2(anchor2 * ratio);
+                    let anchor2 = multibody.data.as_ref().local_anchor2();
+                    multibody.data.as_mut().set_local_anchor2(anchor2 * ratio);
                 }
             }
 

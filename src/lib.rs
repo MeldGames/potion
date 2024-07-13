@@ -19,7 +19,10 @@ pub mod prelude {
         traversal::prelude::*, FixedSet, PotionCellarPlugin,
     };
 
-    pub use bevy::prelude::*;
+    pub use bevy::{
+        color::palettes::css,
+        prelude::*,
+    };
     pub use bevy_rapier3d::prelude::*;
 }
 
@@ -27,7 +30,7 @@ use prelude::*;
 
 use bevy::window::{CursorGrabMode, WindowPlugin};
 
-use bevy_editor_pls::editor::Editor;
+//use bevy_editor_pls::editor::Editor;
 //use bevy_mod_edge_detection::{EdgeDetectionConfig, EdgeDetectionPlugin};
 use bevy_mod_inverse_kinematics::InverseKinematicsPlugin;
 use obj::Obj;
@@ -96,12 +99,12 @@ impl Plugin for PotionCellarPlugin {
             //limiter: bevy_framepace::Limiter::Manual(crate::TICK_RATE),
         });
         */
-        app.insert_resource(FixedTime::new(crate::TICK_RATE));
+        app.insert_resource(Time::<Fixed>::from_duration(crate::TICK_RATE));
         //app.add_plugins(bevy_mod_component_mirror::RapierMirrorsPlugins);
         //app.add_plugins(bevy_framepace::FramepacePlugin);
         app.insert_resource(bevy::pbr::DirectionalLightShadowMap { size: 2 << 10 });
         //app.add_plugins(crate::egui::SetupEguiPlugin);
-        app.add_plugins(bevy_editor_pls::EditorPlugin::default());
+        //app.add_plugins(bevy_editor_pls::EditorPlugin::default());
 
         const EDGE: bool = false;
         if !EDGE {
@@ -130,19 +133,17 @@ impl Plugin for PotionCellarPlugin {
 
         //app.add_plugins(bevy_framepace::FramepacePlugin);
         app.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.3)))
-            .add_plugins((
-                PlayerPlugin,
-                attach::AttachPlugin,
-                StorePlugin,
-                DepositPlugin,
-                HierarchyTraversalPlugin,
-                InverseKinematicsPlugin,
-                crate::objects::potion::PotionPlugin,
-                crate::debug::DebugPlugin,
-                //TreesPlugin,
-                PhysicsPlugin,
-                crate::objects::EffectPlugin,
-            ))
+                .add_plugins(PlayerPlugin)
+                .add_plugins(attach::AttachPlugin,)
+                .add_plugins(StorePlugin,)
+                .add_plugins(DepositPlugin,)
+                .add_plugins(HierarchyTraversalPlugin,)
+                .add_plugins(InverseKinematicsPlugin,)
+                .add_plugins(crate::objects::potion::PotionPlugin,)
+                .add_plugins(crate::debug::DebugPlugin,)
+                //.add_plugins(TreesPlugin,)
+                .add_plugins(PhysicsPlugin,)
+                .add_plugins(crate::objects::EffectPlugin,)
             .add_plugins(RapierDebugRenderPlugin {
                 enabled: true,
                 style: Default::default(),
@@ -265,12 +266,13 @@ fn update_level_collision(
     mut assets: ResMut<Assets<Mesh>>,
     mut replace: Query<(Option<&mut Collider>, &Handle<Mesh>, Entity), With<ColliderLoad>>,
 ) {
-    for ev in ev_asset.iter() {
+    for ev in ev_asset.read() {
         match ev {
-            AssetEvent::Created { handle } => {
-                if let Some(loaded_mesh) = assets.get_mut(handle) {
+            AssetEvent::Added { id } => {
+                if let Some(loaded_mesh) = assets.get_mut(*id) {
                     for (col, inner_handle, e) in replace.iter_mut() {
-                        if *inner_handle == *handle {
+                        /*
+                        if *inner_handle == *id {
                             let new_collider =
                                 Collider::from_bevy_mesh(loaded_mesh, &COMPUTE_SHAPE_PARAMS)
                                     .unwrap();
@@ -284,11 +286,11 @@ fn update_level_collision(
                             }
                             commands.entity(e).remove::<ColliderLoad>();
                         }
+                        */
                     }
                 }
             }
-            AssetEvent::Modified { handle: _ } => {}
-            AssetEvent::Removed { handle: _ } => {}
+            _ => {}
         }
     }
 }
@@ -368,6 +370,10 @@ pub fn window_focused(windows: Query<&Window, With<bevy::window::PrimaryWindow>>
     }
 }
 
+pub fn editor_active() -> bool {
+    false
+}
+/*
 pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
     if let Some(editor) = editor {
         editor.active()
@@ -375,3 +381,4 @@ pub fn editor_active(editor: Option<Res<Editor>>) -> bool {
         false
     }
 }
+*/

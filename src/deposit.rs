@@ -81,7 +81,7 @@ pub fn deposit(
     mut values: Query<&mut Value>,
 ) {
     for (deposit, _) in &deposits {
-        for (collider1, collider2, intersecting) in rapier_context.intersections_with(deposit) {
+        for (collider1, collider2, intersecting) in rapier_context.intersection_pairs_with(deposit) {
             let potential_sellable = if collider1 == deposit {
                 collider2
             } else {

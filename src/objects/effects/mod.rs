@@ -158,18 +158,18 @@ pub fn group_points(
 
 pub fn debug_colors(n: usize) -> Vec<Color> {
     let colors = [
-        Color::RED,
-        Color::GREEN,
-        Color::BLUE,
-        Color::BLACK,
-        Color::WHITE,
-        Color::PINK,
-        Color::SEA_GREEN,
-        Color::ORANGE,
-        Color::PURPLE,
+        css::RED,
+        css::GREEN,
+        css::BLUE,
+        css::BLACK,
+        css::WHITE,
+        css::PINK,
+        css::SEA_GREEN,
+        css::ORANGE,
+        css::PURPLE,
     ];
 
-    colors.to_vec()
+    colors.map(|c| Color::from(c)).to_vec()
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -289,7 +289,7 @@ pub fn scatter_sampling(
             true,
             QueryFilter::default().exclude_sensors(),
         ) {
-            toi = ray.toi;
+            toi = ray.time_of_impact;
             results.push((entity, ray));
         } else {
             let traveled = scatter.from + scatter.dir * Vec3::NEG_Z * step;

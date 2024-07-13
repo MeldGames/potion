@@ -12,7 +12,7 @@ impl Plugin for SetupPlugin {
 pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
+            mesh: meshes.add(Mesh::from(Cuboid::default())),
             transform: Transform {
                 translation: Vec3::new(0.0, -0.5, 0.0),
                 scale: Vec3::new(1000.0, 1.0, 100.0),

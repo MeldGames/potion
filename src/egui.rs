@@ -39,7 +39,7 @@ pub fn setup_fonts(mut egui_context: EguiContexts) {
 
 pub fn setup_style(mut egui_context: EguiContexts) {
     let mut visuals = egui::Visuals::dark();
-    visuals.popup_shadow.extrusion = 1.0;
-    visuals.window_shadow.extrusion = 1.0;
+    //visuals.popup_shadow.extrusion = 1.0;
+    //visuals.window_shadow.extrusion = 1.0;
     egui_context.ctx_mut().set_visuals(visuals);
 }

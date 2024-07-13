@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use bevy::core_pipeline::fxaa::{Fxaa, Sensitivity};
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
-use bevy::ecs::query::ReadOnlyWorldQuery;
+use bevy::ecs::query::QueryFilter;
 use bevy::utils::HashSet;
 use bevy_mod_inverse_kinematics::IkConstraint;
 
@@ -23,7 +23,8 @@ impl Plugin for PlayerSpawnPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Player>();
 
-        app.insert_resource(Events::<PlayerEvent>::default());
+        app.add_event::<PlayerEvent>();
+        //app.insert_resource(Events::<PlayerEvent>::default());
         app.add_systems(
             FixedUpdate,
             (
@@ -32,7 +33,7 @@ impl Plugin for PlayerSpawnPlugin {
                 contact_filter,
                 setup_player,
                 setup_ik,
-                Events::<PlayerEvent>::update_system,
+                //Events::<PlayerEvent>::update_system,
             )
                 .in_set(PlayerSpawnSet)
                 .in_set(crate::FixedSet::First),
@@ -85,7 +86,7 @@ pub fn setup_player(
     mut player_reader: EventReader<PlayerEvent>,
     //server: Option<ResMut<RenetServer>>,
 ) {
-    for (event, id) in player_reader.iter_with_id() {
+    for (event, id) in player_reader.read_with_id() {
         info!("player event {:?}: {:?}", id, event);
         match event {
             &PlayerEvent::SetupLocal { id: _ } => {
@@ -350,10 +351,7 @@ pub fn attach_arm(
     //let motor_model = MotorModel::AccelerationBased;
     const DISPLAY_IK: bool = false;
     let debug_mesh = if DISPLAY_IK {
-        meshes.add(Mesh::from(shape::UVSphere {
-            radius: 0.04,
-            ..default()
-        }))
+        meshes.add(Mesh::from(Sphere::new(0.04)))
     } else {
         default()
     };
@@ -365,7 +363,7 @@ pub fn attach_arm(
     let upperarm_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::BLUE.into()),
+            material: materials.add(Color::from(css::BLUE)),
             transform: Transform::from_translation(at),
             ..default()
         })
@@ -376,7 +374,7 @@ pub fn attach_arm(
     let target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::RED.into()),
+            material: materials.add(Color::from(css::RED)),
             transform: Transform::from_translation(Vec3::new(0.0, 2.0, -2.0)),
             ..default()
         })
@@ -390,7 +388,7 @@ pub fn attach_arm(
     let forearm_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::BLUE.into()),
+            material: materials.add(Color::from(css::BLUE)),
             transform: Transform::from_translation(-forearm_height),
             ..default()
         })
@@ -401,7 +399,7 @@ pub fn attach_arm(
     let pole_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::PURPLE.into()),
+            material: materials.add(Color::from(css::PURPLE)),
             transform: Transform::from_translation(at + Vec3::new(0.0, -0.8, 1.2)),
             ..default()
         })
@@ -412,7 +410,7 @@ pub fn attach_arm(
     let hand_target = commands
         .spawn(PbrBundle {
             mesh: debug_mesh.clone(),
-            material: materials.add(Color::BLUE.into()),
+            material: materials.add(Color::from(css::BLUE)),
             transform: Transform::from_translation(
                 -forearm_height - Vec3::new(0.0, arm_radius, 0.0),
             ),
@@ -625,7 +623,7 @@ pub fn related_entities<R, JointFilter>(
     joints: Query<&ImpulseJoint, JointFilter>,
 ) where
     R: std::ops::DerefMut<Target = HashSet<Entity>> + Component,
-    JointFilter: ReadOnlyWorldQuery,
+    JointFilter: QueryFilter,
 {
     for (core_entity, mut related) in &mut related {
         let mut related_entities = HashSet::new();
@@ -718,17 +716,15 @@ pub fn setup_ik(
         let player = parents.get(parent.get()).unwrap().get();
 
         let mesh_right_hand = if let Ok(found_entity) = find_entity(
-            &EntityPath {
-                parts: vec![
-                    "Pelvis".into(),
-                    "Spine1".into(),
-                    "Spine2".into(),
-                    "Collar.R".into(),
-                    "UpperArm.R".into(),
-                    "ForeArm.R".into(),
-                    "Hand.R".into(),
-                ],
-            },
+            &vec![
+                "Pelvis".into(),
+                "Spine1".into(),
+                "Spine2".into(),
+                "Collar.R".into(),
+                "UpperArm.R".into(),
+                "ForeArm.R".into(),
+                "Hand.R".into(),
+            ],
             entity,
             &children,
             &names,
@@ -739,9 +735,7 @@ pub fn setup_ik(
         };
 
         let physics_right_hand = if let Ok(found_entity) = find_entity(
-            &EntityPath {
-                parts: vec!["Arm 0".into(), "Hand 0".into()],
-            },
+            &vec!["Arm 0".into(), "Hand 0".into()],
             player,
             &children,
             &names,
@@ -752,8 +746,7 @@ pub fn setup_ik(
         };
 
         let mesh_left_hand = if let Ok(found_entity) = find_entity(
-            &EntityPath {
-                parts: vec![
+                &vec![
                     "Pelvis".into(),
                     "Spine1".into(),
                     "Spine2".into(),
@@ -762,7 +755,6 @@ pub fn setup_ik(
                     "ForeArm.L".into(),
                     "Hand.L".into(),
                 ],
-            },
             entity,
             &children,
             &names,
@@ -773,9 +765,7 @@ pub fn setup_ik(
         };
 
         let physics_left_hand = if let Ok(found_entity) = find_entity(
-            &EntityPath {
-                parts: vec!["Arm 1".into(), "Hand 1".into()],
-            },
+            &vec!["Arm 1".into(), "Hand 1".into()],
             player,
             &children,
             &names,
@@ -791,14 +781,12 @@ pub fn setup_ik(
             .spawn(PbrBundle {
                 transform: Transform::from_xyz(-1.0, 0.4, -0.4),
                 mesh: meshes.add(
-                    Mesh::try_from(shape::Icosphere {
+                    Mesh::from(Sphere {
                         radius: 0.05,
-                        subdivisions: 1,
                     })
-                    .unwrap(),
                 ),
                 material: materials.add(StandardMaterial {
-                    base_color: Color::GREEN,
+                    base_color: css::GREEN.into(),
                     ..default()
                 }),
                 ..default()
@@ -819,14 +807,10 @@ pub fn setup_ik(
             .spawn(PbrBundle {
                 transform: Transform::from_xyz(1.0, 0.4, -0.4),
                 mesh: meshes.add(
-                    Mesh::try_from(shape::Icosphere {
-                        radius: 0.05,
-                        subdivisions: 1,
-                    })
-                    .unwrap(),
+                    Mesh::from(Sphere::new(0.05)),
                 ),
                 material: materials.add(StandardMaterial {
-                    base_color: Color::GREEN,
+                    base_color: css::GREEN.into(),
                     ..default()
                 }),
                 ..default()
@@ -853,14 +837,14 @@ pub fn setup_ik(
 }
 
 fn find_entity(
-    path: &EntityPath,
+    path: &Vec<Name>,
     root: Entity,
     children: &Query<(Option<&JointChildren>, Option<&Children>)>,
     names: &Query<&Name>,
 ) -> Result<Entity, ()> {
     let mut current_entity = root;
 
-    for part in path.parts.iter() {
+    for part in path.iter() {
         let mut found = false;
         if let Ok((joint_children, children)) = children.get(current_entity) {
             if let Some(children) = children {
